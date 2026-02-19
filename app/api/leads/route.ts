@@ -53,6 +53,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No email found" }, { status: 400 });
   }
 
-  await saveLead(lead, userId);
+  await saveLead({ ...lead, email: lead.email }, userId);
   return NextResponse.json({ lead }, { status: 201 });
 }

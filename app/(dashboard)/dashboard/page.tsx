@@ -1,5 +1,15 @@
 import { redirect } from "next/navigation";
 import { auth, signOut } from "@/auth";
+import { DashboardUserMenu } from "@/components/dashboard-user-menu";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { getProfileById } from "@/lib/db";
 
 export default async function DashboardPage() {
@@ -14,20 +24,41 @@ export default async function DashboardPage() {
     <main className="mx-auto max-w-5xl p-10">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <form
-          action={async () => {
+        <DashboardUserMenu
+          name={session.user.name}
+          email={session.user.email}
+          signOutAction={async () => {
             "use server";
             await signOut({ redirectTo: "/auth/signin" });
           }}
-        >
-          <button className="rounded border px-3 py-1.5 text-sm" type="submit">
-            Sign out
-          </button>
-        </form>
+        />
       </div>
-      <p className="mt-3 text-zinc-600 dark:text-zinc-300">
-        Signed in as {profile?.email} ({profile?.plan} plan) with {profile?.credits ?? 0} credits.
-      </p>
+
+      <div className="mt-8 space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Account</CardTitle>
+            <CardDescription>
+              Your profile and subscription details
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-muted-foreground text-sm">
+                {profile?.email}
+              </span>
+              <Badge variant="secondary">{profile?.plan}</Badge>
+              <Badge variant="outline">{profile?.credits ?? 0} credits</Badge>
+            </div>
+            <Separator />
+            <p className="text-muted-foreground text-sm">
+              Signed in as {profile?.name ?? profile?.email}. You have{" "}
+              {profile?.credits ?? 0} credits remaining on your {profile?.plan}{" "}
+              plan.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </main>
   );
 }
