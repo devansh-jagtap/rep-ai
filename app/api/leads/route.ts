@@ -1,17 +1,29 @@
 import { NextResponse } from "next/server";
-import { saveLead } from "@/lib/db";
+import { auth } from "@/auth";
+import { saveLead, getLeads } from "@/lib/db";
 import { extractLeadFromText } from "@/lib/lead-extract";
 import { checkRateLimit } from "@/lib/rate-limit";
 
-function getClientId(request: Request): string {
-  return (
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    request.headers.get("x-real-ip") ??
-    "anonymous"
-  );
+export async function GET() {
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const leads = await getLeads(userId);
+  return NextResponse.json({ leads });
 }
 
 export async function POST(request: Request) {
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   let body: unknown;
   try {
     body = await request.json();
@@ -21,13 +33,14 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
+
   const text = String(
     body && typeof body === "object" && "text" in body
       ? (body as { text?: unknown }).text ?? ""
       : ""
   );
 
-  if (!checkRateLimit(`leads:${getClientId(request)}`)) {
+  if (!checkRateLimit(`leads:${userId}`)) {
     return NextResponse.json(
       { error: "Rate limit exceeded" },
       { status: 429 }
@@ -40,6 +53,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No email found" }, { status: 400 });
   }
 
-  await saveLead(lead);
+  await saveLead(lead, userId);
   return NextResponse.json({ lead }, { status: 201 });
 }
