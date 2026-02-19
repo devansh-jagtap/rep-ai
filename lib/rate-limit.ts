@@ -1,12 +1,19 @@
-const counterByBucket = new Map<string, number>();
+const timestampsByBucket = new Map<string, number[]>();
 const MAX_REQUESTS = 100;
+const WINDOW_MS = 60_000; // 1 minute
 
 export function checkRateLimit(bucket: string): boolean {
-  const current = counterByBucket.get(bucket) ?? 0;
-  if (current >= MAX_REQUESTS) {
+  const now = Date.now();
+  const cutoff = now - WINDOW_MS;
+
+  const timestamps = timestampsByBucket.get(bucket) ?? [];
+  const recent = timestamps.filter((t) => t > cutoff);
+
+  if (recent.length >= MAX_REQUESTS) {
     return false;
   }
 
-  counterByBucket.set(bucket, current + 1);
+  recent.push(now);
+  timestampsByBucket.set(bucket, recent);
   return true;
 }
