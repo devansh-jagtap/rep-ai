@@ -86,6 +86,7 @@ export async function submitOnboardingForm(formData: FormData) {
     services,
     projects,
     tone,
+    handle: handleValidation.value,
   };
 
   const created = await createPortfolio({

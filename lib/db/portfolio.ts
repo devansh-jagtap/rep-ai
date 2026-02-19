@@ -16,6 +16,7 @@ export interface PortfolioOnboardingData {
   services: string[];
   projects: PortfolioProjectInput[];
   tone: PortfolioTone;
+  handle: string;
 }
 
 export interface CreatePortfolioInput {
