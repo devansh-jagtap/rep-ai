@@ -1,10 +1,14 @@
-import { mkdir, readFile, writeFile } from "fs/promises";
-import { join } from "path";
+import postgres from "postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
+import { desc, eq } from "drizzle-orm";
+import { leads, users } from "@/lib/schema";
 
 export interface Profile {
   id: string;
   name: string;
   plan: "free" | "pro";
+  credits: number;
+  email: string;
 }
 
 export interface Lead {
@@ -13,50 +17,63 @@ export interface Lead {
   company?: string;
 }
 
-const DATA_DIR =
-  process.env.VERCEL === "1"
-    ? "/tmp"
-    : join(process.cwd(), "data");
-const LEADS_FILE = join(DATA_DIR, "leads.json");
+const globalForDb = globalThis as unknown as {
+  sql?: ReturnType<typeof postgres>;
+};
 
-async function loadLeads(): Promise<Lead[]> {
-  try {
-    const raw = await readFile(LEADS_FILE, "utf-8");
-    return JSON.parse(raw) as Lead[];
-  } catch {
-    return [];
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL is required");
+}
+
+const sql = globalForDb.sql ?? postgres(databaseUrl, { prepare: false });
+if (process.env.NODE_ENV !== "production") {
+  globalForDb.sql = sql;
+}
+
+export const db = drizzle(sql);
+
+export async function getProfileById(id: string): Promise<Profile | null> {
+  const [user] = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      plan: users.plan,
+      credits: users.credits,
+    })
+    .from(users)
+    .where(eq(users.id, id))
+    .limit(1);
+
+  if (!user) {
+    return null;
   }
-}
 
-async function persistLeads(leads: Lead[]): Promise<void> {
-  await mkdir(DATA_DIR, { recursive: true });
-  await writeFile(LEADS_FILE, JSON.stringify(leads, null, 2));
-}
-
-let leadsCache: Lead[] | null = null;
-
-async function getLeadsInternal(): Promise<Lead[]> {
-  if (leadsCache === null) {
-    leadsCache = await loadLeads();
-  }
-  return leadsCache;
-}
-
-export async function getProfileById(id: string): Promise<Profile> {
   return {
-    id,
-    name: "Demo User",
-    plan: "free",
+    ...user,
+    name: user.name ?? "User",
+    plan: user.plan as "free" | "pro",
   };
 }
 
-export async function saveLead(lead: Lead): Promise<void> {
-  const leads = await getLeadsInternal();
-  leads.push(lead);
-  leadsCache = leads;
-  await persistLeads(leads);
+export async function saveLead(
+  lead: Required<Pick<Lead, "email">> & Lead,
+  userId: string
+): Promise<void> {
+  await db.insert(leads).values({
+    id: crypto.randomUUID(),
+    email: lead.email,
+    name: lead.name ?? null,
+    company: lead.company ?? null,
+    userId,
+  });
 }
 
-export async function getLeads(): Promise<Lead[]> {
-  return getLeadsInternal();
+export async function getLeads(userId: string) {
+  return db
+    .select()
+    .from(leads)
+    .where(eq(leads.userId, userId))
+    .orderBy(desc(leads.createdAt));
 }

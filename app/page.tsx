@@ -2,7 +2,9 @@ import Link from "next/link";
 
 const routes = [
   { href: "/marketing", label: "Marketing" },
-  { href: "/dashboard", label: "Dashboard" },
+  { href: "/dashboard", label: "Dashboard (protected)" },
+  { href: "/auth/signin", label: "Sign in" },
+  { href: "/auth/signup", label: "Sign up" },
   { href: "/demo-agent", label: "Public AI Page (/demo-agent)" },
 ];
 

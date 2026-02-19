@@ -1,21 +1,22 @@
-const balanceByUser = new Map<string, number>([["demo-user", 20]]);
-const userLocks = new Map<string, Promise<unknown>>();
+import { and, eq, gte, sql } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { users } from "@/lib/schema";
 
 export async function consumeCredits(
   userId: string,
   amount: number
 ): Promise<boolean> {
-  const run = async (): Promise<boolean> => {
-    const current = balanceByUser.get(userId) ?? 0;
-    if (amount <= 0 || current < amount) {
-      return false;
-    }
-    balanceByUser.set(userId, current - amount);
-    return true;
-  };
+  if (amount <= 0) {
+    return false;
+  }
 
-  const prev = userLocks.get(userId) ?? Promise.resolve();
-  const result = prev.then(() => run());
-  userLocks.set(userId, result);
-  return result;
+  const updated = await db
+    .update(users)
+    .set({
+      credits: sql`${users.credits} - ${amount}`,
+    })
+    .where(and(eq(users.id, userId), gte(users.credits, amount)))
+    .returning({ id: users.id });
+
+  return updated.length > 0;
 }
