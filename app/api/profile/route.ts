@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { getProfileById } from "@/lib/db";
+import { requireUserId } from "@/lib/api/route-helpers";
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const authResult = await requireUserId();
+  if (!authResult.ok) {
+    return authResult.response;
   }
 
-  const profile = await getProfileById(session.user.id);
+  const profile = await getProfileById(authResult.userId);
   if (!profile) {
     return NextResponse.json({ error: "Profile not found" }, { status: 404 });
   }

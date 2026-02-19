@@ -1,46 +1,37 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { saveLead, getLeads } from "@/lib/db";
+import { parseJsonBody, requireUserId } from "@/lib/api/route-helpers";
 import { extractLeadFromText } from "@/lib/lead-extract";
 import { checkRateLimit } from "@/lib/rate-limit";
 
-export async function GET() {
-  const session = await auth();
-  const userId = session?.user?.id;
+interface LeadRequestBody {
+  text?: unknown;
+}
 
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function GET() {
+  const authResult = await requireUserId();
+  if (!authResult.ok) {
+    return authResult.response;
   }
 
-  const leads = await getLeads(userId);
+  const leads = await getLeads(authResult.userId);
   return NextResponse.json({ leads });
 }
 
 export async function POST(request: Request) {
-  const session = await auth();
-  const userId = session?.user?.id;
-
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const authResult = await requireUserId();
+  if (!authResult.ok) {
+    return authResult.response;
   }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json(
-      { error: "Invalid JSON body" },
-      { status: 400 }
-    );
+  const jsonResult = await parseJsonBody<LeadRequestBody>(request);
+  if (!jsonResult.ok) {
+    return jsonResult.response;
   }
 
-  const text = String(
-    body && typeof body === "object" && "text" in body
-      ? (body as { text?: unknown }).text ?? ""
-      : ""
-  );
+  const text = String(jsonResult.body.text ?? "");
 
-  if (!checkRateLimit(`leads:${userId}`)) {
+  if (!checkRateLimit(`leads:${authResult.userId}`)) {
     return NextResponse.json(
       { error: "Rate limit exceeded" },
       { status: 429 }
@@ -53,6 +44,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No email found" }, { status: 400 });
   }
 
-  await saveLead({ ...lead, email: lead.email }, userId);
+  await saveLead({ ...lead, email: lead.email }, authResult.userId);
   return NextResponse.json({ lead }, { status: 201 });
 }
