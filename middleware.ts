@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 
-const protectedRoutes = ["/dashboard", "/api/chat", "/api/profile", "/api/leads"];
+const protectedRoutes = [
+  "/dashboard",
+  "/onboarding",
+  "/api/chat",
+  "/api/profile",
+  "/api/leads",
+];
 
 export default auth((request) => {
   const isProtected = protectedRoutes.some((route) =>
@@ -22,5 +28,11 @@ export default auth((request) => {
 });
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/api/chat", "/api/profile", "/api/leads/:path*"],
+  matcher: [
+    "/dashboard/:path*",
+    "/onboarding",
+    "/api/chat",
+    "/api/profile",
+    "/api/leads/:path*",
+  ],
 };

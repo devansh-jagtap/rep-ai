@@ -1,14 +1,22 @@
+import { sql } from "drizzle-orm";
 import {
+  boolean,
+  check,
+  index,
   integer,
+  jsonb,
   pgTable,
   primaryKey,
   text,
   timestamp,
+  unique,
+  uniqueIndex,
+  uuid,
   varchar,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
-  id: text("id").primaryKey(),
+  id: uuid("id").primaryKey(),
   name: text("name"),
   email: text("email").notNull().unique(),
   emailVerified: timestamp("email_verified", { mode: "date" }),
@@ -22,7 +30,7 @@ export const users = pgTable("users", {
 export const accounts = pgTable(
   "accounts",
   {
-    userId: text("user_id")
+    userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     type: text("type").$type<"oauth" | "oidc" | "email" | "credentials">().notNull(),
@@ -41,7 +49,7 @@ export const accounts = pgTable(
 
 export const sessions = pgTable("sessions", {
   sessionToken: text("session_token").primaryKey(),
-  userId: text("user_id")
+  userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   expires: timestamp("expires", { mode: "date" }).notNull(),
@@ -58,12 +66,44 @@ export const verificationTokens = pgTable(
 );
 
 export const leads = pgTable("leads", {
-  id: text("id").primaryKey(),
+  id: uuid("id").primaryKey(),
   name: text("name"),
   email: text("email").notNull(),
   company: text("company"),
-  userId: text("user_id")
+  userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
+
+export const portfolios = pgTable(
+  "portfolios",
+  {
+    id: uuid("id").primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    handle: varchar("handle", { length: 30 }).notNull(),
+    subdomain: varchar("subdomain", { length: 30 }),
+    onboardingData: jsonb("onboarding_data").notNull(),
+    content: jsonb("content"),
+    theme: varchar("theme", { length: 30 }).notNull().default("minimal"),
+    isPublished: boolean("is_published").notNull().default(false),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => [
+    unique("portfolios_user_id_unique_constraint").on(table.userId),
+    unique("portfolios_handle_unique_constraint").on(table.handle),
+    unique("portfolios_subdomain_unique_constraint").on(table.subdomain),
+    uniqueIndex("portfolios_user_id_unique").on(table.userId),
+    uniqueIndex("portfolios_handle_unique").on(table.handle),
+    uniqueIndex("portfolios_subdomain_unique").on(table.subdomain),
+    index("portfolios_user_id_idx").on(table.userId),
+    check("portfolios_handle_format_check", sql`${table.handle} ~ '^[a-z0-9-]{3,30}$'`),
+    check(
+      "portfolios_subdomain_format_check",
+      sql`${table.subdomain} IS NULL OR ${table.subdomain} ~ '^[a-z0-9-]{3,30}$'`
+    ),
+  ]
+);
