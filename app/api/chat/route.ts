@@ -1,38 +1,31 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { generateChatReply } from "@/lib/ai";
 import { consumeCredits } from "@/lib/credits";
+import { parseJsonBody, requireUserId } from "@/lib/api/route-helpers";
 import { checkRateLimit } from "@/lib/rate-limit";
 
+interface ChatRequestBody {
+  prompt?: unknown;
+}
+
 export async function POST(request: Request) {
-  const session = await auth();
-  const userId = session?.user?.id;
-
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const authResult = await requireUserId();
+  if (!authResult.ok) {
+    return authResult.response;
   }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json(
-      { error: "Invalid JSON body" },
-      { status: 400 }
-    );
+  const jsonResult = await parseJsonBody<ChatRequestBody>(request);
+  if (!jsonResult.ok) {
+    return jsonResult.response;
   }
 
-  const prompt = String(
-    body && typeof body === "object" && "prompt" in body
-      ? (body as { prompt?: unknown }).prompt ?? ""
-      : ""
-  );
+  const prompt = String(jsonResult.body.prompt ?? "");
 
-  if (!checkRateLimit(`chat:${userId}`)) {
+  if (!checkRateLimit(`chat:${authResult.userId}`)) {
     return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
   }
 
-  if (!(await consumeCredits(userId, 1))) {
+  if (!(await consumeCredits(authResult.userId, 1))) {
     return NextResponse.json({ error: "Not enough credits" }, { status: 402 });
   }
 

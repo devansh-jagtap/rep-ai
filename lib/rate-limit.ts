@@ -1,29 +1,57 @@
-const timestampsByBucket = new Map<string, number[]>();
+type BucketState = {
+  timestamps: number[];
+  head: number;
+};
+
+const buckets = new Map<string, BucketState>();
 const MAX_REQUESTS = 100;
 const WINDOW_MS = 60_000; // 1 minute
+const PRUNE_INTERVAL_MS = WINDOW_MS;
+let lastPruneAt = 0;
 
-function pruneStaleBuckets(cutoff: number): void {
-  for (const [bucket, timestamps] of timestampsByBucket.entries()) {
-    const hasRecent = timestamps.some((t) => t > cutoff);
-    if (!hasRecent) {
-      timestampsByBucket.delete(bucket);
-    }
+function trimExpired(bucket: BucketState, cutoff: number): number {
+  while (bucket.head < bucket.timestamps.length && bucket.timestamps[bucket.head] <= cutoff) {
+    bucket.head += 1;
   }
+
+  if (bucket.head > 0 && bucket.head * 2 >= bucket.timestamps.length) {
+    bucket.timestamps = bucket.timestamps.slice(bucket.head);
+    bucket.head = 0;
+  }
+
+  return bucket.timestamps.length - bucket.head;
 }
 
-export function checkRateLimit(bucket: string): boolean {
+function pruneInactiveBuckets(now: number, cutoff: number) {
+  if (now - lastPruneAt < PRUNE_INTERVAL_MS) {
+    return;
+  }
+
+  for (const [bucketKey, bucket] of buckets) {
+    const recentCount = trimExpired(bucket, cutoff);
+    if (recentCount === 0) {
+      buckets.delete(bucketKey);
+    }
+  }
+
+  lastPruneAt = now;
+}
+
+export function checkRateLimit(bucketKey: string): boolean {
   const now = Date.now();
   const cutoff = now - WINDOW_MS;
 
-  const timestamps = timestampsByBucket.get(bucket) ?? [];
-  const recent = timestamps.filter((t) => t > cutoff);
+  const bucket = buckets.get(bucketKey) ?? { timestamps: [], head: 0 };
+  const recentCount = trimExpired(bucket, cutoff);
 
-  if (recent.length >= MAX_REQUESTS) {
+  if (recentCount >= MAX_REQUESTS) {
+    buckets.set(bucketKey, bucket);
+    pruneInactiveBuckets(now, cutoff);
     return false;
   }
 
-  recent.push(now);
-  timestampsByBucket.set(bucket, recent);
-  pruneStaleBuckets(cutoff);
+  bucket.timestamps.push(now);
+  buckets.set(bucketKey, bucket);
+  pruneInactiveBuckets(now, cutoff);
   return true;
 }
