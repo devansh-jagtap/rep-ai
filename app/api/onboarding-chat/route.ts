@@ -73,7 +73,7 @@ export async function POST(request: Request) {
   }
 
   const mergedState = {
-    ...(body.state ?? {}),
+    ...(body?.state ?? {}),
     [currentStep]: finalValue,
   };
 

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth, signOut } from "@/auth";
 import { DashboardUserMenu } from "@/components/dashboard-user-menu";
+import { ResetOnboardingButton } from "@/components/reset-onboarding-button";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -30,14 +31,17 @@ export default async function DashboardPage() {
     <main className="mx-auto max-w-5xl p-10">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <DashboardUserMenu
-          name={session.user.name}
-          email={session.user.email}
-          signOutAction={async () => {
-            "use server";
-            await signOut({ redirectTo: "/auth/signin" });
-          }}
-        />
+        <div className="flex items-center gap-2">
+          <ResetOnboardingButton />
+          <DashboardUserMenu
+            name={session.user.name}
+            email={session.user.email}
+            signOutAction={async () => {
+              "use server";
+              await signOut({ redirectTo: "/auth/signin" });
+            }}
+          />
+        </div>
       </div>
 
       <div className="mt-8 space-y-6">

@@ -76,6 +76,15 @@ export const leads = pgTable("leads", {
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
+export const onboardingDrafts = pgTable("onboarding_drafts", {
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" })
+    .primaryKey(),
+  state: jsonb("state").notNull().$type<Record<string, unknown>>(),
+  updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+});
+
 export const portfolios = pgTable(
   "portfolios",
   {

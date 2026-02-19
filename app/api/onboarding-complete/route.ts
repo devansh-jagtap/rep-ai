@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { onboardingDrafts } from "@/lib/schema";
 import { createPortfolio, getPortfolioByHandle } from "@/lib/db/portfolio";
 import type { OnboardingData } from "@/lib/onboarding/types";
 import { validateFinalOnboardingState } from "@/lib/onboarding/validation";
@@ -10,14 +13,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  let body: { state?: Partial<OnboardingData> };
+  let body: { state?: Partial<OnboardingData> } = {};
   try {
-    body = (await request.json()) as { state?: Partial<OnboardingData> };
+    const text = await request.text();
+    if (text) body = (JSON.parse(text) as { state?: Partial<OnboardingData> }) ?? {};
   } catch {
     return NextResponse.json({ ok: false, error: "Invalid JSON body." }, { status: 400 });
   }
 
-  const parsed = validateFinalOnboardingState(body.state ?? {});
+  let stateToUse = body?.state;
+  if (!stateToUse || Object.keys(stateToUse).length === 0) {
+    const [draft] = await db
+      .select()
+      .from(onboardingDrafts)
+      .where(eq(onboardingDrafts.userId, session.user.id))
+      .limit(1);
+    stateToUse = (draft?.state as Partial<OnboardingData> | undefined) ?? {};
+  }
+
+  const parsed = validateFinalOnboardingState(stateToUse ?? {});
   if (!parsed.ok) {
     return NextResponse.json({ ok: false, error: parsed.message }, { status: 400 });
   }
@@ -50,6 +64,7 @@ export async function POST(request: Request) {
       );
     }
 
+    await db.delete(onboardingDrafts).where(eq(onboardingDrafts.userId, session.user.id));
     return NextResponse.json({ ok: true, redirectTo: "/dashboard/preview" });
   } catch (error) {
     console.error("Failed to complete onboarding", error);

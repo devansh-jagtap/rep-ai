@@ -53,6 +53,7 @@ export async function submitOnboardingForm(formData: FormData) {
   if (!handleValidation.ok) {
     onboardingError(handleValidation.message);
   }
+  const handle = (handleValidation as { ok: true; value: string }).value;
 
   const services = servicesRaw
     .split(",")
@@ -74,7 +75,7 @@ export async function submitOnboardingForm(formData: FormData) {
     onboardingError("Please complete all required fields correctly.");
   }
 
-  const takenPortfolio = await getPortfolioByHandle(handleValidation.value);
+  const takenPortfolio = await getPortfolioByHandle(handle);
   if (takenPortfolio) {
     onboardingError("This handle is already taken. Please choose another one.");
   }
@@ -86,12 +87,12 @@ export async function submitOnboardingForm(formData: FormData) {
     services,
     projects,
     tone,
-    handle: handleValidation.value,
+    handle,
   };
 
   const created = await createPortfolio({
     userId: session.user.id,
-    handle: handleValidation.value,
+    handle,
     onboardingData,
   });
 

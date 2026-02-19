@@ -104,7 +104,10 @@ export function validateStepInput(step: OnboardingStep, answer: string): Validat
   return { ok: true, value: handleResult.value };
 }
 
-export function validateFinalOnboardingState(state: Partial<OnboardingData>): ValidationResult<OnboardingData> {
+export function validateFinalOnboardingState(state: Partial<OnboardingData> | undefined | null): ValidationResult<OnboardingData> {
+  if (state == null || typeof state !== "object") {
+    return { ok: false, message: "Invalid onboarding state." };
+  }
   const requiredKeys: Array<keyof OnboardingData> = [
     "name",
     "title",

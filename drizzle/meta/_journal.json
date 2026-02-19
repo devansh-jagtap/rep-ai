@@ -15,6 +15,13 @@
       "when": 1771497953742,
       "tag": "0001_nice_mac_gargan",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771509132898,
+      "tag": "0002_massive_sinister_six",
+      "breakpoints": true
     }
   ]
 }

@@ -85,3 +85,13 @@ export async function createPortfolio(input: CreatePortfolioInput) {
     return { ok: false as const, reason: "db_error" as const };
   }
 }
+
+export async function deletePortfolioByUserId(userId: string) {
+  try {
+    await db.delete(portfolios).where(eq(portfolios.userId, userId));
+    return { ok: true as const };
+  } catch (error) {
+    console.error("Failed to delete portfolio", error);
+    return { ok: false as const };
+  }
+}

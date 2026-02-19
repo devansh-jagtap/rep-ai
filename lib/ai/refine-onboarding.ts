@@ -7,7 +7,7 @@ const nebius = createOpenAI({
   baseURL: process.env.NEBIUS_BASE_URL ?? "https://api.studio.nebius.com/v1",
 });
 
-const MODEL = process.env.NEBIUS_MODEL ?? "meta-llama/Meta-Llama-3.1-70B-Instruct";
+const MODEL = process.env.NEBIUS_MODEL ?? "moonshotai/Kimi-K2.5";
 
 function getInstruction(step: OnboardingStep) {
   if (step === "bio") {
@@ -32,7 +32,7 @@ export async function refineOnboardingAnswer(step: OnboardingStep, rawAnswer: st
 
   try {
     const response = await generateText({
-      model: nebius(MODEL),
+      model: nebius.chat(MODEL),
       temperature: 0.45,
       prompt: `${getInstruction(step)}\n\nReturn only the revised text.\n\nInput:\n${rawAnswer}`,
     });

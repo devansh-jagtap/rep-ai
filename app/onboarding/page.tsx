@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { OnboardingChat } from "@/app/onboarding/onboarding-chat";
+import { OnboardingChatWrapper } from "@/app/onboarding/onboarding-chat-wrapper";
 import { getPortfolioByUserId } from "@/lib/db/portfolio";
 
 export default async function OnboardingPage() {
@@ -14,9 +14,5 @@ export default async function OnboardingPage() {
     redirect("/dashboard");
   }
 
-  return (
-    <main className="mx-auto max-w-3xl p-8">
-      <OnboardingChat />
-    </main>
-  );
+  return <OnboardingChatWrapper />;
 }

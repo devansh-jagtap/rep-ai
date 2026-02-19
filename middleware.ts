@@ -5,6 +5,7 @@ const protectedRoutes = [
   "/dashboard",
   "/onboarding",
   "/api/chat",
+  "/api/onboarding",
   "/api/profile",
   "/api/leads",
 ];
@@ -32,6 +33,7 @@ export const config = {
     "/dashboard/:path*",
     "/onboarding",
     "/api/chat",
+    "/api/onboarding/:path*",
     "/api/profile",
     "/api/leads/:path*",
   ],

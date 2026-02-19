@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { ResetOnboardingButton } from "@/components/reset-onboarding-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getPortfolioByUserId, type PortfolioOnboardingData } from "@/lib/db/portfolio";
 
@@ -18,7 +19,10 @@ export default async function DashboardPreviewPage() {
 
   return (
     <main className="mx-auto max-w-4xl p-8 space-y-6">
-      <h1 className="text-3xl font-bold">Portfolio Preview</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Portfolio Preview</h1>
+        <ResetOnboardingButton />
+      </div>
 
       <Card>
         <CardHeader>
