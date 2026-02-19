@@ -11,11 +11,17 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { getProfileById } from "@/lib/db";
+import { getPortfolioByUserId } from "@/lib/db/portfolio";
 
 export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.id) {
     redirect("/auth/signin");
+  }
+
+  const portfolio = await getPortfolioByUserId(session.user.id);
+  if (!portfolio) {
+    redirect("/onboarding");
   }
 
   const profile = await getProfileById(session.user.id);
