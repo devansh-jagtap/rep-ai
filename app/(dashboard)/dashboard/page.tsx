@@ -13,6 +13,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { getProfileById } from "@/lib/db";
 import { getPortfolioByUserId } from "@/lib/db/portfolio";
+import { Button } from "@/components/ui/button";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -60,7 +61,13 @@ export default async function DashboardPage() {
               <Badge variant="secondary">{profile?.plan}</Badge>
               <Badge variant="outline">{profile?.credits ?? 0} credits</Badge>
             </div>
-            <Separator />
+            <a href="/dashboard/preview">
+              <Button variant="outline" type="button">
+                Go to Preview
+              </Button>
+            </a>
+
+            <Separator className="mt-4"/>
             <p className="text-muted-foreground text-sm">
               Signed in as {profile?.name ?? profile?.email}. You have{" "}
               {profile?.credits ?? 0} credits remaining on your {profile?.plan}{" "}
