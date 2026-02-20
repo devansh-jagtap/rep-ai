@@ -167,3 +167,41 @@ export const agentLeads = pgTable("agent_leads", {
     sql`${table.status} IN ('new', 'contacted', 'closed')`
   ),
 ]);
+
+export const knowledgeSources = pgTable(
+  "knowledge_sources",
+  {
+    id: uuid("id").primaryKey(),
+    agentId: uuid("agent_id")
+      .notNull()
+      .references(() => agents.id, { onDelete: "cascade" }),
+    title: varchar("title", { length: 160 }).notNull(),
+    type: varchar("type", { length: 20 }).notNull().default("text"),
+    content: text("content").notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("knowledge_sources_agent_id_idx").on(table.agentId),
+    check("knowledge_sources_type_check", sql`${table.type} IN ('text')`),
+  ]
+);
+
+export const knowledgeChunks = pgTable(
+  "knowledge_chunks",
+  {
+    id: uuid("id").primaryKey(),
+    sourceId: uuid("source_id")
+      .notNull()
+      .references(() => knowledgeSources.id, { onDelete: "cascade" }),
+    agentId: uuid("agent_id")
+      .notNull()
+      .references(() => agents.id, { onDelete: "cascade" }),
+    chunkText: text("chunk_text").notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("knowledge_chunks_agent_id_idx").on(table.agentId),
+    index("knowledge_chunks_source_id_idx").on(table.sourceId),
+  ]
+);

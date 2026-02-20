@@ -85,3 +85,12 @@ export function checkPublicChatHandleRateLimit(handle: string): boolean {
     windowMs: 60_000,
   });
 }
+
+export function checkPublicChatAgentRateLimit(agentId: string): boolean {
+  return checkRateLimitWithConfig({
+    key: `public-chat:agent:${agentId}`,
+    maxRequests: 80,
+    windowMs: 60_000,
+  });
+}
+

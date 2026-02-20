@@ -21,6 +21,7 @@ import {
   Settings,
   LogOut,
   Sparkles,
+  BookText,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -46,6 +47,11 @@ const navigation = [
     title: "Leads",
     url: "/dashboard/leads",
     icon: Users,
+  },
+  {
+    title: "Knowledge",
+    url: "/dashboard/knowledge",
+    icon: BookText,
   },
   {
     title: "Settings",
