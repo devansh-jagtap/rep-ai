@@ -60,7 +60,32 @@ const CONFIRM_PHRASES = [
   "should we go with",
 ];
 
-function lastMessageAsksConfirmation(messages: { role?: string; parts: unknown[] }[]): boolean {
+type ToolResultLike = {
+  success?: boolean;
+  preview?: unknown;
+  data?: unknown;
+};
+
+type MessagePartLike = {
+  type?: string;
+  text?: string;
+  toolName?: string;
+  result?: ToolResultLike;
+};
+
+type ChatMessageLike = {
+  role?: string;
+  content?: string;
+  parts: MessagePartLike[];
+  toolInvocations?: MessagePartLike[];
+};
+
+function isCompletePreviewData(value: unknown): value is OnboardingData {
+  if (!value || typeof value !== "object") return false;
+  return validateFinalOnboardingState(value as Partial<OnboardingData>).ok;
+}
+
+function lastMessageAsksConfirmation(messages: ChatMessageLike[]): boolean {
   if (messages.length === 0) return false;
   const last = messages[messages.length - 1];
   if (last.role !== "assistant") return false;
@@ -72,58 +97,34 @@ function lastMessageAsksConfirmation(messages: { role?: string; parts: unknown[]
   return CONFIRM_PHRASES.some((phrase) => text.includes(phrase));
 }
 
-function extractPreviewData(messages: any[]): OnboardingData | null {
+function extractPreviewData(messages: ChatMessageLike[]): OnboardingData | null {
   for (const message of messages) {
     if (message.role !== "assistant") continue;
     
     if (message.toolInvocations) {
       for (const tool of message.toolInvocations) {
-        if (tool.toolName === "request_preview" && 'result' in tool && tool.result?.preview && tool.result?.data) {
+        if (
+          tool.toolName === "request_preview" &&
+          tool.result?.preview &&
+          isCompletePreviewData(tool.result.data)
+        ) {
           return tool.result.data;
         }
       }
     }
 
-    if (message.parts) {
-      for (const part of message.parts) {
-        const p = part as any;
-        if (p.type === "tool-invocation" && p.toolName === "request_preview" && p.result?.preview && p.result?.data) {
-          return p.result.data;
-        }
+    for (const part of message.parts) {
+      if (
+        part.type === "tool-invocation" &&
+        part.toolName === "request_preview" &&
+        part.result?.preview &&
+        isCompletePreviewData(part.result.data)
+      ) {
+        return part.result.data;
       }
     }
   }
   return null;
-}
-
-function lastMessageMentionsPreview(messages: any[]): boolean {
-  if (messages.length === 0) return false;
-  const last = messages[messages.length - 1];
-  if (last.role !== "assistant") return false;
-  
-  let text = "";
-  if (last.parts) {
-    text = last.parts
-      .filter((p: any) => p.type === "text" && typeof p.text === "string")
-      .map((p: any) => p.text)
-      .join(" ")
-      .toLowerCase();
-  } else if (last.content) {
-    text = last.content.toLowerCase();
-  }
-  
-  // Also check if any tool is a request_preview tool invocation
-  let hasPreviewTool = false;
-  
-  if (last.toolInvocations) {
-    hasPreviewTool = last.toolInvocations.some((tool: any) => tool.toolName === "request_preview");
-  }
-  
-  if (!hasPreviewTool && last.parts) {
-    hasPreviewTool = last.parts.some((p: any) => p.type === "tool-invocation" && p.toolName === "request_preview");
-  }
-
-  return hasPreviewTool || text.includes("preview") || text.includes("confirm");
 }
 
 // Use string concat so {data.x} stays literal for react-jsx-parser bindings
@@ -250,7 +251,6 @@ export function OnboardingChat() {
   const [previewDataFromDraft, setPreviewDataFromDraft] = useState<OnboardingData | null>(null);
   const previewData = previewDataFromMessages ?? previewDataFromDraft;
   const [isConfirming, setIsConfirming] = useState(false);
-  const hasFetchedDraft = useRef(false);
 
   useEffect(() => {
     // If we already have preview data from the chat messages, we don't need to fetch
@@ -349,13 +349,17 @@ export function OnboardingChat() {
                     )}
                   >
                     {(() => {
-                      const textParts = message.parts.filter(
+                      const parts = message.parts as MessagePartLike[];
+                      const textParts = parts.filter(
                         (part): part is { type: "text"; text: string } =>
-                          part.type === "text" && typeof (part as { text?: string }).text === "string"
+                          part.type === "text" && typeof part.text === "string"
                       );
-                      const saveStepResults = message.parts.filter((p) => {
-                        const part = p as { type?: string; toolName?: string; result?: { success?: boolean } };
-                        return part.type === "tool-invocation" && part.toolName === "save_step" && part.result?.success;
+                      const saveStepResults = parts.filter((p) => {
+                        return (
+                          p.type === "tool-invocation" &&
+                          p.toolName === "save_step" &&
+                          p.result?.success
+                        );
                       });
                       if (textParts.length > 0) {
                         return textParts.map((part, index) => (
