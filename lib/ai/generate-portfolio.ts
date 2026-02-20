@@ -74,7 +74,7 @@ async function generatePortfolioContent(onboardingData: unknown): Promise<Portfo
       system: SYSTEM_PROMPT,
       prompt,
       temperature: 0.5,
-      maxTokens: 1200,
+      maxOutputTokens: 1200,
     });
 
     try {
@@ -85,7 +85,7 @@ async function generatePortfolioContent(onboardingData: unknown): Promise<Portfo
         system: SYSTEM_PROMPT,
         prompt: `${prompt}\n\nYour previous output was invalid JSON. Return only valid JSON matching the exact schema.`,
         temperature: 0.5,
-        maxTokens: 1200,
+        maxOutputTokens: 1200,
       });
 
       return tryParsePortfolioContent(retryResponse.text);

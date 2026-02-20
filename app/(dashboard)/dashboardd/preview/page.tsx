@@ -8,6 +8,7 @@ import { ModernTemplate } from "@/components/templates/modern-template";
 import { VeilTemplate } from "@/components/templates/veil-template";
 import { BoldTemplate } from "@/components/templates/bold-template";
 import { EditorialTemplate } from "@/components/templates/editorial-template";
+import { LandingTemplate } from "@/components/templates/landing-template";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getPortfolioByUserId, type PortfolioOnboardingData } from "@/lib/db/portfolio";
 import type { PortfolioContent } from "@/lib/validation/portfolio-schema";
@@ -55,7 +56,9 @@ export default async function DashboardPreviewPage(props: { searchParams?: Searc
           </div>
           
           {/* Preview Body */}
-          {theme === "veil" ? (
+          {theme === "landing" ? (
+            <LandingTemplate content={content} />
+          ) : theme === "veil" ? (
             <VeilTemplate content={content} />
           ) : theme === "bold" ? (
             <BoldTemplate content={content} />

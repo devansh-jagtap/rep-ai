@@ -95,6 +95,7 @@ export async function getPublishedPortfolioWithAgentByHandle(handle: string) {
         agentIsEnabled: agents.isEnabled,
         agentModel: agents.model,
         agentBehaviorType: agents.behaviorType,
+        agentStrategyMode: agents.strategyMode,
         agentCustomPrompt: agents.customPrompt,
         agentTemperature: agents.temperature,
       })

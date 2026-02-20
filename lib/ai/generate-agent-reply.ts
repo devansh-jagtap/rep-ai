@@ -2,6 +2,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import type { PortfolioContent } from "@/lib/validation/portfolio-schema";
 import { BEHAVIOR_PRESETS, type BehaviorPresetType } from "@/lib/agent/behavior-presets";
+import { type ConversationStrategyMode } from "@/lib/agent/strategy-modes";
 import { classifyAiError } from "@/lib/ai/safe-logging";
 
 export interface AgentMessage {
@@ -26,6 +27,7 @@ export interface GenerateAgentReplyInput {
   model: string;
   temperature: number;
   behaviorType: BehaviorPresetType | null;
+  strategyMode: ConversationStrategyMode;
   customPrompt: string | null;
   message: string;
   history: AgentMessage[];
@@ -60,6 +62,35 @@ function buildPrompt(input: GenerateAgentReplyInput) {
       ? BEHAVIOR_PRESETS[input.behaviorType]
       : BEHAVIOR_PRESETS.professional;
 
+  const strategyBlock =
+    input.strategyMode === "passive"
+      ? `PASSIVE MODE:
+- Only answer the visitor's questions using the portfolio context.
+- Do NOT ask for email, budget, timeline, or to book a call unless the visitor explicitly asks how.
+- Do NOT attempt to qualify or "capture" a lead.
+- In the JSON payload, always set "lead_detected": false and "confidence": 0.`
+      : input.strategyMode === "sales"
+        ? `SALES MODE:
+- Proactively qualify intent. If the visitor mentions a project, hiring, timeline, budget, quote, proposal, or "getting started", ask for budget and timeline.
+- Drive toward a concrete next step (discovery call / proposal / scope review).
+- If intent seems non-trivial, ask for an email to follow up.
+- In the JSON payload, set "lead_detected": true when there is buying intent OR the visitor shares contact info.
+- Confidence guidance:
+  - 90-100 if they provided an email or explicitly want to hire/book.
+  - 70-89 if they describe a real project with a timeline/budget or ask for a quote/proposal.
+  - 50-69 if they show early buying signals but details are sparse.
+- Never invent details. If unknown, use empty strings.`
+        : `CONSULTATIVE MODE:
+- Ask clarifying questions when needed to give a correct, helpful answer.
+- If the visitor expresses hiring/project intent, ask for scope and timeline (and optionally budget if relevant).
+- Ask for email only when it would clearly help with follow-up.
+- In the JSON payload, set "lead_detected": true only when intent is clear or the visitor provides contact info.
+- Confidence guidance:
+  - 85-100 if they provided an email or explicitly request to hire/book.
+  - 65-84 if they clearly want a quote/proposal or share substantial project details.
+  - 0-64 otherwise.
+- Never invent details. If unknown, use empty strings.`;
+
   return `You are an AI representative for this professional.
 
 PORTFOLIO CONTEXT (structured):
@@ -76,6 +107,9 @@ ${JSON.stringify(
 
 BEHAVIOR INSTRUCTIONS:
 ${behaviorBlock}
+
+CONVERSATION STRATEGY:
+${strategyBlock}
 
 LEAD DETECTION PROTOCOL:
 - Always append one JSON object at the very end of your response.

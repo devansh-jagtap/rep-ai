@@ -1,0 +1,2 @@
+ALTER TABLE "agents" ADD COLUMN "strategy_mode" varchar(20) DEFAULT 'consultative' NOT NULL;--> statement-breakpoint
+ALTER TABLE "agents" ADD CONSTRAINT "agents_strategy_mode_check" CHECK ("agents"."strategy_mode" IN ('passive', 'consultative', 'sales'));

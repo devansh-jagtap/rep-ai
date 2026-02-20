@@ -146,10 +146,11 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
                 <SelectValue placeholder="Select a template" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="minimal">Minimal</SelectItem>
-                <SelectItem value="modern">Modern Professional</SelectItem>
-                <SelectItem value="creative">Creative Dark</SelectItem>
-                <SelectItem value="developer">Developer Terminal</SelectItem>
+                <SelectItem value="landing">Landing</SelectItem>
+                <SelectItem value="modern">Modern</SelectItem>
+                <SelectItem value="veil">Veil (Minimal)</SelectItem>
+                <SelectItem value="bold">Bold (Dark)</SelectItem>
+                <SelectItem value="editorial">Editorial</SelectItem>
               </SelectContent>
             </Select>
           </div>

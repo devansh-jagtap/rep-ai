@@ -8,13 +8,33 @@ import { AnimateIn, StaggerChildren, StaggerItem } from "@/components/animate-in
 export function EditorialTemplate({ content }: { content: PortfolioContent }) {
   return (
     <div className="bg-[#fcfbf9] text-zinc-900 min-h-screen selection:bg-zinc-900 selection:text-[#fcfbf9] font-sans">
-      <div className="mx-auto max-w-6xl px-6 py-12 sm:px-12 md:py-24 space-y-32">
-        
-        {/* Header/Nav minimal line */}
-        <div className="border-b border-zinc-300 pb-6 mb-12 flex justify-between items-end">
-          <span className="text-sm font-medium tracking-widest uppercase">Folio.</span>
-          <span className="text-xs text-zinc-500 tracking-wider">Vol. 1</span>
-        </div>
+      <div className="mx-auto max-w-6xl px-6 py-12 sm:px-12 md:py-20 space-y-24">
+        {/* Header / TOC */}
+        <header className="border-b border-zinc-300 pb-6 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <div className="space-y-2">
+            <div className="flex items-baseline gap-3">
+              <span className="text-sm font-medium tracking-widest uppercase">Folio.</span>
+              <span className="text-xs text-zinc-500 tracking-wider">Vol. 1</span>
+            </div>
+            <div className="text-xs text-zinc-500 tracking-widest uppercase">
+              A selected index of work & expertise
+            </div>
+          </div>
+          <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-medium tracking-widest uppercase text-zinc-600">
+            <a href="#prologue" className="hover:text-zinc-900 transition-colors">
+              Prologue
+            </a>
+            <a href="#expertise" className="hover:text-zinc-900 transition-colors">
+              Expertise
+            </a>
+            <a href="#index" className="hover:text-zinc-900 transition-colors">
+              Index
+            </a>
+            <a href="#contact" className="hover:text-zinc-900 transition-colors">
+              Contact
+            </a>
+          </nav>
+        </header>
 
         {/* Hero Section */}
         <section className="grid lg:grid-cols-[2fr_1fr] gap-12 lg:gap-24 items-end">
@@ -41,12 +61,25 @@ export function EditorialTemplate({ content }: { content: PortfolioContent }) {
                 <ArrowUpRightIcon className="ml-2 size-4" />
               </Button>
             </AnimateIn>
+            <AnimateIn from="bottom" delay={0.55} duration={0.8}>
+              <div className="border border-zinc-200 rounded-2xl bg-white/60 p-5 text-[10px] sm:text-xs leading-relaxed font-medium tracking-widest uppercase text-zinc-500">
+                <div className="flex items-center justify-between gap-4">
+                  <span>Edition</span>
+                  <span className="text-zinc-900">2026</span>
+                </div>
+                <div className="mt-3 h-px bg-zinc-200" />
+                <div className="mt-3 flex items-center justify-between gap-4">
+                  <span>Focus</span>
+                  <span className="text-zinc-900">Clarity & outcomes</span>
+                </div>
+              </div>
+            </AnimateIn>
           </div>
         </section>
 
         {/* About Section - Magazine Style Multi-column */}
         <AnimateIn>
-          <section className="border-y border-zinc-300 py-16 md:py-24">
+          <section id="prologue" className="border-y border-zinc-300 py-16 md:py-24">
             <div className="grid md:grid-cols-[1fr_3fr] gap-8 md:gap-16">
               <h2 className="text-xs font-bold tracking-widest uppercase text-zinc-500 mt-2">
                 Prologue
@@ -64,7 +97,7 @@ export function EditorialTemplate({ content }: { content: PortfolioContent }) {
         </AnimateIn>
 
         {/* Services Section */}
-        <section className="space-y-16">
+        <section id="expertise" className="space-y-16">
           <AnimateIn>
             <div className="flex items-center gap-6">
               <h2 className="text-4xl md:text-5xl font-serif tracking-tight">Expertise</h2>
@@ -92,7 +125,7 @@ export function EditorialTemplate({ content }: { content: PortfolioContent }) {
         </section>
 
         {/* Projects Section */}
-        <section className="space-y-16 pt-12">
+        <section id="index" className="space-y-16 pt-6">
           <AnimateIn>
             <div className="flex flex-row-reverse items-center gap-6">
               <h2 className="text-4xl md:text-5xl font-serif tracking-tight">Index</h2>
@@ -124,7 +157,7 @@ export function EditorialTemplate({ content }: { content: PortfolioContent }) {
 
         {/* CTA Section */}
         <AnimateIn duration={1}>
-          <section className="bg-zinc-900 text-zinc-50 px-6 py-24 sm:px-16 sm:py-32 rounded-2xl md:rounded-[3rem] text-center space-y-12 my-24">
+          <section id="contact" className="bg-zinc-900 text-zinc-50 px-6 py-24 sm:px-16 sm:py-32 rounded-2xl md:rounded-[3rem] text-center space-y-12 my-16">
             <h2 className="text-5xl sm:text-6xl md:text-7xl font-serif tracking-tight max-w-3xl mx-auto leading-tight text-balance">
               {content.cta.headline}
             </h2>
@@ -133,14 +166,25 @@ export function EditorialTemplate({ content }: { content: PortfolioContent }) {
             </p>
             <div className="pt-8">
               <Button 
+                asChild
                 size="lg" 
                 className="bg-white text-zinc-900 hover:bg-zinc-200 rounded-full h-14 px-10 text-sm font-bold tracking-widest uppercase"
               >
-                {content.hero.ctaText}
+                <a href="#contact">
+                  {content.hero.ctaText}
+                  <ArrowUpRightIcon className="ml-2 size-4" />
+                </a>
               </Button>
             </div>
           </section>
         </AnimateIn>
+
+        <footer className="border-t border-zinc-200 pt-10 pb-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between text-xs font-medium tracking-widest uppercase text-zinc-500">
+          <a href="#" className="hover:text-zinc-900 transition-colors">
+            Back to top
+          </a>
+          <span>&copy; {new Date().getFullYear()}</span>
+        </footer>
 
       </div>
     </div>

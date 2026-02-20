@@ -129,6 +129,7 @@ export const agents = pgTable(
     isEnabled: boolean("is_enabled").notNull().default(false),
     model: varchar("model", { length: 80 }).notNull(),
     behaviorType: varchar("behavior_type", { length: 40 }),
+    strategyMode: varchar("strategy_mode", { length: 20 }).notNull().default("consultative"),
     customPrompt: text("custom_prompt"),
     temperature: real("temperature").notNull().default(0.5),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
@@ -139,6 +140,10 @@ export const agents = pgTable(
     uniqueIndex("agents_portfolio_id_unique").on(table.portfolioId),
     index("agents_portfolio_id_idx").on(table.portfolioId),
     check("agents_temperature_range_check", sql`${table.temperature} BETWEEN 0.2 AND 0.8`),
+    check(
+      "agents_strategy_mode_check",
+      sql`${table.strategyMode} IN ('passive', 'consultative', 'sales')`
+    ),
   ]
 );
 
@@ -151,6 +156,14 @@ export const agentLeads = pgTable("agent_leads", {
   email: text("email"),
   budget: text("budget"),
   projectDetails: text("project_details"),
+  conversationSummary: text("conversation_summary"),
+  status: varchar("status", { length: 20 }).$type<"new" | "contacted" | "closed">().notNull().default("new"),
+  isRead: boolean("is_read").notNull().default(false),
   confidence: real("confidence").notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-});
+}, (table) => [
+  check(
+    "agent_leads_status_check",
+    sql`${table.status} IN ('new', 'contacted', 'closed')`
+  ),
+]);

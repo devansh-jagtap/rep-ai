@@ -1,0 +1,44 @@
+import { ScrollArea } from "@/components/ui/scroll-area"
+import type { LeadListItemData } from "./types"
+import { LeadListItem } from "./LeadListItem"
+
+export function LeadList({
+  leads,
+  selectedLeadId,
+  onSelectLead,
+}: {
+  leads: LeadListItemData[]
+  selectedLeadId: string | null
+  onSelectLead: (id: string) => void
+}) {
+  return (
+    <div className="flex h-full flex-col">
+      <div className="px-4 py-3 border-b">
+        <h2 className="text-sm font-semibold">Leads</h2>
+        <p className="text-xs text-muted-foreground">
+          {leads.length} lead{leads.length === 1 ? "" : "s"}
+        </p>
+      </div>
+
+      <ScrollArea className="flex-1">
+        <div className="p-2">
+          {leads.length === 0 ? (
+            <div className="p-6 text-sm text-muted-foreground">
+              No leads yet.
+            </div>
+          ) : (
+            leads.map((lead) => (
+              <LeadListItem
+                key={lead.id}
+                lead={lead}
+                selected={lead.id === selectedLeadId}
+                onSelect={() => onSelectLead(lead.id)}
+              />
+            ))
+          )}
+        </div>
+      </ScrollArea>
+    </div>
+  )
+}
+

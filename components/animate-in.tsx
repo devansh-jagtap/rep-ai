@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode, type HTMLAttributes } from "react";
-import { motion, type Variant } from "motion/react";
+import { motion } from "motion/react";
 
 type AnimateInProps = HTMLAttributes<HTMLDivElement> & {
   children: ReactNode;
@@ -13,12 +13,12 @@ type AnimateInProps = HTMLAttributes<HTMLDivElement> & {
   className?: string;
 };
 
-const origins: Record<string, Variant> = {
+const origins = {
   bottom: { opacity: 0, y: 40 },
   left: { opacity: 0, x: -40 },
   right: { opacity: 0, x: 40 },
   none: { opacity: 0 },
-};
+} as const satisfies Record<string, { opacity: number; x?: number; y?: number }>;
 
 export function AnimateIn({
   children,
@@ -28,7 +28,6 @@ export function AnimateIn({
   amount = 0.15,
   once = true,
   className,
-  ...rest
 }: AnimateInProps) {
   return (
     <motion.div
@@ -37,7 +36,6 @@ export function AnimateIn({
       viewport={{ once, amount }}
       transition={{ duration, delay, ease: [0.25, 0.1, 0.25, 1] }}
       className={className}
-      {...rest}
     >
       {children}
     </motion.div>
@@ -48,7 +46,6 @@ export function StaggerChildren({
   children,
   className,
   stagger = 0.1,
-  ...rest
 }: HTMLAttributes<HTMLDivElement> & { children: ReactNode; stagger?: number }) {
   return (
     <motion.div
@@ -60,7 +57,6 @@ export function StaggerChildren({
         visible: { transition: { staggerChildren: stagger } },
       }}
       className={className}
-      {...rest}
     >
       {children}
     </motion.div>
@@ -71,7 +67,6 @@ export function StaggerItem({
   children,
   className,
   from = "bottom",
-  ...rest
 }: HTMLAttributes<HTMLDivElement> & { children: ReactNode; from?: "bottom" | "left" | "right" | "none" }) {
   return (
     <motion.div
@@ -80,7 +75,6 @@ export function StaggerItem({
         visible: { opacity: 1, x: 0, y: 0, transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] } },
       }}
       className={className}
-      {...rest}
     >
       {children}
     </motion.div>

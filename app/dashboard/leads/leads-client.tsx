@@ -1,213 +1,106 @@
 "use client";
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Eye, Download, Search, Users, MailPlus } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { useState, useMemo } from "react";
+import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMediaQuery } from "@/lib/hooks/use-media-query";
+import { LeadList } from "@/components/leads/LeadList";
+import { LeadViewer } from "@/components/leads/LeadViewer";
+import type { LeadDetailData, LeadStatus } from "@/components/leads/types";
 
-interface LeadData {
-  id: string;
-  name: string | null;
-  email: string | null;
-  budget: string | null;
-  confidence: number;
-  date: string;
-  projectDetails: string | null;
+async function patchRead(id: string) {
+  await fetch(`/api/leads/${id}/read`, { method: "PATCH" });
 }
 
-function getConfidenceLabel(c: number) {
-  if (c >= 80) return "High";
-  if (c >= 50) return "Medium";
-  return "Low";
+async function patchStatus(id: string, status: LeadStatus) {
+  const res = await fetch(`/api/leads/${id}/status`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(body?.error || "Failed to update status");
+  }
 }
 
-function getConfidenceBadge(c: number) {
-  if (c >= 80) return <Badge variant="outline" className="border-green-500 text-green-600">High ({c}%)</Badge>;
-  if (c >= 50) return <Badge variant="outline" className="border-yellow-500 text-yellow-600">Medium ({c}%)</Badge>;
-  return <Badge variant="outline" className="border-red-500 text-red-600">Low ({c}%)</Badge>;
-}
+export function LeadsClient({ leads: initialLeads }: { leads: LeadDetailData[] }) {
+  const router = useRouter();
+  const isMobile = useMediaQuery("(max-width: 767px)");
 
-export function LeadsClient({ leads }: { leads: LeadData[] }) {
-  const [selectedLead, setSelectedLead] = useState<LeadData | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [leads, setLeads] = useState<LeadDetailData[]>(initialLeads);
+  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
 
-  const filteredLeads = useMemo(() => {
-    if (!searchQuery.trim()) return leads;
-    const q = searchQuery.toLowerCase();
-    return leads.filter(
-      (lead) =>
-        lead.name?.toLowerCase().includes(q) ||
-        lead.email?.toLowerCase().includes(q) ||
-        lead.budget?.toLowerCase().includes(q) ||
-        lead.projectDetails?.toLowerCase().includes(q)
+  const selectedLead = useMemo(
+    () => (selectedLeadId ? leads.find((l) => l.id === selectedLeadId) ?? null : null),
+    [leads, selectedLeadId]
+  );
+
+  const markReadOptimistic = (id: string) => {
+    setLeads((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, isRead: true } : l))
     );
-  }, [leads, searchQuery]);
+  };
 
-  const handleExportCsv = () => {
-    if (leads.length === 0) return;
-    const headers = ["Name", "Email", "Budget", "Confidence", "Date", "Project Details"];
-    const rows = leads.map((l) => [
-      l.name || "",
-      l.email || "",
-      l.budget || "",
-      `${l.confidence}%`,
-      l.date,
-      (l.projectDetails || "").replace(/"/g, '""'),
-    ]);
-    const csv = [headers.join(","), ...rows.map((r) => r.map((v) => `"${v}"`).join(","))].join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `leads-${new Date().toISOString().split("T")[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const updateStatusOptimistic = (id: string, status: LeadStatus) => {
+    setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status } : l)));
+  };
+
+  const handleSelectLead = (id: string) => {
+    const lead = leads.find((l) => l.id === id);
+    if (!lead) return;
+
+    if (lead.isRead === false) {
+      markReadOptimistic(id);
+      void patchRead(id);
+    }
+
+    if (isMobile) {
+      router.push(`/dashboard/leads/${id}`);
+      return;
+    }
+
+    setSelectedLeadId(id);
+  };
+
+  const handleStatusChange = async (status: LeadStatus) => {
+    if (!selectedLeadId) return;
+
+    const previous = selectedLead?.status ?? "new";
+    updateStatusOptimistic(selectedLeadId, status);
+
+    try {
+      await patchStatus(selectedLeadId, status);
+      toast.success("Status updated");
+    } catch (e) {
+      updateStatusOptimistic(selectedLeadId, previous as LeadStatus);
+      toast.error(e instanceof Error ? e.message : "Failed to update status");
+    }
   };
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Leads</h1>
-          <p className="text-muted-foreground">
-            {leads.length} lead{leads.length !== 1 ? "s" : ""} captured by your AI agent.
-          </p>
-        </div>
-        <div className="flex gap-2 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-[250px]">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search leads..."
-              className="pl-8"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <Button variant="outline" size="icon" onClick={handleExportCsv} disabled={leads.length === 0} title="Export CSV">
-            <Download className="h-4 w-4" />
-          </Button>
-        </div>
+    <div className="flex flex-col gap-4 w-full max-w-6xl mx-auto">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Leads</h1>
+        <p className="text-muted-foreground">
+          {leads.length} lead{leads.length === 1 ? "" : "s"} captured by your AI agent.
+        </p>
       </div>
 
-      {leads.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-12 text-center">
-          <Users className="size-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-1">No Leads Yet</h3>
-          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-            When visitors interact with your AI agent and show buying intent, their information will appear here automatically.
-          </p>
+      <div className="grid gap-4 md:grid-cols-[320px_1fr] md:h-[calc(100vh-11rem)]">
+        <Card className="h-[65vh] md:h-full overflow-hidden">
+          <LeadList
+            leads={leads}
+            selectedLeadId={selectedLeadId}
+            onSelectLead={handleSelectLead}
+          />
+        </Card>
+
+        <div className="hidden md:block h-full">
+          <LeadViewer lead={selectedLead} onStatusChange={handleStatusChange} />
         </div>
-      ) : (
-        <div className="rounded-md border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Budget</TableHead>
-                <TableHead>Confidence</TableHead>
-                <TableHead className="text-right">Date</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredLeads.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                    No leads matching "{searchQuery}"
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredLeads.map((lead) => (
-                  <TableRow
-                    key={lead.id}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => setSelectedLead(lead)}
-                  >
-                    <TableCell className="font-medium">{lead.name || "Anonymous"}</TableCell>
-                    <TableCell className="text-muted-foreground">{lead.email || "—"}</TableCell>
-                    <TableCell>{lead.budget || "—"}</TableCell>
-                    <TableCell>{getConfidenceBadge(lead.confidence)}</TableCell>
-                    <TableCell className="text-right text-muted-foreground">{lead.date}</TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-
-      <Sheet open={!!selectedLead} onOpenChange={(open) => !open && setSelectedLead(null)}>
-        <SheetContent className="sm:max-w-md overflow-y-auto">
-          {selectedLead && (
-            <>
-              <SheetHeader className="mb-6">
-                <SheetTitle>Lead Details</SheetTitle>
-                <SheetDescription>
-                  Captured by AI Agent on {selectedLead.date}
-                </SheetDescription>
-              </SheetHeader>
-
-              <div className="space-y-6">
-                <div className="space-y-1">
-                  <h4 className="text-sm font-medium text-muted-foreground">Contact</h4>
-                  <p className="font-medium text-lg">{selectedLead.name || "Anonymous"}</p>
-                  {selectedLead.email && (
-                    <a href={`mailto:${selectedLead.email}`} className="text-sm text-primary hover:underline">
-                      {selectedLead.email}
-                    </a>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <h4 className="text-sm font-medium text-muted-foreground">Budget</h4>
-                    <p className="text-sm">{selectedLead.budget || "Not specified"}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <h4 className="text-sm font-medium text-muted-foreground">AI Confidence</h4>
-                    <div>{getConfidenceBadge(selectedLead.confidence)}</div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-muted-foreground">Project Details</h4>
-                  <div className="bg-muted p-4 rounded-lg text-sm leading-relaxed whitespace-pre-wrap">
-                    {selectedLead.projectDetails || "No details captured. The visitor showed interest but didn't share specifics."}
-                  </div>
-                </div>
-
-                {selectedLead.email && (
-                  <div className="pt-4">
-                    <Button className="w-full" asChild>
-                      <a href={`mailto:${selectedLead.email}`}>
-                        <MailPlus className="size-4 mr-2" />
-                        Send Email
-                      </a>
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
+      </div>
     </div>
   );
 }

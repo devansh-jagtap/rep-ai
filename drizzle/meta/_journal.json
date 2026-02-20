@@ -40,7 +40,7 @@
     {
       "idx": 5,
       "version": "7",
-      "when": 1772000000000,
+      "when": 1771568000000,
       "tag": "0005_agents",
       "breakpoints": true
     },
@@ -49,6 +49,20 @@
       "version": "7",
       "when": 1771571084400,
       "tag": "0006_nappy_loners",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1771574788310,
+      "tag": "0007_hot_masque",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1771579000000,
+      "tag": "0008_agent_leads_inbox_fields",
       "breakpoints": true
     }
   ]

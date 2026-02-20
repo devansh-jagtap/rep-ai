@@ -179,7 +179,9 @@ export default async function OverviewPage() {
               </div>
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">Behavior</p>
-                <p className="text-sm font-medium capitalize">{agent.behaviorType || "Custom"}</p>
+                <p className="text-sm font-medium capitalize">
+                  {agent.behaviorType || "Custom"} · {agent.strategyMode || "consultative"}
+                </p>
               </div>
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">Temperature</p>

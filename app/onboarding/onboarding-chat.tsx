@@ -200,19 +200,22 @@ function OnboardingPreviewCard({
     </Button>
   );
 
+  const previewComponents = {
+    Card,
+    CardHeader,
+    CardContent,
+    CardTitle,
+    EditButton,
+    ConfirmButton,
+    editbutton: EditButton,
+    confirmbutton: ConfirmButton,
+  };
+
   return (
     <JSXPreview
       jsx={PREVIEW_JSX}
-      components={{
-        Card,
-        CardHeader,
-        CardContent,
-        CardTitle,
-        EditButton,
-        ConfirmButton,
-        editbutton: EditButton,
-        confirmbutton: ConfirmButton,
-      }}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- react-jsx-parser uses older @types/react; component types are compatible at runtime
+      components={previewComponents as any}
       bindings={{
         data,
         servicesList,

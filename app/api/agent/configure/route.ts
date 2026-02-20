@@ -6,6 +6,7 @@ interface ConfigureRequestBody {
   isEnabled?: unknown;
   model?: unknown;
   behaviorType?: unknown;
+  strategyMode?: unknown;
   customPrompt?: unknown;
   temperature?: unknown;
 }
@@ -25,6 +26,7 @@ export async function POST(request: Request) {
     isEnabled: Boolean(jsonResult.body.isEnabled),
     model: String(jsonResult.body.model ?? ""),
     behaviorType: jsonResult.body.behaviorType ? String(jsonResult.body.behaviorType) : null,
+    strategyMode: String(jsonResult.body.strategyMode ?? "consultative"),
     customPrompt: jsonResult.body.customPrompt ? String(jsonResult.body.customPrompt) : null,
     temperature: Number(jsonResult.body.temperature ?? 0.5),
   });

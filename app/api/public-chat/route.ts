@@ -10,6 +10,11 @@ import { saveLeadWithDedup } from "@/lib/db/agent-leads";
 import { getPublishedPortfolioWithAgentByHandle } from "@/lib/db/portfolio";
 import { isBehaviorPresetType } from "@/lib/agent/behavior-presets";
 import { isSupportedAgentModel } from "@/lib/agent/models";
+import {
+  isConversationStrategyMode,
+  leadConfidenceThresholdForMode,
+  type ConversationStrategyMode,
+} from "@/lib/agent/strategy-modes";
 import { checkPublicChatHandleRateLimit, checkPublicChatIpRateLimit } from "@/lib/rate-limit";
 import { validatePortfolioContent } from "@/lib/validation/portfolio-schema";
 import { parsePublicChatRequest } from "@/lib/validation/public-chat";
@@ -70,17 +75,25 @@ export async function POST(request: Request) {
         ? portfolio.agentBehaviorType
         : null;
 
+    const strategyMode: ConversationStrategyMode =
+      portfolio.agentStrategyMode && isConversationStrategyMode(String(portfolio.agentStrategyMode))
+        ? (String(portfolio.agentStrategyMode) as ConversationStrategyMode)
+        : "consultative";
+
     const result = await generateAgentReply({
       model: portfolio.agentModel,
       temperature: portfolio.agentTemperature,
       behaviorType,
+      strategyMode,
       customPrompt: portfolio.agentCustomPrompt,
       message: parsed.message,
       history: parsed.history,
       portfolio: content,
     });
 
-    const leadDetected = result.lead.lead_detected && result.lead.confidence >= 60;
+    const threshold = leadConfidenceThresholdForMode(strategyMode);
+    const leadDetected =
+      strategyMode !== "passive" && result.lead.lead_detected && result.lead.confidence >= threshold;
 
     if (leadDetected) {
       const dedupeResult = await saveLeadWithDedup({

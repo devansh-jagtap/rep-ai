@@ -30,6 +30,7 @@ export function TemplateSelector() {
           <SelectValue placeholder="Theme" />
         </SelectTrigger>
         <SelectContent>
+          <SelectItem value="landing">Landing</SelectItem>
           <SelectItem value="modern">Modern</SelectItem>
           <SelectItem value="veil">Veil (Minimal)</SelectItem>
           <SelectItem value="bold">Bold (Dark)</SelectItem>

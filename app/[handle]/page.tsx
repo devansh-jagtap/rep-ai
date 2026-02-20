@@ -4,6 +4,7 @@ import { ModernTemplate } from "@/components/templates/modern-template";
 import { VeilTemplate } from "@/components/templates/veil-template";
 import { BoldTemplate } from "@/components/templates/bold-template";
 import { EditorialTemplate } from "@/components/templates/editorial-template";
+import { LandingTemplate } from "@/components/templates/landing-template";
 import { getPublishedPortfolioByHandle, getPublishedPortfolioWithAgentByHandle } from "@/lib/db/portfolio";
 import { validatePortfolioContent } from "@/lib/validation/portfolio-schema";
 import { AgentWidget } from "@/components/agent-widget";
@@ -76,7 +77,9 @@ export default async function PublicPortfolioPage({ params }: PublicPortfolioPag
 
   return (
     <main className="min-h-screen bg-background">
-      {portfolio.template === "veil" ? (
+      {portfolio.template === "landing" ? (
+        <LandingTemplate content={content} />
+      ) : portfolio.template === "veil" ? (
         <VeilTemplate content={content} />
       ) : portfolio.template === "bold" ? (
         <BoldTemplate content={content} />

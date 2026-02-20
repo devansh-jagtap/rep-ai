@@ -11,6 +11,11 @@ import { useState, useTransition, useRef, useCallback } from "react";
 import { Save, BotMessageSquare, Sparkles, SendHorizontal, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { saveAgentConfig } from "../actions";
+import {
+  CONVERSATION_STRATEGY_MODES,
+  isConversationStrategyMode,
+  type ConversationStrategyMode,
+} from "@/lib/agent/strategy-modes";
 
 const MODELS = [
   { value: "moonshotai/Kimi-K2.5", label: "Kimi K2.5", description: "Fast & accurate" },
@@ -26,6 +31,12 @@ const BEHAVIOR_PRESETS = [
   { value: "minimal", label: "Minimal & Direct" },
 ] as const;
 
+const STRATEGY_MODES = [
+  { value: "passive", label: "Passive", helper: CONVERSATION_STRATEGY_MODES.passive.description },
+  { value: "consultative", label: "Consultative", helper: CONVERSATION_STRATEGY_MODES.consultative.description },
+  { value: "sales", label: "Sales", helper: CONVERSATION_STRATEGY_MODES.sales.description },
+] as const satisfies ReadonlyArray<{ value: ConversationStrategyMode; label: string; helper: string }>;
+
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
@@ -36,6 +47,7 @@ interface AgentClientProps {
     isEnabled: boolean;
     model: string;
     behaviorType: string | null;
+    strategyMode: string;
     customPrompt: string | null;
     temperature: number;
   } | null;
@@ -47,6 +59,9 @@ export function AgentClient({ agent, portfolioHandle, hasContent }: AgentClientP
   const [isPending, startTransition] = useTransition();
   const [isEnabled, setIsEnabled] = useState(agent?.isEnabled ?? true);
   const [behavior, setBehavior] = useState(agent?.behaviorType || "friendly");
+  const [strategyMode, setStrategyMode] = useState<ConversationStrategyMode>(
+    agent?.strategyMode && isConversationStrategyMode(agent.strategyMode) ? agent.strategyMode : "consultative"
+  );
   const [temperature, setTemperature] = useState([agent?.temperature ?? 0.5]);
   const [model, setModel] = useState(agent?.model || "moonshotai/Kimi-K2.5");
   const [customPrompt, setCustomPrompt] = useState(agent?.customPrompt || "");
@@ -64,6 +79,7 @@ export function AgentClient({ agent, portfolioHandle, hasContent }: AgentClientP
           isEnabled,
           model,
           behaviorType: behavior === "custom" ? null : behavior,
+          strategyMode,
           customPrompt: behavior === "custom" ? customPrompt : null,
           temperature: temperature[0],
         });
@@ -188,6 +204,25 @@ export function AgentClient({ agent, portfolioHandle, hasContent }: AgentClientP
                   <SelectItem value="custom">Custom Instructions</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-3">
+              <Label>Conversation Strategy</Label>
+              <Select value={strategyMode} onValueChange={(v) => setStrategyMode(v as ConversationStrategyMode)} disabled={isPending}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a strategy" />
+                </SelectTrigger>
+                <SelectContent>
+                  {STRATEGY_MODES.map((m) => (
+                    <SelectItem key={m.value} value={m.value}>
+                      {m.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {CONVERSATION_STRATEGY_MODES[strategyMode].description}
+              </p>
             </div>
 
             {behavior === "custom" && (

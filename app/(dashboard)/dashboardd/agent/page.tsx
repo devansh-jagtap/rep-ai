@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { AgentConfigForm } from "@/components/agent-config-form";
 import { getPortfolioByUserId } from "@/lib/db/portfolio";
 import { getAgentByPortfolioId } from "@/lib/agent/configure";
+import { isConversationStrategyMode, type ConversationStrategyMode } from "@/lib/agent/strategy-modes";
 
 export default async function AgentDashboardPage() {
   const session = await auth();
@@ -16,6 +17,10 @@ export default async function AgentDashboardPage() {
   }
 
   const agent = await getAgentByPortfolioId(portfolio.id);
+  const strategyMode: ConversationStrategyMode =
+    agent?.strategyMode && isConversationStrategyMode(String(agent.strategyMode))
+      ? (String(agent.strategyMode) as ConversationStrategyMode)
+      : "consultative";
 
   return (
     <main className="mx-auto max-w-3xl p-8">
@@ -26,6 +31,7 @@ export default async function AgentDashboardPage() {
           isEnabled: agent?.isEnabled ?? false,
           model: agent?.model ?? "moonshotai/Kimi-K2.5",
           behaviorType: agent?.behaviorType ?? "professional",
+          strategyMode,
           customPrompt: agent?.customPrompt ?? "",
           temperature: agent?.temperature ?? 0.5,
         }}

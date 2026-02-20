@@ -4,11 +4,13 @@ import { getPortfolioByUserId } from "@/lib/db/portfolio";
 import { agents } from "@/lib/schema";
 import { isBehaviorPresetType } from "@/lib/agent/behavior-presets";
 import { isSupportedAgentModel } from "@/lib/agent/models";
+import { isConversationStrategyMode } from "@/lib/agent/strategy-modes";
 
 export interface ConfigureAgentInput {
   isEnabled: boolean;
   model: string;
   behaviorType: string | null;
+  strategyMode: string;
   customPrompt: string | null;
   temperature: number;
 }
@@ -23,6 +25,10 @@ export function validateConfigureAgentInput(input: ConfigureAgentInput) {
 
   if (input.behaviorType && !isBehaviorPresetType(input.behaviorType)) {
     return { ok: false as const, error: "Invalid behavior preset" };
+  }
+
+  if (!isConversationStrategyMode(input.strategyMode)) {
+    return { ok: false as const, error: "Invalid conversation strategy mode" };
   }
 
   if (!input.behaviorType && !normalizedPrompt) {
@@ -42,6 +48,7 @@ export function validateConfigureAgentInput(input: ConfigureAgentInput) {
       isEnabled: input.isEnabled,
       model: input.model,
       behaviorType: input.behaviorType,
+      strategyMode: input.strategyMode,
       customPrompt: normalizedPrompt,
       temperature: Number(input.temperature.toFixed(2)),
     },
@@ -77,6 +84,7 @@ export async function configureAgentForUser(userId: string, input: ConfigureAgen
       isEnabled: validation.value.isEnabled,
       model: validation.value.model,
       behaviorType: validation.value.behaviorType,
+      strategyMode: validation.value.strategyMode,
       customPrompt: validation.value.customPrompt,
       temperature: validation.value.temperature,
       updatedAt: new Date(),
@@ -87,6 +95,7 @@ export async function configureAgentForUser(userId: string, input: ConfigureAgen
         isEnabled: validation.value.isEnabled,
         model: validation.value.model,
         behaviorType: validation.value.behaviorType,
+        strategyMode: validation.value.strategyMode,
         customPrompt: validation.value.customPrompt,
         temperature: validation.value.temperature,
         updatedAt: new Date(),

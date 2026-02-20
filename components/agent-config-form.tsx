@@ -7,12 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SUPPORTED_AGENT_MODELS } from "@/lib/agent/models";
 import { BEHAVIOR_PRESETS } from "@/lib/agent/behavior-presets";
+import { CONVERSATION_STRATEGY_MODES, type ConversationStrategyMode } from "@/lib/agent/strategy-modes";
 
 interface AgentConfigFormProps {
   initialConfig: {
     isEnabled: boolean;
     model: string;
     behaviorType: string;
+    strategyMode: ConversationStrategyMode;
     customPrompt: string;
     temperature: number;
   };
@@ -22,6 +24,7 @@ export function AgentConfigForm({ initialConfig }: AgentConfigFormProps) {
   const [isEnabled, setIsEnabled] = useState(initialConfig.isEnabled);
   const [model, setModel] = useState(initialConfig.model);
   const [behaviorType, setBehaviorType] = useState(initialConfig.behaviorType);
+  const [strategyMode, setStrategyMode] = useState<ConversationStrategyMode>(initialConfig.strategyMode);
   const [customPrompt, setCustomPrompt] = useState(initialConfig.customPrompt);
   const [temperature, setTemperature] = useState(initialConfig.temperature);
   const [status, setStatus] = useState<string | null>(null);
@@ -38,6 +41,7 @@ export function AgentConfigForm({ initialConfig }: AgentConfigFormProps) {
         isEnabled,
         model,
         behaviorType,
+        strategyMode,
         customPrompt,
         temperature,
       }),
@@ -91,6 +95,25 @@ export function AgentConfigForm({ initialConfig }: AgentConfigFormProps) {
             </option>
           ))}
         </select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="strategy-mode">Conversation strategy</Label>
+        <select
+          id="strategy-mode"
+          value={strategyMode}
+          onChange={(e) => setStrategyMode(e.target.value as ConversationStrategyMode)}
+          className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+        >
+          {Object.entries(CONVERSATION_STRATEGY_MODES).map(([key, value]) => (
+            <option key={key} value={key}>
+              {value.label}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-muted-foreground">
+          {CONVERSATION_STRATEGY_MODES[strategyMode].description}
+        </p>
       </div>
 
       <div className="space-y-2">
