@@ -3,6 +3,9 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { portfolios } from "@/lib/schema";
 import { requireUserId } from "@/lib/api/route-helpers";
+import type { InferInsertModel } from "drizzle-orm";
+
+type PortfolioUpdate = Partial<Pick<InferInsertModel<typeof portfolios>, "isPublished" | "updatedAt" | "template">>;
 
 export async function POST(request: Request) {
   const authResult = await requireUserId();
@@ -39,7 +42,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const updateData: any = { isPublished: true, updatedAt: new Date() };
+    const updateData: PortfolioUpdate = { isPublished: true, updatedAt: new Date() };
     if (body.template) {
       updateData.template = body.template;
     }
