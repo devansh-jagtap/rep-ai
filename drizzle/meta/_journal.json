@@ -43,6 +43,13 @@
       "when": 1772000000000,
       "tag": "0005_agents",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1771571084400,
+      "tag": "0006_nappy_loners",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,4 @@
 import { signIn } from "@/auth"
-import { Logo } from "@/components/logo"
 import { SignedUpToast } from "@/components/signed-up-toast"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -20,7 +19,7 @@ export default function SignIn() {
           aria-label="go home"
           className="inline-block border-t-2 border-transparent py-3"
         >
-          <Logo className="w-fit" />
+          REF
         </Link>
       </div>
 

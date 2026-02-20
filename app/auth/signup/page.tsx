@@ -1,6 +1,6 @@
 "use client"
 
-import { Logo } from "@/components/logo"
+
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -23,7 +23,7 @@ export default function SignUpPage() {
           aria-label="go home"
           className="inline-block border-t-2 border-transparent py-3"
         >
-          <Logo className="w-fit" />
+          REF
         </Link>
       </div>
 
