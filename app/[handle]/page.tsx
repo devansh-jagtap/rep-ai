@@ -4,8 +4,9 @@ import { ModernTemplate } from "@/components/templates/modern-template";
 import { VeilTemplate } from "@/components/templates/veil-template";
 import { BoldTemplate } from "@/components/templates/bold-template";
 import { EditorialTemplate } from "@/components/templates/editorial-template";
-import { getPublishedPortfolioByHandle } from "@/lib/db/portfolio";
+import { getPublishedPortfolioByHandle, getPublishedPortfolioWithAgentByHandle } from "@/lib/db/portfolio";
 import { validatePortfolioContent } from "@/lib/validation/portfolio-schema";
+import { AgentWidget } from "@/components/agent-widget";
 
 const HANDLE_REGEX = /^[a-z0-9-]{3,30}$/;
 
@@ -61,7 +62,7 @@ export default async function PublicPortfolioPage({ params }: PublicPortfolioPag
     notFound();
   }
 
-  const portfolio = await getPublishedPortfolioByHandle(handle);
+  const portfolio = await getPublishedPortfolioWithAgentByHandle(handle);
   if (!portfolio || !portfolio.content) {
     notFound();
   }
@@ -84,6 +85,7 @@ export default async function PublicPortfolioPage({ params }: PublicPortfolioPag
       ) : (
         <ModernTemplate content={content} />
       )}
+      {portfolio.agentIsEnabled ? <AgentWidget handle={handle} /> : null}
     </main>
   );
 }
