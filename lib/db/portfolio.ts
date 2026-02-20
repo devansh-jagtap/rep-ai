@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { portfolios } from "@/lib/schema";
+import { agents, portfolios } from "@/lib/schema";
 
 export type PortfolioTone = "Professional" | "Friendly" | "Bold" | "Minimal";
 
@@ -80,6 +80,35 @@ export async function getPublishedPortfolioByHandle(handle: string) {
   }
 }
 
+
+export async function getPublishedPortfolioWithAgentByHandle(handle: string) {
+  try {
+    const [row] = await db
+      .select({
+        id: portfolios.id,
+        userId: portfolios.userId,
+        handle: portfolios.handle,
+        template: portfolios.template,
+        content: portfolios.content,
+        isPublished: portfolios.isPublished,
+        agentId: agents.id,
+        agentIsEnabled: agents.isEnabled,
+        agentModel: agents.model,
+        agentBehaviorType: agents.behaviorType,
+        agentCustomPrompt: agents.customPrompt,
+        agentTemperature: agents.temperature,
+      })
+      .from(portfolios)
+      .leftJoin(agents, eq(agents.portfolioId, portfolios.id))
+      .where(and(eq(portfolios.handle, handle), eq(portfolios.isPublished, true)))
+      .limit(1);
+
+    return row ?? null;
+  } catch (error) {
+    console.error("Failed to fetch published portfolio with agent", error);
+    return null;
+  }
+}
 export async function createPortfolio(input: CreatePortfolioInput) {
   try {
     const [existing] = await db

@@ -4,6 +4,7 @@ import {
   check,
   index,
   integer,
+  real,
   jsonb,
   pgTable,
   primaryKey,
@@ -117,3 +118,39 @@ export const portfolios = pgTable(
     ),
   ]
 );
+
+export const agents = pgTable(
+  "agents",
+  {
+    id: uuid("id").primaryKey(),
+    portfolioId: uuid("portfolio_id")
+      .notNull()
+      .references(() => portfolios.id, { onDelete: "cascade" }),
+    isEnabled: boolean("is_enabled").notNull().default(false),
+    model: varchar("model", { length: 80 }).notNull(),
+    behaviorType: varchar("behavior_type", { length: 40 }),
+    customPrompt: text("custom_prompt"),
+    temperature: real("temperature").notNull().default(0.5),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => [
+    unique("agents_portfolio_id_unique_constraint").on(table.portfolioId),
+    uniqueIndex("agents_portfolio_id_unique").on(table.portfolioId),
+    index("agents_portfolio_id_idx").on(table.portfolioId),
+    check("agents_temperature_range_check", sql`${table.temperature} BETWEEN 0.2 AND 0.8`),
+  ]
+);
+
+export const agentLeads = pgTable("agent_leads", {
+  id: uuid("id").primaryKey(),
+  portfolioId: uuid("portfolio_id")
+    .notNull()
+    .references(() => portfolios.id, { onDelete: "cascade" }),
+  name: text("name"),
+  email: text("email"),
+  budget: text("budget"),
+  projectDetails: text("project_details"),
+  confidence: real("confidence").notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});

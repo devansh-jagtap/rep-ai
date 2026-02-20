@@ -84,6 +84,9 @@ export default async function DashboardPage() {
                   Edit Design
                 </Button>
               </Link>
+              <Link href="/dashboard/agent">
+                <Button variant="outline">Configure AI Agent</Button>
+              </Link>
               {portfolio.isPublished && (
                 <a href={`/${portfolio.handle}`} target="_blank" rel="noreferrer">
                   <Button variant="outline">
