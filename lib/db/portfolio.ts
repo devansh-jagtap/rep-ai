@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { portfolios } from "@/lib/schema";
 
@@ -43,7 +43,13 @@ export async function getPortfolioByUserId(userId: string) {
 export async function getPortfolioByHandle(handle: string) {
   try {
     const [portfolio] = await db
-      .select({ id: portfolios.id })
+      .select({
+        id: portfolios.id,
+        handle: portfolios.handle,
+        template: portfolios.template,
+        isPublished: portfolios.isPublished,
+        content: portfolios.content,
+      })
       .from(portfolios)
       .where(eq(portfolios.handle, handle))
       .limit(1);
@@ -51,6 +57,25 @@ export async function getPortfolioByHandle(handle: string) {
     return portfolio ?? null;
   } catch (error) {
     console.error("Failed to fetch portfolio by handle", error);
+    return null;
+  }
+}
+
+export async function getPublishedPortfolioByHandle(handle: string) {
+  try {
+    const [portfolio] = await db
+      .select({
+        handle: portfolios.handle,
+        template: portfolios.template,
+        content: portfolios.content,
+      })
+      .from(portfolios)
+      .where(and(eq(portfolios.handle, handle), eq(portfolios.isPublished, true)))
+      .limit(1);
+
+    return portfolio ?? null;
+  } catch (error) {
+    console.error("Failed to fetch published portfolio by handle", error);
     return null;
   }
 }
@@ -73,6 +98,7 @@ export async function createPortfolio(input: CreatePortfolioInput) {
       handle: input.handle,
       subdomain: null,
       onboardingData: input.onboardingData,
+      template: "modern",
       theme: "minimal",
       isPublished: false,
       content: null,

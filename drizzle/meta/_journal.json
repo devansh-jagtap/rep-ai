@@ -22,6 +22,13 @@
       "when": 1771509132898,
       "tag": "0002_massive_sinister_six",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1771565777914,
+      "tag": "0003_add_portfolio_template",
+      "breakpoints": true
     }
   ]
 }
