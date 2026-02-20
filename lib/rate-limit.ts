@@ -3,10 +3,16 @@ type BucketState = {
   head: number;
 };
 
+interface RateLimitConfig {
+  key: string;
+  maxRequests: number;
+  windowMs: number;
+}
+
 const buckets = new Map<string, BucketState>();
-const MAX_REQUESTS = 100;
-const WINDOW_MS = 60_000; // 1 minute
-const PRUNE_INTERVAL_MS = WINDOW_MS;
+const DEFAULT_MAX_REQUESTS = 100;
+const DEFAULT_WINDOW_MS = 60_000;
+const PRUNE_INTERVAL_MS = 60_000;
 let lastPruneAt = 0;
 
 function trimExpired(bucket: BucketState, cutoff: number): number {
@@ -37,21 +43,45 @@ function pruneInactiveBuckets(now: number, cutoff: number) {
   lastPruneAt = now;
 }
 
-export function checkRateLimit(bucketKey: string): boolean {
+export function checkRateLimitWithConfig(config: RateLimitConfig): boolean {
   const now = Date.now();
-  const cutoff = now - WINDOW_MS;
+  const cutoff = now - config.windowMs;
 
-  const bucket = buckets.get(bucketKey) ?? { timestamps: [], head: 0 };
+  const bucket = buckets.get(config.key) ?? { timestamps: [], head: 0 };
   const recentCount = trimExpired(bucket, cutoff);
 
-  if (recentCount >= MAX_REQUESTS) {
-    buckets.set(bucketKey, bucket);
+  if (recentCount >= config.maxRequests) {
+    buckets.set(config.key, bucket);
     pruneInactiveBuckets(now, cutoff);
     return false;
   }
 
   bucket.timestamps.push(now);
-  buckets.set(bucketKey, bucket);
+  buckets.set(config.key, bucket);
   pruneInactiveBuckets(now, cutoff);
   return true;
+}
+
+export function checkRateLimit(bucketKey: string): boolean {
+  return checkRateLimitWithConfig({
+    key: bucketKey,
+    maxRequests: DEFAULT_MAX_REQUESTS,
+    windowMs: DEFAULT_WINDOW_MS,
+  });
+}
+
+export function checkPublicChatIpRateLimit(ip: string): boolean {
+  return checkRateLimitWithConfig({
+    key: `public-chat:ip:${ip}`,
+    maxRequests: 30,
+    windowMs: 60_000,
+  });
+}
+
+export function checkPublicChatHandleRateLimit(handle: string): boolean {
+  return checkRateLimitWithConfig({
+    key: `public-chat:handle:${handle}`,
+    maxRequests: 50,
+    windowMs: 60_000,
+  });
 }
