@@ -96,6 +96,7 @@ export const portfolios = pgTable(
     subdomain: varchar("subdomain", { length: 30 }),
     onboardingData: jsonb("onboarding_data").notNull(),
     content: jsonb("content"),
+    template: varchar("template", { length: 30 }).notNull().default("modern"),
     theme: varchar("theme", { length: 30 }).notNull().default("minimal"),
     isPublished: boolean("is_published").notNull().default(false),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),

@@ -1,0 +1,89 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { ModernTemplate } from "@/components/templates/modern-template";
+import { VeilTemplate } from "@/components/templates/veil-template";
+import { BoldTemplate } from "@/components/templates/bold-template";
+import { EditorialTemplate } from "@/components/templates/editorial-template";
+import { getPublishedPortfolioByHandle } from "@/lib/db/portfolio";
+import { validatePortfolioContent } from "@/lib/validation/portfolio-schema";
+
+const HANDLE_REGEX = /^[a-z0-9-]{3,30}$/;
+
+function isValidHandle(handle: string) {
+  return HANDLE_REGEX.test(handle);
+}
+
+interface PublicPortfolioPageProps {
+  params: Promise<{ handle: string }>;
+}
+
+export async function generateMetadata({ params }: PublicPortfolioPageProps): Promise<Metadata> {
+  const { handle } = await params;
+
+  if (!isValidHandle(handle)) {
+    return {};
+  }
+
+  try {
+    const portfolio = await getPublishedPortfolioByHandle(handle);
+    if (!portfolio || !portfolio.content) {
+      return {};
+    }
+
+    const content = validatePortfolioContent(portfolio.content);
+    const title = content.hero.headline;
+    const description = content.about.paragraph.slice(0, 150);
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    const canonical = `${baseUrl}/${handle}`;
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        url: canonical,
+        type: "website",
+      },
+      alternates: {
+        canonical,
+      },
+    };
+  } catch {
+    return {};
+  }
+}
+
+export default async function PublicPortfolioPage({ params }: PublicPortfolioPageProps) {
+  const { handle } = await params;
+
+  if (!isValidHandle(handle)) {
+    notFound();
+  }
+
+  const portfolio = await getPublishedPortfolioByHandle(handle);
+  if (!portfolio || !portfolio.content) {
+    notFound();
+  }
+
+  let content;
+  try {
+    content = validatePortfolioContent(portfolio.content);
+  } catch {
+    notFound();
+  }
+
+  return (
+    <main className="min-h-screen bg-background">
+      {portfolio.template === "veil" ? (
+        <VeilTemplate content={content} />
+      ) : portfolio.template === "bold" ? (
+        <BoldTemplate content={content} />
+      ) : portfolio.template === "editorial" ? (
+        <EditorialTemplate content={content} />
+      ) : (
+        <ModernTemplate content={content} />
+      )}
+    </main>
+  );
+}
