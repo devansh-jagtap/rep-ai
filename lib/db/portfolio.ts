@@ -110,6 +110,37 @@ export async function getPublishedPortfolioWithAgentByHandle(handle: string) {
     return null;
   }
 }
+
+export async function getPublishedPortfolioWithAgentByAgentId(agentId: string) {
+  try {
+    const [row] = await db
+      .select({
+        id: portfolios.id,
+        userId: portfolios.userId,
+        handle: portfolios.handle,
+        template: portfolios.template,
+        content: portfolios.content,
+        isPublished: portfolios.isPublished,
+        agentId: agents.id,
+        agentIsEnabled: agents.isEnabled,
+        agentModel: agents.model,
+        agentBehaviorType: agents.behaviorType,
+        agentStrategyMode: agents.strategyMode,
+        agentCustomPrompt: agents.customPrompt,
+        agentTemperature: agents.temperature,
+      })
+      .from(portfolios)
+      .innerJoin(agents, eq(agents.portfolioId, portfolios.id))
+      .where(and(eq(agents.id, agentId), eq(portfolios.isPublished, true)))
+      .limit(1);
+
+    return row ?? null;
+  } catch (error) {
+    console.error("Failed to fetch published portfolio with agent id", error);
+    return null;
+  }
+}
+
 export async function createPortfolio(input: CreatePortfolioInput) {
   try {
     const [existing] = await db

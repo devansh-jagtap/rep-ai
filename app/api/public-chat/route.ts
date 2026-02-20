@@ -7,7 +7,10 @@ import {
 } from "@/lib/ai/failure-guard";
 import { classifyAiError, logPublicAgentEvent } from "@/lib/ai/safe-logging";
 import { saveLeadWithDedup } from "@/lib/db/agent-leads";
-import { getPublishedPortfolioWithAgentByHandle } from "@/lib/db/portfolio";
+import {
+  getPublishedPortfolioWithAgentByAgentId,
+  getPublishedPortfolioWithAgentByHandle,
+} from "@/lib/db/portfolio";
 import { isBehaviorPresetType } from "@/lib/agent/behavior-presets";
 import { isSupportedAgentModel } from "@/lib/agent/models";
 import {
@@ -15,7 +18,11 @@ import {
   leadConfidenceThresholdForMode,
   type ConversationStrategyMode,
 } from "@/lib/agent/strategy-modes";
-import { checkPublicChatHandleRateLimit, checkPublicChatIpRateLimit } from "@/lib/rate-limit";
+import {
+  checkPublicChatAgentRateLimit,
+  checkPublicChatHandleRateLimit,
+  checkPublicChatIpRateLimit,
+} from "@/lib/rate-limit";
 import { validatePortfolioContent } from "@/lib/validation/portfolio-schema";
 import { parsePublicChatRequest } from "@/lib/validation/public-chat";
 
@@ -28,6 +35,31 @@ function getClientIp(request: Request): string {
   return request.headers.get("x-real-ip") ?? "unknown";
 }
 
+
+function getCorsHeaders(request: Request): Record<string, string> {
+  const origin = request.headers.get("origin");
+  const appOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim();
+
+  if (!origin || !appOrigin || origin !== appOrigin) {
+    return {};
+  }
+
+  return {
+    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+  };
+}
+
+export async function OPTIONS(request: Request) {
+  const corsHeaders = getCorsHeaders(request);
+  if (!("Access-Control-Allow-Origin" in corsHeaders)) {
+    return new NextResponse(null, { status: 403 });
+  }
+
+  return new NextResponse(null, { status: 204, headers: corsHeaders });
+}
+
 export async function POST(request: Request) {
   try {
     const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
@@ -37,18 +69,29 @@ export async function POST(request: Request) {
     }
 
     const ip = getClientIp(request);
-    if (!checkPublicChatIpRateLimit(ip) || !checkPublicChatHandleRateLimit(parsed.handle)) {
+    if (!checkPublicChatIpRateLimit(ip)) {
       return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
     }
 
-    if (isHandleTemporarilyBlocked(parsed.handle)) {
+    if (parsed.handle && !checkPublicChatHandleRateLimit(parsed.handle)) {
+      return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+    }
+
+    if (parsed.agentId && !checkPublicChatAgentRateLimit(parsed.agentId)) {
+      return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+    }
+
+    if (parsed.handle && isHandleTemporarilyBlocked(parsed.handle)) {
       return NextResponse.json(
         { reply: "Agent temporarily unavailable. Please try again later." },
         { status: 200 }
       );
     }
 
-    const portfolio = await getPublishedPortfolioWithAgentByHandle(parsed.handle);
+    const portfolio = parsed.agentId
+      ? await getPublishedPortfolioWithAgentByAgentId(parsed.agentId)
+      : await getPublishedPortfolioWithAgentByHandle(parsed.handle ?? "");
+
     if (!portfolio || !portfolio.content) {
       return NextResponse.json({ error: "Portfolio not found" }, { status: 404 });
     }
@@ -81,6 +124,7 @@ export async function POST(request: Request) {
         : "consultative";
 
     const result = await generateAgentReply({
+      agentId: portfolio.agentId,
       model: portfolio.agentModel,
       temperature: portfolio.agentTemperature,
       behaviorType,
@@ -109,7 +153,7 @@ export async function POST(request: Request) {
         console.info(
           JSON.stringify({
             event: "agent_lead_dedupe",
-            handle: parsed.handle,
+            handle: portfolio.handle,
             portfolioId: portfolio.id,
             timestamp: new Date().toISOString(),
           })
@@ -117,14 +161,16 @@ export async function POST(request: Request) {
       }
     }
 
-    if (result.errorType) {
-      markHandleAiFailure(parsed.handle);
-    } else {
-      markHandleAiSuccess(parsed.handle);
+    if (parsed.handle) {
+      if (result.errorType) {
+        markHandleAiFailure(parsed.handle);
+      } else {
+        markHandleAiSuccess(parsed.handle);
+      }
     }
 
     logPublicAgentEvent({
-      handle: parsed.handle,
+      handle: portfolio.handle,
       model: portfolio.agentModel,
       tokensUsed: result.usage.totalTokens,
       leadDetected,
@@ -132,7 +178,7 @@ export async function POST(request: Request) {
       errorType: result.errorType,
     });
 
-    return NextResponse.json({ reply: result.reply, leadDetected });
+    return NextResponse.json({ reply: result.reply, leadDetected }, { headers: getCorsHeaders(request) });
   } catch (error) {
     const errorType = classifyAiError(error);
     console.error(

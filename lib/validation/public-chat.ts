@@ -1,3 +1,4 @@
+import { validate as validateUuid } from "uuid";
 import { validateHandle } from "@/lib/validation/handle";
 
 export interface PublicHistoryMessage {
@@ -7,12 +8,14 @@ export interface PublicHistoryMessage {
 
 interface PublicChatBody {
   handle?: unknown;
+  agentId?: unknown;
   message?: unknown;
   history?: unknown;
 }
 
 export interface PublicChatRequest {
-  handle: string;
+  handle: string | null;
+  agentId: string | null;
   message: string;
   history: PublicHistoryMessage[];
 }
@@ -27,8 +30,13 @@ export function parsePublicChatRequest(body: PublicChatBody | null): PublicChatR
   }
 
   const rawHandle = String(body.handle ?? "").trim();
-  const handleResult = validateHandle(rawHandle);
-  if (!handleResult.ok || rawHandle !== handleResult.value) {
+  const handleResult = rawHandle ? validateHandle(rawHandle) : null;
+  const handle = handleResult?.ok && rawHandle === handleResult.value ? handleResult.value : null;
+
+  const rawAgentId = String(body.agentId ?? "").trim();
+  const agentId = rawAgentId && validateUuid(rawAgentId) ? rawAgentId : null;
+
+  if (!handle && !agentId) {
     return null;
   }
 
@@ -38,7 +46,8 @@ export function parsePublicChatRequest(body: PublicChatBody | null): PublicChatR
   }
 
   return {
-    handle: handleResult.value,
+    handle,
+    agentId,
     message: trimmedMessage,
     history: sanitizeHistory(body.history),
   };

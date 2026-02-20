@@ -64,6 +64,13 @@
       "when": 1771579000000,
       "tag": "0008_agent_leads_inbox_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1771577703013,
+      "tag": "0009_knowledge_base",
+      "breakpoints": true
     }
   ]
 }
