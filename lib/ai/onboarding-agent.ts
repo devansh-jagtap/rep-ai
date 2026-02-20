@@ -172,18 +172,22 @@ export async function streamOnboardingChat({
           handle: z.string(),
         }),
         execute: async (data) => {
+          console.log("[request_preview] execute called with:", data);
           const parsed = validateFinalOnboardingState(data);
           if (!parsed.ok) {
+            console.error("[request_preview] validation failed:", parsed.message);
             return { preview: false, error: parsed.message };
           }
           const finalState = parsed.value;
           const taken = await getPortfolioByHandle(finalState.handle);
           if (taken) {
+            console.warn("[request_preview] handle taken:", finalState.handle);
             return {
               preview: false,
               error: "This handle is already taken. Please choose another one.",
             };
           }
+          console.log("[request_preview] success!");
           return { preview: true, data: finalState };
         },
       }),

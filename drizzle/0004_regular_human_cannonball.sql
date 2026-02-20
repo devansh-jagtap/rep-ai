@@ -1,0 +1,1 @@
+ALTER TABLE "portfolios" ADD COLUMN "template" varchar(30) DEFAULT 'modern' NOT NULL;

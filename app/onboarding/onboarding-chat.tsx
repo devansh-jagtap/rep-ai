@@ -72,29 +72,58 @@ function lastMessageAsksConfirmation(messages: { role?: string; parts: unknown[]
   return CONFIRM_PHRASES.some((phrase) => text.includes(phrase));
 }
 
-function extractPreviewData(messages: { role?: string; parts: unknown[] }[]): OnboardingData | null {
+function extractPreviewData(messages: any[]): OnboardingData | null {
   for (const message of messages) {
     if (message.role !== "assistant") continue;
-    for (const part of message.parts) {
-      const p = part as { type?: string; toolName?: string; result?: { preview?: boolean; data?: OnboardingData } };
-      if (p.type === "tool-invocation" && p.toolName === "request_preview" && p.result?.preview && p.result?.data) {
-        return p.result.data;
+    
+    if (message.toolInvocations) {
+      for (const tool of message.toolInvocations) {
+        if (tool.toolName === "request_preview" && 'result' in tool && tool.result?.preview && tool.result?.data) {
+          return tool.result.data;
+        }
+      }
+    }
+
+    if (message.parts) {
+      for (const part of message.parts) {
+        const p = part as any;
+        if (p.type === "tool-invocation" && p.toolName === "request_preview" && p.result?.preview && p.result?.data) {
+          return p.result.data;
+        }
       }
     }
   }
   return null;
 }
 
-function lastMessageMentionsPreview(messages: { role?: string; parts: unknown[] }[]): boolean {
+function lastMessageMentionsPreview(messages: any[]): boolean {
   if (messages.length === 0) return false;
   const last = messages[messages.length - 1];
   if (last.role !== "assistant") return false;
-  const text = last.parts
-    .filter((p): p is { type: "text"; text: string } => (p as { type?: string; text?: string }).type === "text" && typeof (p as { text?: string }).text === "string")
-    .map((p) => p.text)
-    .join(" ")
-    .toLowerCase();
-  return text.includes("preview") || text.includes("confirm");
+  
+  let text = "";
+  if (last.parts) {
+    text = last.parts
+      .filter((p: any) => p.type === "text" && typeof p.text === "string")
+      .map((p: any) => p.text)
+      .join(" ")
+      .toLowerCase();
+  } else if (last.content) {
+    text = last.content.toLowerCase();
+  }
+  
+  // Also check if any tool is a request_preview tool invocation
+  let hasPreviewTool = false;
+  
+  if (last.toolInvocations) {
+    hasPreviewTool = last.toolInvocations.some((tool: any) => tool.toolName === "request_preview");
+  }
+  
+  if (!hasPreviewTool && last.parts) {
+    hasPreviewTool = last.parts.some((p: any) => p.type === "tool-invocation" && p.toolName === "request_preview");
+  }
+
+  return hasPreviewTool || text.includes("preview") || text.includes("confirm");
 }
 
 // Use string concat so {data.x} stays literal for react-jsx-parser bindings
@@ -224,20 +253,30 @@ export function OnboardingChat() {
   const hasFetchedDraft = useRef(false);
 
   useEffect(() => {
-    if (previewDataFromMessages || hasFetchedDraft.current || status === "streaming") return;
-    if (!lastMessageMentionsPreview(messages)) return;
+    // If we already have preview data from the chat messages, we don't need to fetch
+    if (previewDataFromMessages) return;
 
-    hasFetchedDraft.current = true;
+    if (status === "streaming") return;
+
     fetch("/api/onboarding/draft", { credentials: "include" })
       .then((res) => res.json())
       .then((json: { ok?: boolean; state?: Partial<OnboardingData> } | undefined) => {
         const state = json?.state;
         if (!json?.ok || !state || typeof state !== "object") return;
         const parsed = validateFinalOnboardingState(state);
-        if (parsed.ok) setPreviewDataFromDraft(parsed.value);
+        // Only set preview data if the draft is 100% complete
+        if (parsed.ok) {
+          console.log("[Onboarding] Setting preview data from draft:", parsed.value);
+          setPreviewDataFromDraft(parsed.value);
+        } else {
+          // If the draft is incomplete, make sure preview UI isn't shown
+          setPreviewDataFromDraft(null);
+        }
       })
-      .catch(() => {});
-  }, [messages, previewDataFromMessages, status]);
+      .catch((e) => {
+        console.error("Failed to fetch draft:", e);
+      });
+  }, [previewDataFromMessages, status]); // Re-fetch draft when chat is done streaming in case the final tool call was missed by the UI
 
   const handleConfirm = async () => {
     if (!previewData || hasRedirected.current) return;

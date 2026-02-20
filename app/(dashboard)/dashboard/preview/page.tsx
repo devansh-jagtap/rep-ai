@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { GeneratePortfolioButton } from "@/components/generate-portfolio-button";
+import { PublishPortfolioButton } from "@/components/publish-portfolio-button";
 import { ResetOnboardingButton } from "@/components/reset-onboarding-button";
 import { TemplateSelector } from "@/components/template-selector";
 import { ModernTemplate } from "@/components/templates/modern-template";
@@ -36,6 +37,7 @@ export default async function DashboardPreviewPage(props: { searchParams?: Searc
         <div className="flex items-center gap-2">
           {content && <TemplateSelector />}
           <GeneratePortfolioButton />
+          {content && <PublishPortfolioButton handle={portfolio.handle} theme={theme} />}
           <ResetOnboardingButton />
         </div>
       </div>

@@ -4,13 +4,21 @@ import { db } from "@/lib/db";
 import { portfolios } from "@/lib/schema";
 import { requireUserId } from "@/lib/api/route-helpers";
 
-export async function POST() {
+export async function POST(request: Request) {
   const authResult = await requireUserId();
   if (!authResult.ok) {
     return authResult.response;
   }
 
   try {
+    let body: { template?: string } = {};
+    try {
+      const text = await request.text();
+      if (text) body = JSON.parse(text);
+    } catch {
+      // ignore
+    }
+
     const [portfolio] = await db
       .select({ id: portfolios.id, content: portfolios.content })
       .from(portfolios)
@@ -31,9 +39,14 @@ export async function POST() {
       );
     }
 
+    const updateData: any = { isPublished: true, updatedAt: new Date() };
+    if (body.template) {
+      updateData.template = body.template;
+    }
+
     await db
       .update(portfolios)
-      .set({ isPublished: true, updatedAt: new Date() })
+      .set(updateData)
       .where(eq(portfolios.id, portfolio.id));
 
     return NextResponse.json({ ok: true, message: "Portfolio published" });
