@@ -11,6 +11,7 @@ interface PublicChatBody {
   agentId?: unknown;
   message?: unknown;
   history?: unknown;
+  sessionId?: unknown;
 }
 
 export interface PublicChatRequest {
@@ -18,6 +19,7 @@ export interface PublicChatRequest {
   agentId: string | null;
   message: string;
   history: PublicHistoryMessage[];
+  sessionId: string | null;
 }
 
 const MAX_MESSAGE_CHARS = 2_000;
@@ -50,6 +52,7 @@ export function parsePublicChatRequest(body: PublicChatBody | null): PublicChatR
     agentId,
     message: trimmedMessage,
     history: sanitizeHistory(body.history),
+    sessionId: body.sessionId && typeof body.sessionId === "string" && validateUuid(body.sessionId) ? body.sessionId : null,
   };
 }
 

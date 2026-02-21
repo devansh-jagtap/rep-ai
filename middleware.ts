@@ -8,6 +8,7 @@ const protectedRoutes = [
   "/api/onboarding",
   "/api/profile",
   "/api/leads",
+  "/api/analytics",
 ];
 
 const authRoutes = [

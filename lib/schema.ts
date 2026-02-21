@@ -205,3 +205,24 @@ export const knowledgeChunks = pgTable(
     index("knowledge_chunks_source_id_idx").on(table.sourceId),
   ]
 );
+
+export const portfolioAnalytics = pgTable(
+  "portfolio_analytics",
+  {
+    id: uuid("id").primaryKey(),
+    portfolioId: uuid("portfolio_id")
+      .notNull()
+      .references(() => portfolios.id, { onDelete: "cascade" }),
+    type: varchar("type", { length: 20 }).notNull(),
+    referrer: text("referrer"),
+    userAgent: text("user_agent"),
+    country: varchar("country", { length: 2 }),
+    sessionId: uuid("session_id"),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("portfolio_analytics_portfolio_id_idx").on(table.portfolioId),
+    index("portfolio_analytics_created_at_idx").on(table.createdAt),
+    check("portfolio_analytics_type_check", sql`${table.type} IN ('page_view', 'chat_session_start', 'chat_message')`),
+  ]
+);

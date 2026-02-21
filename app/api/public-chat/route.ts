@@ -25,6 +25,7 @@ import {
 } from "@/lib/rate-limit";
 import { validatePortfolioContent } from "@/lib/validation/portfolio-schema";
 import { parsePublicChatRequest } from "@/lib/validation/public-chat";
+import { trackAnalytics } from "@/lib/db/analytics";
 
 function getClientIp(request: Request): string {
   const forwarded = request.headers.get("x-forwarded-for");
@@ -178,7 +179,24 @@ export async function POST(request: Request) {
       errorType: result.errorType,
     });
 
-    return NextResponse.json({ reply: result.reply, leadDetected }, { headers: getCorsHeaders(request) });
+    const sessionId = parsed.sessionId || crypto.randomUUID();
+    const isFirstMessage = !parsed.history || parsed.history.length === 0;
+    
+    if (isFirstMessage) {
+      await trackAnalytics({
+        portfolioId: portfolio.id,
+        type: "chat_session_start",
+        sessionId,
+      });
+    }
+    
+    await trackAnalytics({
+      portfolioId: portfolio.id,
+      type: "chat_message",
+      sessionId,
+    });
+
+    return NextResponse.json({ reply: result.reply, leadDetected, sessionId }, { headers: getCorsHeaders(request) });
   } catch (error) {
     const errorType = classifyAiError(error);
     console.error(

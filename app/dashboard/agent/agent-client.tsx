@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
-import { useState, useTransition, useRef, useCallback } from "react";
+import { useTransition, useRef, useCallback, useEffect } from "react";
 import { Save, BotMessageSquare, Sparkles, SendHorizontal, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { saveAgentConfig } from "../actions";
@@ -16,6 +16,7 @@ import {
   isConversationStrategyMode,
   type ConversationStrategyMode,
 } from "@/lib/agent/strategy-modes";
+import { useAgentStore } from "@/lib/stores/agent-store";
 
 const MODELS = [
   { value: "moonshotai/Kimi-K2.5", label: "Kimi K2.5", description: "Fast & accurate" },
@@ -37,11 +38,6 @@ const STRATEGY_MODES = [
   { value: "sales", label: "Sales", helper: CONVERSATION_STRATEGY_MODES.sales.description },
 ] as const satisfies ReadonlyArray<{ value: ConversationStrategyMode; label: string; helper: string }>;
 
-interface ChatMessage {
-  role: "user" | "assistant";
-  content: string;
-}
-
 interface AgentClientProps {
   agent: {
     isEnabled: boolean;
@@ -57,31 +53,44 @@ interface AgentClientProps {
 
 export function AgentClient({ agent, portfolioHandle, hasContent }: AgentClientProps) {
   const [isPending, startTransition] = useTransition();
-  const [isEnabled, setIsEnabled] = useState(agent?.isEnabled ?? true);
-  const [behavior, setBehavior] = useState(agent?.behaviorType || "friendly");
-  const [strategyMode, setStrategyMode] = useState<ConversationStrategyMode>(
-    agent?.strategyMode && isConversationStrategyMode(agent.strategyMode) ? agent.strategyMode : "consultative"
-  );
-  const [temperature, setTemperature] = useState([agent?.temperature ?? 0.5]);
-  const [model, setModel] = useState(agent?.model || "moonshotai/Kimi-K2.5");
-  const [customPrompt, setCustomPrompt] = useState(agent?.customPrompt || "");
-
-  // Test chat state
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [chatInput, setChatInput] = useState("");
-  const [isChatLoading, setIsChatLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  const {
+    config,
+    chatMessages,
+    chatInput,
+    isChatLoading,
+    setConfig,
+    addChatMessage,
+    clearChatMessages,
+    setChatInput,
+    setIsChatLoading,
+    resetConfig,
+  } = useAgentStore();
+
+  useEffect(() => {
+    if (agent) {
+      resetConfig({
+        isEnabled: agent.isEnabled,
+        model: agent.model,
+        behaviorType: agent.behaviorType || "friendly",
+        strategyMode: (agent.strategyMode && isConversationStrategyMode(agent.strategyMode)) ? agent.strategyMode : "consultative",
+        customPrompt: agent.customPrompt || "",
+        temperature: agent.temperature,
+      });
+    }
+  }, [agent, resetConfig]);
 
   const handleSave = () => {
     startTransition(async () => {
       try {
         await saveAgentConfig({
-          isEnabled,
-          model,
-          behaviorType: behavior === "custom" ? null : behavior,
-          strategyMode,
-          customPrompt: behavior === "custom" ? customPrompt : null,
-          temperature: temperature[0],
+          isEnabled: config.isEnabled,
+          model: config.model,
+          behaviorType: config.behaviorType === "custom" ? null : config.behaviorType,
+          strategyMode: config.strategyMode,
+          customPrompt: config.behaviorType === "custom" ? config.customPrompt : null,
+          temperature: config.temperature,
         });
         toast.success("Agent configuration saved");
       } catch (error) {
@@ -99,8 +108,7 @@ export function AgentClient({ agent, portfolioHandle, hasContent }: AgentClientP
       return;
     }
 
-    const newMessages: ChatMessage[] = [...chatMessages, { role: "user", content: msg }];
-    setChatMessages(newMessages);
+    addChatMessage({ role: "user", content: msg });
     setChatInput("");
     setIsChatLoading(true);
 
@@ -111,7 +119,7 @@ export function AgentClient({ agent, portfolioHandle, hasContent }: AgentClientP
         body: JSON.stringify({
           handle: portfolioHandle,
           message: msg,
-          history: newMessages.slice(-10),
+          history: chatMessages.slice(-10),
         }),
       });
 
@@ -121,17 +129,17 @@ export function AgentClient({ agent, portfolioHandle, hasContent }: AgentClientP
       }
 
       const data = await res.json();
-      setChatMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
+      addChatMessage({ role: "assistant", content: data.reply });
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Agent unavailable";
-      setChatMessages((prev) => [...prev, { role: "assistant", content: `Error: ${errorMsg}` }]);
+      addChatMessage({ role: "assistant", content: `Error: ${errorMsg}` });
     } finally {
       setIsChatLoading(false);
       setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     }
-  }, [chatInput, chatMessages, isChatLoading, portfolioHandle, hasContent]);
+  }, [chatInput, isChatLoading, hasContent, portfolioHandle, chatMessages, addChatMessage, setChatInput, setIsChatLoading]);
 
-  const canTest = isEnabled && hasContent;
+  const canTest = config.isEnabled && hasContent;
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 max-w-6xl mx-auto">
@@ -157,11 +165,11 @@ export function AgentClient({ agent, portfolioHandle, hasContent }: AgentClientP
                 Responds to visitor inquiries and captures leads 24/7.
               </span>
             </Label>
-            <Switch checked={isEnabled} onCheckedChange={setIsEnabled} disabled={isPending} />
+            <Switch checked={config.isEnabled} onCheckedChange={(checked) => setConfig({ isEnabled: checked })} disabled={isPending} />
           </CardContent>
         </Card>
 
-        <Card className={!isEnabled ? "opacity-50 pointer-events-none transition-opacity" : "transition-opacity"}>
+        <Card className={!config.isEnabled ? "opacity-50 pointer-events-none transition-opacity" : "transition-opacity"}>
           <CardHeader>
             <CardTitle>Model & Behavior</CardTitle>
             <CardDescription>
@@ -171,7 +179,7 @@ export function AgentClient({ agent, portfolioHandle, hasContent }: AgentClientP
           <CardContent className="space-y-6">
             <div className="space-y-3">
               <Label>AI Model</Label>
-              <Select value={model} onValueChange={setModel} disabled={isPending}>
+              <Select value={config.model} onValueChange={(value) => setConfig({ model: value })} disabled={isPending}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a model" />
                 </SelectTrigger>
@@ -193,7 +201,7 @@ export function AgentClient({ agent, portfolioHandle, hasContent }: AgentClientP
 
             <div className="space-y-3">
               <Label>Behavior Preset</Label>
-              <Select value={behavior} onValueChange={setBehavior} disabled={isPending}>
+              <Select value={config.behaviorType} onValueChange={(value) => setConfig({ behaviorType: value })} disabled={isPending}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a preset" />
                 </SelectTrigger>
@@ -208,7 +216,7 @@ export function AgentClient({ agent, portfolioHandle, hasContent }: AgentClientP
 
             <div className="space-y-3">
               <Label>Conversation Strategy</Label>
-              <Select value={strategyMode} onValueChange={(v) => setStrategyMode(v as ConversationStrategyMode)} disabled={isPending}>
+              <Select value={config.strategyMode} onValueChange={(v) => setConfig({ strategyMode: v as ConversationStrategyMode })} disabled={isPending}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a strategy" />
                 </SelectTrigger>
@@ -221,18 +229,18 @@ export function AgentClient({ agent, portfolioHandle, hasContent }: AgentClientP
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                {CONVERSATION_STRATEGY_MODES[strategyMode].description}
+                {CONVERSATION_STRATEGY_MODES[config.strategyMode].description}
               </p>
             </div>
 
-            {behavior === "custom" && (
+            {config.behaviorType === "custom" && (
               <div className="space-y-3 animate-in fade-in zoom-in-95">
                 <Label>Custom System Prompt</Label>
                 <Textarea
                   placeholder="Define how your agent should behave, what tone to use, and any specific instructions..."
                   className="min-h-[120px]"
-                  value={customPrompt}
-                  onChange={(e) => setCustomPrompt(e.target.value)}
+                  value={config.customPrompt}
+                  onChange={(e) => setConfig({ customPrompt: e.target.value })}
                   disabled={isPending}
                 />
                 <p className="text-xs text-muted-foreground">
@@ -244,11 +252,11 @@ export function AgentClient({ agent, portfolioHandle, hasContent }: AgentClientP
             <div className="space-y-4 pt-2">
               <div className="flex justify-between">
                 <Label>Creativity (Temperature)</Label>
-                <span className="text-sm font-mono text-muted-foreground">{temperature[0].toFixed(1)}</span>
+                <span className="text-sm font-mono text-muted-foreground">{config.temperature.toFixed(1)}</span>
               </div>
               <Slider
-                value={temperature}
-                onValueChange={setTemperature}
+                value={[config.temperature]}
+                onValueChange={([value]) => setConfig({ temperature: value })}
                 min={0.2}
                 max={0.8}
                 step={0.1}
@@ -291,7 +299,7 @@ export function AgentClient({ agent, portfolioHandle, hasContent }: AgentClientP
                 <div className="text-center space-y-2 p-4">
                   <AlertCircle className="size-8 text-muted-foreground mx-auto" />
                   <p className="text-sm text-muted-foreground">
-                    {!isEnabled
+                    {!config.isEnabled
                       ? "Enable the agent to test it."
                       : "Generate your portfolio content first to test the agent."
                     }

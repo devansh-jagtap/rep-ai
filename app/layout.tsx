@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Figtree } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryProvider } from "@/lib/providers/query-provider";
 import "./globals.css";
 
 const figtree = Figtree({ subsets: ["latin"], variable: "--font-sans" });
@@ -34,8 +35,10 @@ export default function RootLayout({
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <TooltipProvider>
-            {children}
-            <Toaster />
+            <QueryProvider>
+              {children}
+              <Toaster />
+            </QueryProvider>
           </TooltipProvider>
         </ThemeProvider>
       </body>

@@ -8,6 +8,7 @@ import { LandingTemplate } from "@/components/templates/landing-template";
 import { getPublishedPortfolioByHandle, getPublishedPortfolioWithAgentByHandle } from "@/lib/db/portfolio";
 import { validatePortfolioContent } from "@/lib/validation/portfolio-schema";
 import { AgentWidget } from "@/components/agent-widget";
+import { AnalyticsTracker } from "@/components/analytics-tracker";
 
 const HANDLE_REGEX = /^[a-z0-9-]{3,30}$/;
 
@@ -77,6 +78,7 @@ export default async function PublicPortfolioPage({ params }: PublicPortfolioPag
 
   return (
     <main className="min-h-screen bg-background">
+      <AnalyticsTracker handle={handle} />
       {portfolio.template === "landing" ? (
         <LandingTemplate content={content} />
       ) : portfolio.template === "veil" ? (
