@@ -23,9 +23,7 @@ export async function DashboardLayout({ children }: DashboardLayoutProps) {
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
           <div className="flex flex-1 items-center justify-between">
-            <h1 className="text-sm font-medium leading-none">
-              AI Portfolio Platform
-            </h1>
+            
             <div className="flex items-center gap-4">
               <span className="text-sm text-muted-foreground hidden sm:inline-block">
                 {session.user.email}

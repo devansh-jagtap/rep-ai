@@ -73,12 +73,9 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-border/50 py-4">
         <div className="flex items-center gap-2 px-4">
-          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Sparkles className="size-4" />
-          </div>
+          
           <div className="flex flex-col gap-0.5 leading-none group-data-[collapsible=icon]:hidden">
-            <span className="font-semibold">AI Portfolio</span>
-            <span className="text-xs text-muted-foreground">Platform</span>
+          REF  
           </div>
         </div>
       </SidebarHeader>
