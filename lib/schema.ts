@@ -198,6 +198,7 @@ export const knowledgeChunks = pgTable(
       .notNull()
       .references(() => agents.id, { onDelete: "cascade" }),
     chunkText: text("chunk_text").notNull(),
+    embedding: text("embedding"),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   },
   (table) => [
