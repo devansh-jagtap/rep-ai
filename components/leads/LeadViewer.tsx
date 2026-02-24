@@ -23,8 +23,8 @@ export function LeadViewer({
   }
 
   return (
-    <Card className="h-full overflow-hidden">
-      <ScrollArea className="h-full">
+    <Card className="h-full min-h-0 overflow-hidden flex flex-col">
+      <ScrollArea className="h-full min-h-0 flex-1">
         <div className="p-4 md:p-6">
           <LeadHeader lead={lead} onStatusChange={onStatusChange} />
           <Separator className="my-5" />

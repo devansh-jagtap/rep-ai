@@ -88,8 +88,8 @@ export function LeadsClient({ leads: initialLeads }: { leads: LeadDetailData[] }
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-[320px_1fr] md:h-[calc(100vh-11rem)]">
-        <Card className="h-[65vh] md:h-full overflow-hidden">
+      <div className="grid gap-4 md:grid-cols-[320px_1fr] md:min-h-0 md:h-[calc(100vh-11rem)]">
+        <Card className="h-[65vh] md:h-full min-h-0 overflow-hidden flex flex-col">
           <LeadList
             leads={leads}
             selectedLeadId={selectedLeadId}
@@ -97,7 +97,7 @@ export function LeadsClient({ leads: initialLeads }: { leads: LeadDetailData[] }
           />
         </Card>
 
-        <div className="hidden md:block h-full">
+        <div className="hidden md:block h-full min-h-0 overflow-hidden">
           <LeadViewer lead={selectedLead} onStatusChange={handleStatusChange} />
         </div>
       </div>

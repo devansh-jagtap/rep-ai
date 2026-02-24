@@ -44,7 +44,7 @@ export function LeadListItem({
       type="button"
       onClick={onSelect}
       className={cn(
-        "w-full text-left group flex gap-3 px-3 py-3 rounded-xl transition-colors",
+        "w-full min-w-0 overflow-hidden text-left group flex gap-3 px-3 py-3 rounded-xl transition-colors",
         "hover:bg-muted/50",
         selected && "bg-muted"
       )}
@@ -69,9 +69,12 @@ export function LeadListItem({
           </p>
         </div>
 
-        <p className="mt-0.5 truncate text-sm text-muted-foreground">
+        {/* <p
+          className="mt-0.5 truncate text-sm text-muted-foreground"
+          title={lead.subject || "No subject"}
+        >
           {lead.subject || "No subject"}
-        </p>
+        </p> */}
 
         <div className="mt-2 flex flex-wrap items-center gap-2">
           {lead.budget ? (

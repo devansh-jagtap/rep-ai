@@ -168,10 +168,10 @@ export async function POST(request: Request) {
         confidence: result.lead.confidence,
       });
 
-      if (dedupeResult === "duplicate") {
+      if (dedupeResult === "updated") {
         console.info(
           JSON.stringify({
-            event: "agent_lead_dedupe",
+            event: "agent_lead_updated",
             handle: portfolio.handle,
             portfolioId: portfolio.id,
             timestamp: new Date().toISOString(),

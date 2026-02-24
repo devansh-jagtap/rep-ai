@@ -11,11 +11,27 @@ interface SaveLeadInput {
   confidence: number;
 }
 
-export async function isDuplicateLead(portfolioId: string, email: string): Promise<boolean> {
+interface ExistingLead {
+  id: string;
+  name: string | null;
+  email: string | null;
+  budget: string | null;
+  projectDetails: string | null;
+  confidence: number;
+}
+
+export async function findExistingLead(portfolioId: string, email: string): Promise<ExistingLead | null> {
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
   const [existing] = await db
-    .select({ id: agentLeads.id })
+    .select({
+      id: agentLeads.id,
+      name: agentLeads.name,
+      email: agentLeads.email,
+      budget: agentLeads.budget,
+      projectDetails: agentLeads.projectDetails,
+      confidence: agentLeads.confidence,
+    })
     .from(agentLeads)
     .where(
       and(
@@ -27,20 +43,50 @@ export async function isDuplicateLead(portfolioId: string, email: string): Promi
     .orderBy(desc(agentLeads.createdAt))
     .limit(1);
 
-  return Boolean(existing);
+  return existing ?? null;
 }
 
-export async function saveLeadWithDedup(input: SaveLeadInput): Promise<"inserted" | "duplicate" | "skipped"> {
+function mergeLeadData(existing: ExistingLead, input: SaveLeadInput) {
+  const mergedName = input.name?.trim() || existing.name;
+  const mergedBudget = input.budget?.trim() || existing.budget;
+  const mergedProjectDetails = input.projectDetails?.trim() || existing.projectDetails;
+  const mergedConfidence = Math.max(existing.confidence, input.confidence);
+
+  return {
+    name: mergedName,
+    budget: mergedBudget,
+    projectDetails: mergedProjectDetails,
+    confidence: mergedConfidence,
+  };
+}
+
+export async function saveLeadWithDedup(input: SaveLeadInput): Promise<"inserted" | "updated" | "skipped"> {
   const normalizedEmail = input.email?.trim().toLowerCase() ?? "";
 
   if (!normalizedEmail) {
     return "skipped";
   }
 
-  const duplicate = await isDuplicateLead(input.portfolioId, normalizedEmail);
+  const existing = await findExistingLead(input.portfolioId, normalizedEmail);
 
-  if (duplicate) {
-    return "duplicate";
+  if (existing) {
+    const merged = mergeLeadData(existing, input);
+    
+    const hasChanges = 
+      merged.name !== existing.name ||
+      merged.budget !== existing.budget ||
+      merged.projectDetails !== existing.projectDetails ||
+      merged.confidence !== existing.confidence;
+
+    if (hasChanges) {
+      await db
+        .update(agentLeads)
+        .set(merged)
+        .where(eq(agentLeads.id, existing.id));
+      return "updated";
+    }
+    
+    return "updated";
   }
 
   await db.insert(agentLeads).values({
