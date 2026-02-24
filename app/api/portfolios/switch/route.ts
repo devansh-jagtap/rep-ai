@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getSession } from "@/auth";
 import { ACTIVE_PORTFOLIO_COOKIE } from "@/lib/active-portfolio";
 import { getPortfolioByIdAndUserId } from "@/lib/db/portfolio";
 
 export async function POST(request: Request) {
-    const session = await auth();
+    const session = await getSession();
     if (!session?.user?.id) {
         return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }

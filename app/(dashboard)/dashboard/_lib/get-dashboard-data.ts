@@ -1,9 +1,9 @@
-import { auth } from "@/auth";
+import { getSession } from "@/auth";
 import { getActivePortfolio } from "@/lib/active-portfolio";
 import { getAgentByPortfolioId } from "@/lib/agent/configure";
 
 async function requireAuthUserId() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) throw new Error("Unauthorized");
   return session.user.id;
 }

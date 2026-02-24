@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@/auth";
+import { getSession } from "@/auth";
 import { handlePublicChat, type PublicChatResult } from "@/lib/ai/public-chat-handler";
 import { sanitizeHistory } from "@/lib/validation/public-chat";
 
@@ -12,7 +12,7 @@ export async function widgetChatWithAgent(body: {
 }): Promise<PublicChatResult> {
   let userId: string | null = null;
   try {
-    const session = await auth();
+    const session = await getSession();
     userId = session?.user?.id ?? null;
   } catch {
     // public visitors are typically unauthenticated

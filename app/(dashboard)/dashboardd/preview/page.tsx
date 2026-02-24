@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { getSession } from "@/auth";
 import { GeneratePortfolioButton } from "@/components/generate-portfolio-button";
 import { PublishPortfolioButton } from "@/components/publish-portfolio-button";
 import { ResetOnboardingButton } from "@/components/reset-onboarding-button";
@@ -17,7 +17,7 @@ import type { PortfolioContent } from "@/lib/validation/portfolio-schema";
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
 export default async function DashboardPreviewPage(props: { searchParams?: SearchParams }) {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) {
     redirect("/auth/signin?callbackUrl=/dashboard/preview");
   }

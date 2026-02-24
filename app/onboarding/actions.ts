@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { getSession } from "@/auth";
 import {
   createPortfolio,
   getPortfolioByHandle,
@@ -37,7 +37,7 @@ function onboardingError(message: string) {
 }
 
 export async function submitOnboardingForm(formData: FormData) {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) {
     redirect("/auth/signin?callbackUrl=/onboarding");
   }
@@ -96,7 +96,7 @@ export async function submitOnboardingForm(formData: FormData) {
     onboardingData,
   });
 
-  if (!created.ok && created.reason === "exists") {
+  if (!created.ok && created.reason === "db_error") {
     redirect("/dashboard");
   }
 

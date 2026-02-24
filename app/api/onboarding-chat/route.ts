@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getSession } from "@/auth";
 import { refineOnboardingAnswer } from "@/lib/ai/refine-onboarding";
 import { getPortfolioByHandle } from "@/lib/db/portfolio";
 import { getNextStep, getQuestionForStep } from "@/lib/onboarding/state-machine";
@@ -17,7 +17,7 @@ function badRequest(message: string) {
 }
 
 export async function POST(request: Request) {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }

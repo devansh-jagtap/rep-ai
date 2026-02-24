@@ -33,8 +33,8 @@ import {
   User,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
+import { signOut } from "@/auth-client";
 import { PortfolioSwitcher } from "./portfolio-switcher";
 
 interface AppSidebarProps {
@@ -55,6 +55,13 @@ const navigation = [
 
 export function AppSidebar({ credits, userName, userEmail, userImage }: AppSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push("/auth/signin");
+    router.refresh();
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -124,7 +131,7 @@ export function AppSidebar({ credits, userName, userEmail, userImage }: AppSideb
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => signOut()}
+              onClick={handleSignOut}
               className="cursor-pointer text-destructive focus:text-destructive"
             >
               <LogOut className="mr-2 size-4" />

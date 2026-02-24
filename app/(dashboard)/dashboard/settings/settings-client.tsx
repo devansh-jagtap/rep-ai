@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTheme } from "next-themes";
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useTransition, useSyncExternalStore } from "react";
 import { updateHandle, deleteActivePortfolio } from "../actions";
 import { toast } from "sonner";
 import { Zap, AlertTriangle, Trash2 } from "lucide-react";

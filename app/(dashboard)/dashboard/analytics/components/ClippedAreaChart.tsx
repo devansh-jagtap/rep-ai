@@ -69,9 +69,10 @@ export function ClippedAreaChart({
             <AreaChart
               accessibilityLayer
               data={data}
-              onMouseMove={(state) => {
-                const x = state.activeCoordinate?.x;
-                const dataValue = state.activePayload?.[0]?.value;
+              onMouseMove={(state: unknown) => {
+                const s = state as { activeCoordinate?: { x: number }; activePayload?: Array<{ value: number }> };
+                const x = s.activeCoordinate?.x;
+                const dataValue = s.activePayload?.[0]?.value;
                 if (x !== undefined && dataValue !== undefined) {
                   springX.set(x);
                   springY.set(dataValue);

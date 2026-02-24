@@ -1,10 +1,10 @@
-import { auth } from "@/auth";
+import { getSession } from "@/auth";
 import { redirect } from "next/navigation";
 import { getDashboardData } from "../_lib/get-dashboard-data";
 import { PortfolioClient } from "./portfolio-client";
 
 export default async function PortfolioPage() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user) redirect("/auth/signin");
 
   const data = await getDashboardData();

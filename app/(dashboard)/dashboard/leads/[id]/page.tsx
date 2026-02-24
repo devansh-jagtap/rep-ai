@@ -1,4 +1,4 @@
-import { auth } from "@/auth"
+import { getSession } from "@/auth"
 import { redirect, notFound } from "next/navigation"
 import { and, desc, eq } from "drizzle-orm"
 
@@ -30,7 +30,7 @@ export default async function LeadDetailPage({
 }: {
   params: Promise<{ id: string }>
 }) {
-  const session = await auth()
+  const session = await getSession()
   if (!session?.user) redirect("/auth/signin")
 
   const data = await getDashboardData()

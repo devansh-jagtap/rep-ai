@@ -1,4 +1,4 @@
-import { auth } from "@/auth";
+import { getSession } from "@/auth";
 import { getDashboardData } from "@/app/(dashboard)/dashboard/_lib/get-dashboard-data";
 import { getProfileById } from "@/lib/db";
 import { db } from "@/lib/db";
@@ -13,7 +13,7 @@ const MODEL_LABELS: Record<string, string> = {
 };
 
 export async function getDashboardOverviewData() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) return { session: null };
 
   const [data, profile] = await Promise.all([getDashboardData(), getProfileById(session.user.id)]);

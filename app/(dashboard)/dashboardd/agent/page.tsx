@@ -1,12 +1,12 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { getSession } from "@/auth";
 import { AgentConfigForm } from "@/components/agent-config-form";
 import { getActivePortfolio } from "@/lib/active-portfolio";
 import { getAgentByPortfolioId } from "@/lib/agent/configure";
 import { isConversationStrategyMode, type ConversationStrategyMode } from "@/lib/agent/strategy-modes";
 
 export default async function AgentDashboardPage() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) {
     redirect("/auth/signin");
   }

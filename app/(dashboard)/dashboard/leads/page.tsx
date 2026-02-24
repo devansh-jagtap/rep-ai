@@ -1,4 +1,4 @@
-import { auth } from "@/auth";
+import { getSession } from "@/auth";
 import { redirect } from "next/navigation";
 import { getDashboardData } from "../_lib/get-dashboard-data";
 import { LeadsClient } from "./leads-client";
@@ -25,7 +25,7 @@ function extractTimeline(projectDetails: string | null) {
 }
 
 export default async function LeadsPage() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user) redirect("/auth/signin");
 
   const data = await getDashboardData();

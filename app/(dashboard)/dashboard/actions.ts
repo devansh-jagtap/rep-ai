@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@/auth";
+import { getSession } from "@/auth";
 import { db } from "@/lib/db";
 import { portfolios, agents } from "@/lib/schema";
 import { eq } from "drizzle-orm";
@@ -13,7 +13,7 @@ import { handlePublicChat, type PublicChatResult } from "@/lib/ai/public-chat-ha
 import { sanitizeHistory } from "@/lib/validation/public-chat";
 
 async function requireAuth() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) throw new Error("Unauthorized");
   return session.user.id;
 }

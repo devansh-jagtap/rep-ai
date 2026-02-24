@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getSession } from "@/auth";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { onboardingDrafts } from "@/lib/schema";
@@ -7,7 +7,7 @@ import { getActivePortfolio } from "@/lib/active-portfolio";
 import { deletePortfolioById } from "@/lib/db/portfolio";
 
 export async function DELETE() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }

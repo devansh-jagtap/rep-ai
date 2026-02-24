@@ -16,8 +16,8 @@ const authRoutes = [
   "/auth/error",
 ];
 
-const SESSION_COOKIE = "authjs.session-token";
-const SECURE_SESSION_COOKIE = "__Secure-authjs.session-token";
+const SESSION_COOKIE = "better-auth.session_token";
+const SECURE_SESSION_COOKIE = "__better-auth.session_token";
 
 function hasSessionToken(request: NextRequest): boolean {
   return (

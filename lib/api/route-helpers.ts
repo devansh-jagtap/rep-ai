@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getSession } from "@/auth";
 
 export function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -8,7 +8,7 @@ export function jsonError(message: string, status: number) {
 export async function requireUserId() {
   let session;
   try {
-    session = await auth();
+    session = await getSession();
   } catch {
     return { ok: false as const, response: jsonError("Unauthorized", 401) };
   }

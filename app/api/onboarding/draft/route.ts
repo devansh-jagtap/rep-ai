@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getSession } from "@/auth";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { onboardingDrafts } from "@/lib/schema";
 import type { OnboardingData } from "@/lib/onboarding/types";
 
 export async function GET() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
@@ -27,7 +27,7 @@ export async function GET() {
 }
 
 export async function DELETE() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
