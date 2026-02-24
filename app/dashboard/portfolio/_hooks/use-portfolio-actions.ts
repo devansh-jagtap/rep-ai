@@ -1,6 +1,10 @@
 import { useCallback, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { regeneratePortfolio, togglePublish, updateTemplate } from "../../actions";
+import {
+  regeneratePortfolio,
+  togglePublish,
+  updateTemplate,
+} from "@/app/(dashboard)/dashboard/actions";
 
 export function usePortfolioActions(hasContent: boolean, initialPublished: boolean) {
   const [isPending, startTransition] = useTransition();

@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { getDashboardData } from "@/app/dashboard/actions";
+import { getDashboardData } from "@/app/(dashboard)/dashboard/_lib/get-dashboard-data";
 import { getProfileById } from "@/lib/db";
 import { db } from "@/lib/db";
 import { agentLeads } from "@/lib/schema";
@@ -14,10 +14,10 @@ const MODEL_LABELS: Record<string, string> = {
 
 export async function getDashboardOverviewData() {
   const session = await auth();
-  if (!session?.user?.id) return { session: null as const };
+  if (!session?.user?.id) return { session: null };
 
   const [data, profile] = await Promise.all([getDashboardData(), getProfileById(session.user.id)]);
-  if (!data) return { session, data: null as const, profile };
+  if (!data) return { session, data: null, profile };
 
   const { portfolio, agent } = data;
   const [totalLeadsResult] = await db.select({ count: count() }).from(agentLeads).where(eq(agentLeads.portfolioId, portfolio.id));

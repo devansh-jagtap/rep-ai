@@ -4,7 +4,7 @@ import { and, desc, eq } from "drizzle-orm"
 
 import { db } from "@/lib/db"
 import { agentLeads } from "@/lib/schema"
-import { getDashboardData } from "../../actions"
+import { getDashboardData } from "../../_lib/get-dashboard-data"
 import { LeadDetailClient } from "./lead-detail-client"
 import type { LeadDetailData } from "@/components/leads/types"
 

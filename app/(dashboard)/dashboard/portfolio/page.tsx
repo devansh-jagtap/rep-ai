@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { getDashboardData } from "../actions";
+import { getDashboardData } from "../_lib/get-dashboard-data";
 import { PortfolioClient } from "./portfolio-client";
 
 export default async function PortfolioPage() {

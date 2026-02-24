@@ -16,11 +16,6 @@ const authRoutes = [
   "/auth/error",
 ];
 
-<<<<<<< HEAD
-export default auth((request) => {
-  const { pathname } = request.nextUrl;
-  const isAuth = Boolean(request.auth?.user?.id);
-=======
 const SESSION_COOKIE = "authjs.session-token";
 const SECURE_SESSION_COOKIE = "__Secure-authjs.session-token";
 
@@ -34,7 +29,6 @@ function hasSessionToken(request: NextRequest): boolean {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isAuth = hasSessionToken(request);
->>>>>>> 5acaf21 (Implement authentication enhancements and update dependencies)
 
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
 

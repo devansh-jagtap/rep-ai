@@ -6,7 +6,7 @@ import { portfolios, agents } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getPortfolioByUserId } from "@/lib/db/portfolio";
-import { configureAgentForUser, getAgentByPortfolioId, type ConfigureAgentInput } from "@/lib/agent/configure";
+import { configureAgentForUser, type ConfigureAgentInput } from "@/lib/agent/configure";
 import { generatePortfolio } from "@/lib/ai/generate-portfolio";
 import { validateHandle } from "@/lib/validation/handle";
 
@@ -14,17 +14,6 @@ async function requireAuth() {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
   return session.user.id;
-}
-
-export async function getDashboardData() {
-  const userId = await requireAuth();
-
-  const portfolio = await getPortfolioByUserId(userId);
-  if (!portfolio) return null;
-
-  const agent = await getAgentByPortfolioId(portfolio.id);
-
-  return { portfolio, agent };
 }
 
 export async function togglePublish(publish: boolean) {
