@@ -3,7 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { agentLeads } from "@/lib/schema";
 import { requireUserId } from "@/lib/api/route-helpers";
-import { getPortfolioByUserId } from "@/lib/db/portfolio";
+import { getActivePortfolio } from "@/lib/active-portfolio";
 
 export async function PATCH(
   _request: Request,
@@ -12,7 +12,7 @@ export async function PATCH(
   const authResult = await requireUserId();
   if (!authResult.ok) return authResult.response;
 
-  const portfolio = await getPortfolioByUserId(authResult.userId);
+  const portfolio = await getActivePortfolio(authResult.userId);
   if (!portfolio) {
     return NextResponse.json({ error: "Portfolio not found" }, { status: 404 });
   }
@@ -31,4 +31,3 @@ export async function PATCH(
 
   return NextResponse.json({ ok: true, lead: updated[0] });
 }
-

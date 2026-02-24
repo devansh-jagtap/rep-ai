@@ -13,13 +13,51 @@ export interface KnowledgeSourceRecord {
   chunkCount: number;
 }
 
-export async function getUserAgent(userId: string) {
+async function persistChunksWithEmbeddings(input: {
+  sourceId: string;
+  agentId: string;
+  content: string;
+  now?: Date;
+}) {
+  const chunks = chunkText(input.content);
+  if (chunks.length === 0) return;
+
+  const now = input.now ?? new Date();
+  let embeddings: number[][] = [];
+
+  try {
+    embeddings = await generateEmbeddings(chunks);
+  } catch (error) {
+    console.warn("Failed to generate embeddings:", error);
+  }
+
+  await db.insert(knowledgeChunks).values(
+    chunks.map((chunk, index) => ({
+      id: crypto.randomUUID(),
+      sourceId: input.sourceId,
+      agentId: input.agentId,
+      chunkText: chunk,
+      embedding: embeddings[index] ? `[${embeddings[index].join(",")}]` : null,
+      createdAt: now,
+    }))
+  );
+}
+
+/** Get agent by userId — looks up the active portfolio via cookie first, then falls back to first portfolio. */
+export async function getUserAgent(userId: string, portfolioId?: string) {
+  if (portfolioId) {
+    // Scope to the specific (active) portfolio
+    const [agent] = await db
+      .select({ id: agents.id, portfolioId: agents.portfolioId, isEnabled: agents.isEnabled })
+      .from(agents)
+      .where(eq(agents.portfolioId, portfolioId))
+      .limit(1);
+    return agent ?? null;
+  }
+
+  // Legacy: grab agent from first portfolio belonging to the user
   const [agent] = await db
-    .select({
-      id: agents.id,
-      portfolioId: agents.portfolioId,
-      isEnabled: agents.isEnabled,
-    })
+    .select({ id: agents.id, portfolioId: agents.portfolioId, isEnabled: agents.isEnabled })
     .from(agents)
     .innerJoin(portfolios, eq(portfolios.id, agents.portfolioId))
     .where(eq(portfolios.userId, userId))
@@ -85,7 +123,15 @@ export async function createKnowledgeSourceRecord(input: {
     updatedAt: now,
   });
 
-  return { id, now };
+  await persistChunksWithEmbeddings({
+    sourceId,
+    agentId: input.agentId,
+    content: input.content,
+    now,
+  });
+
+
+  return { ok: true as const, sourceId };
 }
 
 export async function getKnowledgeSourceByIdAndAgent(input: { id: string; agentId: string }) {
@@ -110,6 +156,18 @@ export async function updateKnowledgeSourceRecord(input: {
     .update(knowledgeSources)
     .set({ title: input.title, content: input.content, updatedAt: now })
     .where(eq(knowledgeSources.id, input.id));
+
+  await db.delete(knowledgeChunks).where(eq(knowledgeChunks.sourceId, input.id));
+
+  await persistChunksWithEmbeddings({
+    sourceId: input.id,
+    agentId: input.agentId,
+    content: input.content,
+    now,
+  });
+
+
+  return { ok: true as const };
 }
 
 export async function deleteKnowledgeSource(input: { id: string; agentId: string }) {

@@ -3,14 +3,18 @@ import { parseJsonBody, requireUserId } from "@/lib/api/route-helpers";
 import { getUserAgent, listKnowledgeSourcesByAgentId } from "@/lib/db/knowledge";
 import { createKnowledgeSource } from "@/lib/knowledge/service";
 import { parseKnowledgeInput } from "@/lib/validation/knowledge";
+import { getActivePortfolio } from "@/lib/active-portfolio";
 
 export async function GET() {
   const auth = await requireUserId();
-  if (!auth.ok) {
-    return auth.response;
+  if (!auth.ok) return auth.response;
+
+  const portfolio = await getActivePortfolio(auth.userId);
+  if (!portfolio) {
+    return NextResponse.json({ error: "Portfolio not found" }, { status: 404 });
   }
 
-  const agent = await getUserAgent(auth.userId);
+  const agent = await getUserAgent(auth.userId, portfolio.id);
   if (!agent) {
     return NextResponse.json({ error: "Agent not found" }, { status: 404 });
   }
@@ -21,21 +25,22 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const auth = await requireUserId();
-  if (!auth.ok) {
-    return auth.response;
-  }
+  if (!auth.ok) return auth.response;
 
   const json = await parseJsonBody<Record<string, unknown>>(request);
-  if (!json.ok) {
-    return json.response;
-  }
+  if (!json.ok) return json.response;
 
   const parsed = parseKnowledgeInput(json.body);
   if (!parsed) {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
 
-  const agent = await getUserAgent(auth.userId);
+  const portfolio = await getActivePortfolio(auth.userId);
+  if (!portfolio) {
+    return NextResponse.json({ error: "Portfolio not found" }, { status: 404 });
+  }
+
+  const agent = await getUserAgent(auth.userId, portfolio.id);
   if (!agent) {
     return NextResponse.json({ error: "Agent not found" }, { status: 404 });
   }

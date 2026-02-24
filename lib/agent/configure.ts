@@ -1,6 +1,5 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { getPortfolioByUserId } from "@/lib/db/portfolio";
 import { agents } from "@/lib/schema";
 import { isBehaviorPresetType } from "@/lib/agent/behavior-presets";
 import { isSupportedAgentModel } from "@/lib/agent/models";
@@ -65,12 +64,8 @@ export async function getAgentByPortfolioId(portfolioId: string) {
   return agent ?? null;
 }
 
-export async function configureAgentForUser(userId: string, input: ConfigureAgentInput) {
-  const portfolio = await getPortfolioByUserId(userId);
-  if (!portfolio) {
-    return { ok: false as const, status: 404, error: "Portfolio not found" };
-  }
-
+/** Configure (upsert) an agent for a specific portfolio ID. */
+export async function configureAgentForPortfolio(portfolioId: string, input: ConfigureAgentInput) {
   const validation = validateConfigureAgentInput(input);
   if (!validation.ok) {
     return { ok: false as const, status: 400, error: validation.error };
@@ -80,7 +75,7 @@ export async function configureAgentForUser(userId: string, input: ConfigureAgen
     .insert(agents)
     .values({
       id: crypto.randomUUID(),
-      portfolioId: portfolio.id,
+      portfolioId,
       isEnabled: validation.value.isEnabled,
       model: validation.value.model,
       behaviorType: validation.value.behaviorType,
@@ -103,4 +98,14 @@ export async function configureAgentForUser(userId: string, input: ConfigureAgen
     });
 
   return { ok: true as const };
+}
+
+/** @deprecated Use configureAgentForPortfolio(portfolioId, input) instead. Kept for API route compatibility. */
+export async function configureAgentForUser(userId: string, input: ConfigureAgentInput) {
+  const { getActivePortfolio } = await import("@/lib/active-portfolio");
+  const portfolio = await getActivePortfolio(userId);
+  if (!portfolio) {
+    return { ok: false as const, status: 404, error: "Portfolio not found" };
+  }
+  return configureAgentForPortfolio(portfolio.id, input);
 }

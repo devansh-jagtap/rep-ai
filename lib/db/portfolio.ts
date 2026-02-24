@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { agents, portfolios } from "@/lib/schema";
 
@@ -22,20 +22,51 @@ export interface PortfolioOnboardingData {
 export interface CreatePortfolioInput {
   userId: string;
   handle: string;
+  name?: string;
   onboardingData: PortfolioOnboardingData;
 }
 
+/** Returns the first (newest) portfolio for a user. */
 export async function getPortfolioByUserId(userId: string) {
   try {
     const [portfolio] = await db
       .select()
       .from(portfolios)
       .where(eq(portfolios.userId, userId))
+      .orderBy(desc(portfolios.createdAt))
       .limit(1);
-
     return portfolio ?? null;
   } catch (error) {
     console.error("Failed to fetch portfolio by user id", error);
+    return null;
+  }
+}
+
+/** Returns all portfolios for a user, newest first. */
+export async function getPortfoliosByUserId(userId: string) {
+  try {
+    return await db
+      .select()
+      .from(portfolios)
+      .where(eq(portfolios.userId, userId))
+      .orderBy(desc(portfolios.createdAt));
+  } catch (error) {
+    console.error("Failed to fetch portfolios by user id", error);
+    return [];
+  }
+}
+
+/** Returns a specific portfolio by ID, verifying it belongs to the given user. */
+export async function getPortfolioByIdAndUserId(id: string, userId: string) {
+  try {
+    const [portfolio] = await db
+      .select()
+      .from(portfolios)
+      .where(and(eq(portfolios.id, id), eq(portfolios.userId, userId)))
+      .limit(1);
+    return portfolio ?? null;
+  } catch (error) {
+    console.error("Failed to fetch portfolio by id and user id", error);
     return null;
   }
 }
@@ -53,7 +84,6 @@ export async function getPortfolioByHandle(handle: string) {
       .from(portfolios)
       .where(eq(portfolios.handle, handle))
       .limit(1);
-
     return portfolio ?? null;
   } catch (error) {
     console.error("Failed to fetch portfolio by handle", error);
@@ -72,14 +102,12 @@ export async function getPublishedPortfolioByHandle(handle: string) {
       .from(portfolios)
       .where(and(eq(portfolios.handle, handle), eq(portfolios.isPublished, true)))
       .limit(1);
-
     return portfolio ?? null;
   } catch (error) {
     console.error("Failed to fetch published portfolio by handle", error);
     return null;
   }
 }
-
 
 export async function getPublishedPortfolioWithAgentByHandle(handle: string) {
   try {
@@ -103,10 +131,38 @@ export async function getPublishedPortfolioWithAgentByHandle(handle: string) {
       .leftJoin(agents, eq(agents.portfolioId, portfolios.id))
       .where(and(eq(portfolios.handle, handle), eq(portfolios.isPublished, true)))
       .limit(1);
-
     return row ?? null;
   } catch (error) {
     console.error("Failed to fetch published portfolio with agent", error);
+    return null;
+  }
+}
+
+export async function getPortfolioWithAgentByHandle(handle: string) {
+  try {
+    const [row] = await db
+      .select({
+        id: portfolios.id,
+        userId: portfolios.userId,
+        handle: portfolios.handle,
+        template: portfolios.template,
+        content: portfolios.content,
+        isPublished: portfolios.isPublished,
+        agentId: agents.id,
+        agentIsEnabled: agents.isEnabled,
+        agentModel: agents.model,
+        agentBehaviorType: agents.behaviorType,
+        agentStrategyMode: agents.strategyMode,
+        agentCustomPrompt: agents.customPrompt,
+        agentTemperature: agents.temperature,
+      })
+      .from(portfolios)
+      .leftJoin(agents, eq(agents.portfolioId, portfolios.id))
+      .where(eq(portfolios.handle, handle))
+      .limit(1);
+    return row ?? null;
+  } catch (error) {
+    console.error("Failed to fetch portfolio with agent", error);
     return null;
   }
 }
@@ -133,7 +189,6 @@ export async function getPublishedPortfolioWithAgentByAgentId(agentId: string) {
       .innerJoin(agents, eq(agents.portfolioId, portfolios.id))
       .where(and(eq(agents.id, agentId), eq(portfolios.isPublished, true)))
       .limit(1);
-
     return row ?? null;
   } catch (error) {
     console.error("Failed to fetch published portfolio with agent id", error);
@@ -141,38 +196,78 @@ export async function getPublishedPortfolioWithAgentByAgentId(agentId: string) {
   }
 }
 
+export async function getPortfolioWithAgentByAgentId(agentId: string) {
+  try {
+    const [row] = await db
+      .select({
+        id: portfolios.id,
+        userId: portfolios.userId,
+        handle: portfolios.handle,
+        template: portfolios.template,
+        content: portfolios.content,
+        isPublished: portfolios.isPublished,
+        agentId: agents.id,
+        agentIsEnabled: agents.isEnabled,
+        agentModel: agents.model,
+        agentBehaviorType: agents.behaviorType,
+        agentStrategyMode: agents.strategyMode,
+        agentCustomPrompt: agents.customPrompt,
+        agentTemperature: agents.temperature,
+      })
+      .from(portfolios)
+      .innerJoin(agents, eq(agents.portfolioId, portfolios.id))
+      .where(eq(agents.id, agentId))
+      .limit(1);
+    return row ?? null;
+  } catch (error) {
+    console.error("Failed to fetch portfolio with agent id", error);
+    return null;
+  }
+}
+
 export async function createPortfolio(input: CreatePortfolioInput) {
   try {
-    const [existing] = await db
-      .select({ id: portfolios.id })
-      .from(portfolios)
-      .where(eq(portfolios.userId, input.userId))
-      .limit(1);
+    const firstName = input.onboardingData.name?.split(" ")[0];
+    const portfolioName =
+      input.name ?? (firstName ? `${firstName}'s Portfolio` : "My Portfolio");
 
-    if (existing) {
-      return { ok: false as const, reason: "exists" as const };
-    }
+    const [created] = await db
+      .insert(portfolios)
+      .values({
+        id: crypto.randomUUID(),
+        userId: input.userId,
+        name: portfolioName,
+        handle: input.handle,
+        subdomain: null,
+        onboardingData: input.onboardingData,
+        template: "modern",
+        theme: "minimal",
+        isPublished: false,
+        content: null,
+        updatedAt: new Date(),
+      })
+      .returning({ id: portfolios.id });
 
-    await db.insert(portfolios).values({
-      id: crypto.randomUUID(),
-      userId: input.userId,
-      handle: input.handle,
-      subdomain: null,
-      onboardingData: input.onboardingData,
-      template: "modern",
-      theme: "minimal",
-      isPublished: false,
-      content: null,
-      updatedAt: new Date(),
-    });
-
-    return { ok: true as const };
+    return { ok: true as const, portfolioId: created.id };
   } catch (error) {
     console.error("Failed to create portfolio", error);
     return { ok: false as const, reason: "db_error" as const };
   }
 }
 
+export async function deletePortfolioById(portfolioId: string, userId: string) {
+  try {
+    await db
+      .delete(portfolios)
+      .where(and(eq(portfolios.id, portfolioId), eq(portfolios.userId, userId)));
+    return { ok: true as const };
+  } catch (error) {
+    console.error("Failed to delete portfolio", error);
+    return { ok: false as const };
+  }
+}
+
+/** @deprecated Use deletePortfolioById instead */
 export async function deletePortfolioByUserId(userId: string) {
   try {
     await db.delete(portfolios).where(eq(portfolios.userId, userId));

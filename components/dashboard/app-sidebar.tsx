@@ -35,6 +35,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { PortfolioSwitcher } from "./portfolio-switcher";
 
 interface AppSidebarProps {
   credits: number;
@@ -44,36 +45,12 @@ interface AppSidebarProps {
 }
 
 const navigation = [
-  {
-    title: "Overview",
-    url: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Portfolio",
-    url: "/dashboard/portfolio",
-    icon: Briefcase,
-  },
-  {
-    title: "Agent",
-    url: "/dashboard/agent",
-    icon: Bot,
-  },
-  {
-    title: "Leads",
-    url: "/dashboard/leads",
-    icon: Users,
-  },
-  {
-    title: "Analytics",
-    url: "/dashboard/analytics",
-    icon: BarChart3,
-  },
-  {
-    title: "Knowledge",
-    url: "/dashboard/knowledge",
-    icon: BookText,
-  },
+  { title: "Overview", url: "/dashboard", icon: LayoutDashboard },
+  { title: "Portfolio", url: "/dashboard/portfolio", icon: Briefcase },
+  { title: "Agent", url: "/dashboard/agent", icon: Bot },
+  { title: "Leads", url: "/dashboard/leads", icon: Users },
+  { title: "Analytics", url: "/dashboard/analytics", icon: BarChart3 },
+  { title: "Knowledge", url: "/dashboard/knowledge", icon: BookText },
 ];
 
 export function AppSidebar({ credits, userName, userEmail, userImage }: AppSidebarProps) {
@@ -81,14 +58,16 @@ export function AppSidebar({ credits, userName, userEmail, userImage }: AppSideb
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-border/50 py-4">
-        <div className="flex items-center gap-2 px-4">
-          
-          <div className="flex flex-col gap-0.5 leading-none group-data-[collapsible=icon]:hidden">
-          REF  
-          </div>
-        </div>
+      {/* ── Header: portfolio switcher ── */}
+      <SidebarHeader className="border-b border-border/50 p-2">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <PortfolioSwitcher />
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarHeader>
+
+      {/* ── Navigation ── */}
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
@@ -108,6 +87,8 @@ export function AppSidebar({ credits, userName, userEmail, userImage }: AppSideb
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      {/* ── Footer: credits + user menu ── */}
       <SidebarFooter className="border-t border-border/50">
         <div className="flex items-center gap-2 px-2 py-3">
           <Coins className="size-4 text-muted-foreground" />
@@ -115,15 +96,12 @@ export function AppSidebar({ credits, userName, userEmail, userImage }: AppSideb
             {credits} credits
           </span>
         </div>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton className="w-full justify-start">
               {userImage ? (
-                <img
-                  src={userImage}
-                  alt={userName}
-                  className="size-6 rounded-full"
-                />
+                <img src={userImage} alt={userName} className="size-6 rounded-full" />
               ) : (
                 <User className="size-4" />
               )}
@@ -155,6 +133,7 @@ export function AppSidebar({ credits, userName, userEmail, userImage }: AppSideb
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarFooter>
+
       <SidebarRail />
     </Sidebar>
   );
