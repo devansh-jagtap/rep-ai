@@ -1,6 +1,21 @@
 import type { PortfolioTone } from "@/lib/db/portfolio";
 
-export const ONBOARDING_STEPS = ["name", "title", "bio", "services", "projects", "tone", "handle"] as const;
+export type OnboardingSetupPath = "existing-site" | "build-new";
+
+export const ONBOARDING_STEPS = [
+  "setupPath",
+  "name",
+  "title",
+  "bio",
+  "services",
+  "projects",
+  "siteUrl",
+  "targetAudience",
+  "contactPreferences",
+  "faqs",
+  "tone",
+  "handle",
+] as const;
 
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 
@@ -10,11 +25,16 @@ export interface OnboardingProjectInput {
 }
 
 export interface OnboardingData {
+  setupPath: OnboardingSetupPath;
   name: string;
   title: string;
   bio: string;
   services: string[];
-  projects: OnboardingProjectInput[];
+  projects?: OnboardingProjectInput[];
+  siteUrl?: string;
+  targetAudience?: string;
+  contactPreferences?: string;
+  faqs?: string[];
   tone: PortfolioTone;
   handle: string;
 }
@@ -36,12 +56,17 @@ export interface OnboardingChatResponse {
 }
 
 export const ONBOARDING_QUESTIONS: Record<OnboardingStep, string> = {
+  setupPath: "Choose a setup path: I already have a website, or Build me a portfolio + agent.",
   name: "Great to meet you. What full name should appear on your portfolio?",
   title: "Nice. What professional title best describes your work?",
-  bio: "Now share a short bio (at least 20 characters).",
+  bio: "Share your elevator pitch or short bio (at least 20 characters).",
   services:
-    "What services do you offer? Share them in plain language, one per line or comma-separated.",
-  projects: "Tell me about 2–3 projects. Format each as `Title: Description` on a new line.",
+    "What services/work do you offer? Share them in plain language, one per line or comma-separated.",
+  projects: "Tell me about 1-3 projects. Format each as `Title: Description` on a new line.",
+  siteUrl: "What is your website URL?",
+  targetAudience: "Who is your target audience?",
+  contactPreferences: "How should your agent handle contact preferences?",
+  faqs: "Share a few FAQs you want your agent to answer (one per line).",
   tone: "Choose your preferred tone: Professional, Friendly, Bold, or Minimal.",
   handle:
     "Last step: choose your public handle (3–30 chars, lowercase letters/numbers/hyphens).",

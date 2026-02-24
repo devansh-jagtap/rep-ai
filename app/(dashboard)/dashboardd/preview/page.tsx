@@ -97,7 +97,7 @@ export default async function DashboardPreviewPage(props: { searchParams?: Searc
             <div>
               <p className="text-sm text-muted-foreground">Services</p>
               <ul className="list-disc ml-5">
-                {onboardingData.services.map((service) => (
+                {(onboardingData.services ?? []).map((service) => (
                   <li key={service}>{service}</li>
                 ))}
               </ul>
@@ -106,7 +106,7 @@ export default async function DashboardPreviewPage(props: { searchParams?: Searc
             <div>
               <p className="text-sm text-muted-foreground">Projects</p>
               <div className="space-y-2 mt-1">
-                {onboardingData.projects.map((project, index) => (
+                {(onboardingData.projects ?? []).map((project, index) => (
                   <div key={`${project.title}-${index}`} className="rounded-md border p-3">
                     <p className="font-medium">{project.title}</p>
                     <p className="text-sm text-muted-foreground">{project.description}</p>

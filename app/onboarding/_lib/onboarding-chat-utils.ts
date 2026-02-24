@@ -2,7 +2,7 @@ import type { OnboardingData } from "@/lib/onboarding/types";
 import { validateFinalOnboardingState } from "@/lib/onboarding/validation";
 
 export const INITIAL_GREETING =
-  "Hi! I'm here to help you set up your portfolio on ref. Let's start with the basics—what's your full name?";
+  "Hi! Let’s choose your setup path: **I already have a website** (agent only) or **Build me a portfolio + agent** (start from scratch).";
 
 const CONFIRM_PHRASES = [
   "is that correct",
