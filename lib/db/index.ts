@@ -9,6 +9,7 @@ export interface Profile {
   plan: "free" | "pro";
   credits: number;
   email: string;
+  image?: string | null;
 }
 
 export interface Lead {
@@ -41,6 +42,7 @@ export async function getProfileById(id: string): Promise<Profile | null> {
       email: users.email,
       plan: users.plan,
       credits: users.credits,
+      image: users.image,
     })
     .from(users)
     .where(eq(users.id, id))

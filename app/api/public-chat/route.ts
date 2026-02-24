@@ -26,6 +26,10 @@ import {
 import { validatePortfolioContent } from "@/lib/validation/portfolio-schema";
 import { parsePublicChatRequest } from "@/lib/validation/public-chat";
 import { trackAnalytics } from "@/lib/db/analytics";
+import { consumeCredits, getCredits } from "@/lib/credits";
+import { requireUserId } from "@/lib/api/route-helpers";
+
+const CREDIT_COST = 1;
 
 function getClientIp(request: Request): string {
   const forwarded = request.headers.get("x-forwarded-for");
@@ -89,6 +93,16 @@ export async function POST(request: Request) {
       );
     }
 
+    const authResult = await requireUserId();
+    const userId = authResult.ok ? authResult.userId : null;
+    
+    if (userId) {
+      const currentCredits = await getCredits(userId);
+      if (currentCredits < CREDIT_COST) {
+        return NextResponse.json({ error: "Not enough credits" }, { status: 402 });
+      }
+    }
+
     const portfolio = parsed.agentId
       ? await getPublishedPortfolioWithAgentByAgentId(parsed.agentId)
       : await getPublishedPortfolioWithAgentByHandle(parsed.handle ?? "");
@@ -135,6 +149,10 @@ export async function POST(request: Request) {
       history: parsed.history,
       portfolio: content,
     });
+
+    if (userId) {
+      await consumeCredits(userId, CREDIT_COST);
+    }
 
     const threshold = leadConfidenceThresholdForMode(strategyMode);
     const leadDetected =

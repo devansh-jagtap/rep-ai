@@ -2,6 +2,16 @@ import { and, eq, gte, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { users } from "@/lib/schema";
 
+export async function getCredits(userId: string): Promise<number> {
+  const [user] = await db
+    .select({ credits: users.credits })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  return user?.credits ?? 0;
+}
+
 export async function consumeCredits(
   userId: string,
   amount: number

@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     name,
     passwordHash: await hash(password, 12),
     plan: "free",
-    credits: 20,
+    credits: 500,
   });
 
   return NextResponse.json({ ok: true }, { status: 201 });

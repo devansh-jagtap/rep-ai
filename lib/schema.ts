@@ -24,7 +24,7 @@ export const users = pgTable("users", {
   image: text("image"),
   passwordHash: text("password_hash").notNull(),
   plan: varchar("plan", { length: 20 }).notNull().default("free"),
-  credits: integer("credits").notNull().default(20),
+  credits: integer("credits").notNull().default(500),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
