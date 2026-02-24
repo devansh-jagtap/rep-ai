@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
+import { chatWithAgent } from "@/app/(dashboard)/dashboard/actions";
 
 export function useAgentActions(params: {
   chatInput: string;
@@ -25,23 +26,17 @@ export function useAgentActions(params: {
     params.setIsChatLoading(true);
 
     try {
-      const res = await fetch("/api/public-chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          handle: params.portfolioHandle,
-          message: msg,
-          history: params.chatMessages.slice(-10),
-        }),
+      const result = await chatWithAgent({
+        handle: params.portfolioHandle,
+        message: msg,
+        history: params.chatMessages.slice(-10),
       });
 
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error || `Request failed (${res.status})`);
+      if (!result.ok) {
+        throw new Error(result.error);
       }
 
-      const data = await res.json();
-      params.addChatMessage({ role: "assistant", content: data.reply });
+      params.addChatMessage({ role: "assistant", content: result.reply });
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Agent unavailable";
       params.addChatMessage({ role: "assistant", content: `Error: ${errorMsg}` });

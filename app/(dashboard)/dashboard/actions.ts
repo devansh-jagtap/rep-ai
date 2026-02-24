@@ -9,6 +9,8 @@ import { getActivePortfolio } from "@/lib/active-portfolio";
 import { getAgentByPortfolioId, configureAgentForPortfolio, type ConfigureAgentInput } from "@/lib/agent/configure";
 import { generatePortfolio } from "@/lib/ai/generate-portfolio";
 import { validateHandle } from "@/lib/validation/handle";
+import { handlePublicChat, type PublicChatResult } from "@/lib/ai/public-chat-handler";
+import { sanitizeHistory } from "@/lib/validation/public-chat";
 
 async function requireAuth() {
   const session = await auth();
@@ -130,6 +132,24 @@ export async function updatePortfolioName(name: string) {
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/settings");
+}
+
+export async function chatWithAgent(body: {
+  handle: string;
+  message: string;
+  history: { role: "user" | "assistant"; content: string }[];
+  sessionId?: string | null;
+}): Promise<PublicChatResult> {
+  const userId = await requireAuth();
+  return handlePublicChat({
+    handle: body.handle,
+    agentId: null,
+    message: body.message,
+    history: sanitizeHistory(body.history),
+    sessionId: body.sessionId ?? null,
+    ip: "dashboard",
+    userId,
+  });
 }
 
 export async function deleteActivePortfolio() {

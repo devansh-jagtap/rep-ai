@@ -18,6 +18,7 @@ import {
   InputGroupTextarea,
 } from "@/components/ui/input-group";
 import { MessageResponse } from "@/components/ai-elements/message";
+import { widgetChatWithAgent } from "@/app/[handle]/actions";
 
 type ChatMessage = {
   id: string;
@@ -57,24 +58,15 @@ export function AgentWidget({ handle, agentName = "AI Assistant" }: AgentWidgetP
     setStreamingContent("");
 
     try {
-      const response = await fetch("/api/public-chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ handle, message, history }),
+      const result = await widgetChatWithAgent({
+        handle,
+        message,
+        history,
       });
 
-      const data = (await response.json().catch(() => null)) as { 
-        reply?: string; 
-        error?: string;
-        lead?: {
-          lead_detected: boolean;
-          confidence: number;
-        };
-      } | null;
-
-      const reply = response.ok 
-        ? data?.reply ?? "Sorry, I couldn't generate a reply." 
-        : data?.error ?? "Request failed.";
+      const reply = result.ok
+        ? result.reply
+        : result.error ?? "Request failed.";
 
       let streamed = "";
       for (const char of reply) {

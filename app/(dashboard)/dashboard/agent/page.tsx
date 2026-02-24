@@ -13,8 +13,10 @@ export default async function AgentPage() {
   return (
     <AgentClient
       agent={data.agent}
+      agentId={data.agent?.id ?? null}
       portfolioHandle={data.portfolio.handle}
       hasContent={!!data.portfolio.content}
+      isPortfolioPublished={data.portfolio.isPublished}
     />
   );
 }

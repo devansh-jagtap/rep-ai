@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { getPortfolioByUserId } from "@/lib/db/portfolio";
+import { getActivePortfolio } from "@/lib/active-portfolio";
 import { getAgentByPortfolioId } from "@/lib/agent/configure";
 
 async function requireAuthUserId() {
@@ -11,7 +11,7 @@ async function requireAuthUserId() {
 export async function getDashboardData() {
   const userId = await requireAuthUserId();
 
-  const portfolio = await getPortfolioByUserId(userId);
+  const portfolio = await getActivePortfolio(userId);
   if (!portfolio) return null;
 
   const agent = await getAgentByPortfolioId(portfolio.id);

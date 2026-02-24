@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/input-group";
 import { MessageResponse } from "@/components/ai-elements/message";
 import { ArrowUpIcon, Loader2, MessageSquare } from "lucide-react";
+import { embedChatWithAgent } from "./actions";
 
 type ChatMessage = { 
   id: string;
@@ -52,22 +53,17 @@ export function EmbedChatClient({ agentId, agentName = "AI Assistant" }: EmbedCh
     setStreamingContent("");
 
     try {
-      const response = await fetch("/api/public-chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          agentId,
-          message: content,
-          history: nextMessages.slice(-8),
-        }),
+      const result = await embedChatWithAgent({
+        agentId,
+        message: content,
+        history: nextMessages.slice(-8),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to send message");
+      if (!result.ok) {
+        throw new Error(result.error);
       }
 
-      const data = (await response.json()) as { reply?: string };
-      const reply = data.reply ?? "No response";
+      const reply = result.reply;
 
       let streamed = "";
       for (const char of reply) {
