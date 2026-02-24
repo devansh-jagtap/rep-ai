@@ -10,7 +10,8 @@ import { BoldTemplate } from "@/components/templates/bold-template";
 import { EditorialTemplate } from "@/components/templates/editorial-template";
 import { LandingTemplate } from "@/components/templates/landing-template";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getPortfolioByUserId, type PortfolioOnboardingData } from "@/lib/db/portfolio";
+import { type PortfolioOnboardingData } from "@/lib/db/portfolio";
+import { getActivePortfolio } from "@/lib/active-portfolio";
 import type { PortfolioContent } from "@/lib/validation/portfolio-schema";
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
@@ -21,7 +22,7 @@ export default async function DashboardPreviewPage(props: { searchParams?: Searc
     redirect("/auth/signin?callbackUrl=/dashboard/preview");
   }
 
-  const portfolio = await getPortfolioByUserId(session.user.id);
+  const portfolio = await getActivePortfolio(session.user.id);
   if (!portfolio) {
     redirect("/onboarding");
   }
@@ -54,7 +55,7 @@ export default async function DashboardPreviewPage(props: { searchParams?: Searc
               {portfolio.handle}.ref.com
             </div>
           </div>
-          
+
           {/* Preview Body */}
           {theme === "landing" ? (
             <LandingTemplate content={content} />

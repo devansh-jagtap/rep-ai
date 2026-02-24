@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { type NextRequest, NextResponse } from "next/server";
 
 const protectedRoutes = [
   "/dashboard",
@@ -17,23 +16,29 @@ const authRoutes = [
   "/auth/error",
 ];
 
-export default auth((request) => {
-  const { pathname } = request.nextUrl;
-  const isAuth = !!request.auth;
+const SESSION_COOKIE = "authjs.session-token";
+const SECURE_SESSION_COOKIE = "__Secure-authjs.session-token";
 
-  // Check if the user is trying to access an authentication route
+function hasSessionToken(request: NextRequest): boolean {
+  return (
+    request.cookies.has(SESSION_COOKIE) ||
+    request.cookies.has(SECURE_SESSION_COOKIE)
+  );
+}
+
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const isAuth = hasSessionToken(request);
+
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
 
   if (isAuthRoute) {
     if (isAuth) {
-      // If user is already authenticated, redirect them to the dashboard
       return NextResponse.redirect(new URL("/dashboard", request.nextUrl));
     }
-    // Allow unauthenticated users to access auth routes
     return NextResponse.next();
   }
 
-  // Check if the user is trying to access a protected route
   const isProtected = protectedRoutes.some((route) => pathname.startsWith(route));
 
   if (isProtected && !isAuth) {
@@ -47,7 +52,7 @@ export default auth((request) => {
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: [
@@ -58,5 +63,6 @@ export const config = {
     "/api/onboarding/:path*",
     "/api/profile",
     "/api/leads/:path*",
+    "/api/analytics/:path*",
   ],
 };

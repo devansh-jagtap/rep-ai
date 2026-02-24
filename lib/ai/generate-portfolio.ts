@@ -60,7 +60,19 @@ export class PortfolioGenerationError extends Error {
 }
 
 function tryParsePortfolioContent(text: string): PortfolioContent {
-  const trimmed = text.trim();
+  let trimmed = text.trim();
+
+  // Strip markdown code block marking if present
+  if (trimmed.startsWith("```json")) {
+    trimmed = trimmed.replace(/^```json/, "");
+  } else if (trimmed.startsWith("```")) {
+    trimmed = trimmed.replace(/^```/, "");
+  }
+  if (trimmed.endsWith("```")) {
+    trimmed = trimmed.replace(/```$/, "");
+  }
+  trimmed = trimmed.trim();
+
   const parsed: unknown = JSON.parse(trimmed);
   return validatePortfolioContent(parsed);
 }
@@ -74,7 +86,7 @@ async function generatePortfolioContent(onboardingData: unknown): Promise<Portfo
       system: SYSTEM_PROMPT,
       prompt,
       temperature: 0.5,
-      maxOutputTokens: 1200,
+      maxOutputTokens: 4096, // Increased to avoid truncated JSON
     });
 
     try {
@@ -83,9 +95,9 @@ async function generatePortfolioContent(onboardingData: unknown): Promise<Portfo
       const retryResponse = await generateText({
         model: nebius.chat(MODEL),
         system: SYSTEM_PROMPT,
-        prompt: `${prompt}\n\nYour previous output was invalid JSON. Return only valid JSON matching the exact schema.`,
+        prompt: `${prompt}\n\nYour previous output was invalid JSON. Return only valid JSON matching the exact schema without truncation.`,
         temperature: 0.5,
-        maxOutputTokens: 1200,
+        maxOutputTokens: 4096,
       });
 
       return tryParsePortfolioContent(retryResponse.text);
@@ -97,18 +109,34 @@ async function generatePortfolioContent(onboardingData: unknown): Promise<Portfo
   }
 }
 
-export async function generatePortfolio(userId: string): Promise<void> {
-  console.info("[portfolio-generation] start", { userId });
+/**
+ * Generate AI content for a portfolio.
+ * @param userId   - Owner user id (used for logging and fallback lookup)
+ * @param portfolioId - When provided, operates on this specific portfolio.
+ *                     Falls back to the first portfolio for the user if omitted.
+ */
+export async function generatePortfolio(userId: string, portfolioId?: string): Promise<void> {
+  console.info("[portfolio-generation] start", { userId, portfolioId });
 
   try {
-    const [portfolio] = await db
-      .select({
-        id: portfolios.id,
-        onboardingData: portfolios.onboardingData,
-      })
-      .from(portfolios)
-      .where(eq(portfolios.userId, userId))
-      .limit(1);
+    let portfolio: { id: string; onboardingData: unknown } | undefined;
+
+    if (portfolioId) {
+      const [found] = await db
+        .select({ id: portfolios.id, onboardingData: portfolios.onboardingData })
+        .from(portfolios)
+        .where(eq(portfolios.id, portfolioId))
+        .limit(1);
+      portfolio = found;
+    } else {
+      // Legacy: fetch first portfolio for user
+      const [found] = await db
+        .select({ id: portfolios.id, onboardingData: portfolios.onboardingData })
+        .from(portfolios)
+        .where(eq(portfolios.userId, userId))
+        .limit(1);
+      portfolio = found;
+    }
 
     if (!portfolio) {
       throw new PortfolioGenerationError("Portfolio not found");
@@ -118,23 +146,18 @@ export async function generatePortfolio(userId: string): Promise<void> {
 
     await db
       .update(portfolios)
-      .set({
-        content: generatedContent,
-        updatedAt: new Date(),
-      })
+      .set({ content: generatedContent, updatedAt: new Date() })
       .where(eq(portfolios.id, portfolio.id));
 
-    console.info("[portfolio-generation] success", { userId });
+    console.info("[portfolio-generation] success", { userId, portfolioId: portfolio.id });
   } catch (error) {
     console.error("[portfolio-generation] failure", {
       userId,
+      portfolioId,
       message: error instanceof Error ? error.message : "Unknown error",
     });
 
-    if (error instanceof PortfolioGenerationError) {
-      throw error;
-    }
-
+    if (error instanceof PortfolioGenerationError) throw error;
     throw new PortfolioGenerationError("Portfolio generation failed");
   }
 }

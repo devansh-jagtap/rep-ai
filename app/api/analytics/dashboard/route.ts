@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireUserId } from "@/lib/api/route-helpers";
 import { getAnalyticsSummary, getDailyAnalytics } from "@/lib/db/analytics";
-import { getPortfolioByUserId } from "@/lib/db/portfolio";
+import { getActivePortfolio } from "@/lib/active-portfolio";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
       startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   }
 
-  const portfolio = await getPortfolioByUserId(authResult.userId);
+  const portfolio = await getActivePortfolio(authResult.userId);
   if (!portfolio) {
     return NextResponse.json({ error: "Portfolio not found" }, { status: 404 });
   }

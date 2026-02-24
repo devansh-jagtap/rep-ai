@@ -6,7 +6,12 @@ export function jsonError(message: string, status: number) {
 }
 
 export async function requireUserId() {
-  const session = await auth();
+  let session;
+  try {
+    session = await auth();
+  } catch {
+    return { ok: false as const, response: jsonError("Unauthorized", 401) };
+  }
   const userId = session?.user?.id;
 
   if (!userId) {

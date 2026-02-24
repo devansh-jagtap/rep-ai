@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { getProfileById } from "@/lib/db";
-import { getPortfolioByUserId } from "@/lib/db/portfolio";
+import { getActivePortfolio } from "@/lib/active-portfolio";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ExternalLink, Palette } from "lucide-react";
@@ -23,7 +23,7 @@ export default async function DashboardPage() {
     redirect("/auth/signin");
   }
 
-  const portfolio = await getPortfolioByUserId(session.user.id);
+  const portfolio = await getActivePortfolio(session.user.id);
   if (!portfolio) {
     redirect("/onboarding");
   }
@@ -75,7 +75,7 @@ export default async function DashboardPage() {
               </div>
             </div>
 
-            <Separator className="my-4"/>
+            <Separator className="my-4" />
 
             <div className="flex flex-wrap gap-3">
               <Link href="/dashboard/preview">
@@ -114,8 +114,8 @@ export default async function DashboardPage() {
               <Badge variant="secondary">{profile?.plan}</Badge>
               <Badge variant="outline">{profile?.credits ?? 0} credits</Badge>
             </div>
-            
-            <Separator className="mt-4"/>
+
+            <Separator className="mt-4" />
             <p className="text-muted-foreground text-sm">
               Signed in as {profile?.name ?? profile?.email}. You have{" "}
               {profile?.credits ?? 0} credits remaining on your {profile?.plan}{" "}
