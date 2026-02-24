@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import { parseJsonBody, requireUserId } from "@/lib/api/route-helpers";
-import {
-  createKnowledgeSource,
-  getUserAgent,
-  listKnowledgeSourcesByAgentId,
-} from "@/lib/db/knowledge";
+import { getUserAgent, listKnowledgeSourcesByAgentId } from "@/lib/db/knowledge";
+import { createKnowledgeSource } from "@/lib/knowledge/service";
 import { parseKnowledgeInput } from "@/lib/validation/knowledge";
 
 export async function GET() {

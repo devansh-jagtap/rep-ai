@@ -17,7 +17,7 @@ import {
   type ConversationStrategyMode,
 } from "@/lib/agent/strategy-modes";
 import { useAgentStore } from "@/lib/stores/agent-store";
-import { useAgentActions } from "@/app/dashboard/agent/_hooks/use-agent-actions";
+import { useAgentActions } from "@/app/(dashboard)/dashboard/agent/_hooks/use-agent-actions";
 
 const MODELS = [
   { value: "moonshotai/Kimi-K2.5", label: "Kimi K2.5", description: "Fast & accurate" },

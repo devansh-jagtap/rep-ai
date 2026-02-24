@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTheme } from "next-themes";
-import { useState, useEffect, useTransition } from "react";
+import { useState, useSyncExternalStore, useTransition } from "react";
 import { updateHandle } from "../actions";
 import { toast } from "sonner";
 import { Zap, AlertTriangle } from "lucide-react";
@@ -26,14 +26,15 @@ interface SettingsClientProps {
 
 export function SettingsClient({ user, portfolio }: SettingsClientProps) {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const [isPending, startTransition] = useTransition();
   const [handle, setHandle] = useState(portfolio.handle);
   const [handleError, setHandleError] = useState("");
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const validateHandleFormat = (value: string) => {
     if (value.length < 3) {

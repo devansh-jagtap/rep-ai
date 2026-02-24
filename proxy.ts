@@ -26,7 +26,7 @@ function hasSessionToken(request: NextRequest): boolean {
   );
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isAuth = hasSessionToken(request);
 

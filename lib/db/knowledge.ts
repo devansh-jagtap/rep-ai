@@ -1,10 +1,6 @@
-import { and, count, desc, eq, sql } from "drizzle-orm";
+import { and, count, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { agents, knowledgeChunks, knowledgeSources, portfolios } from "@/lib/schema";
-import { chunkText } from "@/lib/knowledge/chunk-text";
-import { generateEmbedding, generateEmbeddings, cosineSimilarity } from "@/lib/ai/embeddings";
-
-const MAX_KNOWLEDGE_SOURCES_PER_AGENT = 50;
 
 export interface KnowledgeSourceRecord {
   id: string;
@@ -15,36 +11,6 @@ export interface KnowledgeSourceRecord {
   createdAt: Date;
   updatedAt: Date;
   chunkCount: number;
-}
-
-async function persistChunksWithEmbeddings(input: {
-  sourceId: string;
-  agentId: string;
-  content: string;
-  now?: Date;
-}) {
-  const chunks = chunkText(input.content);
-  if (chunks.length === 0) return;
-
-  const now = input.now ?? new Date();
-  let embeddings: number[][] = [];
-
-  try {
-    embeddings = await generateEmbeddings(chunks);
-  } catch (error) {
-    console.warn("Failed to generate embeddings:", error);
-  }
-
-  await db.insert(knowledgeChunks).values(
-    chunks.map((chunk, index) => ({
-      id: crypto.randomUUID(),
-      sourceId: input.sourceId,
-      agentId: input.agentId,
-      chunkText: chunk,
-      embedding: embeddings[index] ? `[${embeddings[index].join(",")}]` : null,
-      createdAt: now,
-    }))
-  );
 }
 
 export async function getUserAgent(userId: string) {
@@ -91,21 +57,26 @@ export async function listKnowledgeSourcesByAgentId(agentId: string): Promise<Kn
   return rows.map((row) => ({ ...row, chunkCount: Number(row.chunkCount ?? 0) }));
 }
 
-export async function createKnowledgeSource(input: { agentId: string; title: string; content: string }) {
-  const [sourceCount] = await db
+export async function countKnowledgeSourcesByAgentId(agentId: string): Promise<number> {
+  const [row] = await db
     .select({ total: count(knowledgeSources.id) })
     .from(knowledgeSources)
-    .where(eq(knowledgeSources.agentId, input.agentId));
+    .where(eq(knowledgeSources.agentId, agentId));
 
-  if (Number(sourceCount?.total ?? 0) >= MAX_KNOWLEDGE_SOURCES_PER_AGENT) {
-    return { ok: false as const, error: "Knowledge source limit reached" };
-  }
+  return Number(row?.total ?? 0);
+}
 
-  const sourceId = crypto.randomUUID();
-  const now = new Date();
+export async function createKnowledgeSourceRecord(input: {
+  agentId: string;
+  title: string;
+  content: string;
+  now?: Date;
+}) {
+  const id = crypto.randomUUID();
+  const now = input.now ?? new Date();
 
   await db.insert(knowledgeSources).values({
-    id: sourceId,
+    id,
     agentId: input.agentId,
     title: input.title,
     type: "text",
@@ -114,49 +85,31 @@ export async function createKnowledgeSource(input: { agentId: string; title: str
     updatedAt: now,
   });
 
-  await persistChunksWithEmbeddings({
-    sourceId,
-    agentId: input.agentId,
-    content: input.content,
-    now,
-  });
-
-  return { ok: true as const, sourceId };
+  return { id, now };
 }
 
-export async function updateKnowledgeSource(input: {
-  id: string;
-  agentId: string;
-  title: string;
-  content: string;
-}) {
+export async function getKnowledgeSourceByIdAndAgent(input: { id: string; agentId: string }) {
   const [existing] = await db
     .select({ id: knowledgeSources.id })
     .from(knowledgeSources)
     .where(and(eq(knowledgeSources.id, input.id), eq(knowledgeSources.agentId, input.agentId)))
     .limit(1);
 
-  if (!existing) {
-    return { ok: false as const, error: "Knowledge source not found" };
-  }
+  return existing ?? null;
+}
 
-  const now = new Date();
+export async function updateKnowledgeSourceRecord(input: {
+  id: string;
+  title: string;
+  content: string;
+  now?: Date;
+}) {
+  const now = input.now ?? new Date();
 
   await db
     .update(knowledgeSources)
     .set({ title: input.title, content: input.content, updatedAt: now })
     .where(eq(knowledgeSources.id, input.id));
-
-  await db.delete(knowledgeChunks).where(eq(knowledgeChunks.sourceId, input.id));
-
-  await persistChunksWithEmbeddings({
-    sourceId: input.id,
-    agentId: input.agentId,
-    content: input.content,
-    now,
-  });
-
-  return { ok: true as const };
 }
 
 export async function deleteKnowledgeSource(input: { id: string; agentId: string }) {
@@ -166,6 +119,31 @@ export async function deleteKnowledgeSource(input: { id: string; agentId: string
     .returning({ id: knowledgeSources.id });
 
   return deleted.length > 0;
+}
+
+export async function deleteKnowledgeChunksBySourceId(sourceId: string) {
+  await db.delete(knowledgeChunks).where(eq(knowledgeChunks.sourceId, sourceId));
+}
+
+export async function insertKnowledgeChunks(input: {
+  sourceId: string;
+  agentId: string;
+  chunks: Array<{ text: string; embedding: string | null }>;
+  now?: Date;
+}) {
+  if (input.chunks.length === 0) return;
+
+  const now = input.now ?? new Date();
+  await db.insert(knowledgeChunks).values(
+    input.chunks.map((chunk) => ({
+      id: crypto.randomUUID(),
+      sourceId: input.sourceId,
+      agentId: input.agentId,
+      chunkText: chunk.text,
+      embedding: chunk.embedding,
+      createdAt: now,
+    }))
+  );
 }
 
 export async function getRecentKnowledgeChunksByAgentId(agentId: string, limit = 3): Promise<string[]> {
@@ -179,105 +157,34 @@ export async function getRecentKnowledgeChunksByAgentId(agentId: string, limit =
   return rows.map((row) => row.chunkText);
 }
 
-export async function hybridSearchKnowledgeByAgentId(
-  agentId: string,
-  query: string,
-  limit = 5
-): Promise<string[]> {
-  if (!query.trim()) {
-    return getRecentKnowledgeChunksByAgentId(agentId, limit);
-  }
-
-  let queryEmbedding: number[];
-  try {
-    queryEmbedding = await generateEmbedding(query);
-  } catch (error) {
-    console.warn("Failed to generate embedding, falling back to recency:", error);
-    return getRecentKnowledgeChunksByAgentId(agentId, limit);
-  }
-
-  try {
-    const rows = await db
-      .select({
-        id: knowledgeChunks.id,
-        chunkText: knowledgeChunks.chunkText,
-        embedding: knowledgeChunks.embedding,
-        createdAt: knowledgeChunks.createdAt,
-      })
-      .from(knowledgeChunks)
-      .where(eq(knowledgeChunks.agentId, agentId))
-      .limit(30);
-
-    if (rows.length === 0) {
-      return [];
-    }
-
-    const maxDate = Math.max(...rows.map((r) => new Date(r.createdAt).getTime()));
-    const minDate = Math.min(...rows.map((r) => new Date(r.createdAt).getTime()));
-
-    const scoredChunks = rows
-      .map((row) => {
-        let semanticScore = 0;
-        let recencyScore = 0;
-
-        if (row.embedding) {
-          try {
-            const storedEmbedding = JSON.parse(row.embedding);
-            semanticScore = cosineSimilarity(queryEmbedding, storedEmbedding);
-          } catch {
-            semanticScore = 0;
-          }
-        }
-
-        const createdTime = new Date(row.createdAt).getTime();
-        recencyScore = (createdTime - minDate) / (maxDate - minDate + 1);
-
-        const combinedScore = semanticScore * 0.7 + recencyScore * 0.3;
-        return { chunkText: row.chunkText, score: combinedScore };
-      })
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit);
-
-    return scoredChunks.map((c) => c.chunkText);
-  } catch {
-    return getRecentKnowledgeChunksByAgentId(agentId, limit);
-  }
+export async function getKnowledgeChunksForSearch(agentId: string, limit = 30) {
+  return db
+    .select({
+      id: knowledgeChunks.id,
+      chunkText: knowledgeChunks.chunkText,
+      embedding: knowledgeChunks.embedding,
+      createdAt: knowledgeChunks.createdAt,
+    })
+    .from(knowledgeChunks)
+    .where(eq(knowledgeChunks.agentId, agentId))
+    .limit(limit);
 }
 
-export async function backfillEmbeddingsForAgent(agentId: string): Promise<number> {
-  const chunks = await db
+export async function getKnowledgeChunksWithoutEmbeddings(agentId: string) {
+  return db
     .select({
       id: knowledgeChunks.id,
       chunkText: knowledgeChunks.chunkText,
     })
     .from(knowledgeChunks)
-    .where(and(eq(knowledgeChunks.agentId, agentId), sql`${knowledgeChunks.embedding} IS NULL`));
+    .where(and(eq(knowledgeChunks.agentId, agentId), isNull(knowledgeChunks.embedding)));
+}
 
-  if (chunks.length === 0) {
-    return 0;
-  }
-
-  const texts = chunks.map((c) => c.chunkText);
-  let embeddings: number[][] = [];
-  try {
-    embeddings = await generateEmbeddings(texts);
-  } catch (error) {
-    console.warn("Failed to generate embeddings for backfill:", error);
-    return 0;
-  }
-
-  let updated = 0;
-  for (let i = 0; i < chunks.length; i++) {
-    if (embeddings[i]) {
-      await db
-        .update(knowledgeChunks)
-        .set({ embedding: `[${embeddings[i].join(",")}]` })
-        .where(eq(knowledgeChunks.id, chunks[i].id));
-      updated++;
-    }
-  }
-
-  return updated;
+export async function updateChunkEmbedding(input: { chunkId: string; embedding: string }) {
+  await db
+    .update(knowledgeChunks)
+    .set({ embedding: input.embedding })
+    .where(eq(knowledgeChunks.id, input.chunkId));
 }
 
 export async function getPublicAgentById(agentId: string) {

@@ -17,7 +17,7 @@ export default function Integrations() {
                 <IntegrationsIllustration />
                 <div className="mx-auto mt-12 max-w-md text-balance text-center">
                     <h2 className="font-serif text-4xl font-medium">Train your agent in minutes</h2>
-                    <p className="text-muted-foreground mb-6 mt-4">Link your GitHub, Figma, Dribbble, and Notion. We'll automatically build a knowledge base so your agent knows exactly how you work.</p>
+                    <p className="text-muted-foreground mb-6 mt-4">Link your GitHub, Figma, Dribbble, and Notion. We’ll automatically build a knowledge base so your agent knows exactly how you work.</p>
                     <Button
                         variant="secondary"
                         size="sm"
