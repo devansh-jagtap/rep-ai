@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { ExternalLink, Sparkles, Loader2, Globe, FileText, Briefcase, Megaphone } from "lucide-react";
 import Link from "next/link";
-import { usePortfolioActions } from "@/app/dashboard/portfolio/_hooks/use-portfolio-actions";
+import { usePortfolioActions } from "@/app/(dashboard)/dashboard/portfolio/_hooks/use-portfolio-actions";
 
 interface PortfolioContent {
   hero?: { headline?: string; subheadline?: string };

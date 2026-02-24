@@ -5,7 +5,7 @@ import { ArrowRight, Briefcase, Bot, Users, Sparkles, AlertCircle } from "lucide
 import Link from "next/link";
 import { CopyButton } from "@/components/dashboard/copy-button";
 import { redirect } from "next/navigation";
-import { getDashboardOverviewData } from "@/app/dashboard/_lib/dashboard-overview-service";
+import { getDashboardOverviewData } from "@/app/(dashboard)/dashboard/_lib/dashboard-overview-service";
 
 
 export default async function OverviewPage() {
