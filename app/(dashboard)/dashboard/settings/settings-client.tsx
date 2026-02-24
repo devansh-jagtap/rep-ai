@@ -8,9 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTheme } from "next-themes";
 import { useState, useEffect, useTransition } from "react";
-import { updateHandle } from "../actions";
+import { updateHandle, deleteActivePortfolio } from "../actions";
 import { toast } from "sonner";
-import { Zap, AlertTriangle } from "lucide-react";
+import { Zap, AlertTriangle, Trash2 } from "lucide-react";
 
 interface SettingsClientProps {
   user: {
@@ -30,6 +30,7 @@ export function SettingsClient({ user, portfolio }: SettingsClientProps) {
   const [isPending, startTransition] = useTransition();
   const [handle, setHandle] = useState(portfolio.handle);
   const [handleError, setHandleError] = useState("");
+  const [isDeletingPortfolio, setIsDeletingPortfolio] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -70,6 +71,24 @@ export function SettingsClient({ user, portfolio }: SettingsClientProps) {
         const msg = error instanceof Error ? error.message : "Failed to save";
         toast.error(msg);
         setHandleError(msg);
+      }
+    });
+  };
+
+  const handleDeletePortfolio = () => {
+    if (!confirm("Are you sure you want to delete this portfolio? This action cannot be undone and will delete all associated agents and leads.")) {
+      return;
+    }
+
+    setIsDeletingPortfolio(true);
+    startTransition(async () => {
+      try {
+        await deleteActivePortfolio();
+        toast.success("Portfolio deleted successfully");
+        window.location.href = "/dashboard";
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Failed to delete portfolio");
+        setIsDeletingPortfolio(false);
       }
     });
   };
@@ -201,14 +220,34 @@ export function SettingsClient({ user, portfolio }: SettingsClientProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center p-4 border rounded-md border-destructive/20 bg-destructive/5">
-            <div className="space-y-1">
-              <h4 className="text-sm font-medium">Delete Account</h4>
-              <p className="text-sm text-muted-foreground">
-                Permanently delete your account, portfolio, agent, and all captured leads.
-              </p>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center p-4 border rounded-md border-destructive/20 bg-destructive/5">
+              <div className="space-y-1">
+                <h4 className="text-sm font-medium">Delete Current Portfolio</h4>
+                <p className="text-sm text-muted-foreground">
+                  Permanently delete this specific portfolio, its agent, and captured leads.
+                </p>
+              </div>
+              <Button
+                variant="destructive"
+                className="shrink-0"
+                onClick={handleDeletePortfolio}
+                disabled={isDeletingPortfolio || isPending}
+              >
+                <Trash2 className="size-4 mr-2" />
+                {isDeletingPortfolio ? "Deleting..." : "Delete Portfolio"}
+              </Button>
             </div>
-            <Button variant="destructive" className="shrink-0">Delete Account</Button>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center p-4 border rounded-md border-destructive/20 bg-destructive/5">
+              <div className="space-y-1">
+                <h4 className="text-sm font-medium">Delete Account</h4>
+                <p className="text-sm text-muted-foreground">
+                  Permanently delete your account, all portfolios, agents, and all captured leads.
+                </p>
+              </div>
+              <Button variant="destructive" className="shrink-0">Delete Account</Button>
+            </div>
           </div>
         </CardContent>
       </Card>

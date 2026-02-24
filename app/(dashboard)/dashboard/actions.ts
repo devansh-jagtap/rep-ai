@@ -131,3 +131,15 @@ export async function updatePortfolioName(name: string) {
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/settings");
 }
+
+export async function deleteActivePortfolio() {
+  const userId = await requireAuth();
+  const portfolio = await getActivePortfolio(userId);
+  if (!portfolio) throw new Error("Portfolio not found");
+
+  const { deletePortfolioById } = await import("@/lib/db/portfolio");
+  const result = await deletePortfolioById(portfolio.id, userId);
+  if (!result.ok) throw new Error("Failed to delete portfolio");
+
+  revalidatePath("/dashboard");
+}
