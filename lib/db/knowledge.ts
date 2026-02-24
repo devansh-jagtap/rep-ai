@@ -17,6 +17,36 @@ export interface KnowledgeSourceRecord {
   chunkCount: number;
 }
 
+async function persistChunksWithEmbeddings(input: {
+  sourceId: string;
+  agentId: string;
+  content: string;
+  now?: Date;
+}) {
+  const chunks = chunkText(input.content);
+  if (chunks.length === 0) return;
+
+  const now = input.now ?? new Date();
+  let embeddings: number[][] = [];
+
+  try {
+    embeddings = await generateEmbeddings(chunks);
+  } catch (error) {
+    console.warn("Failed to generate embeddings:", error);
+  }
+
+  await db.insert(knowledgeChunks).values(
+    chunks.map((chunk, index) => ({
+      id: crypto.randomUUID(),
+      sourceId: input.sourceId,
+      agentId: input.agentId,
+      chunkText: chunk,
+      embedding: embeddings[index] ? `[${embeddings[index].join(",")}]` : null,
+      createdAt: now,
+    }))
+  );
+}
+
 export async function getUserAgent(userId: string) {
   const [agent] = await db
     .select({
@@ -42,26 +72,23 @@ export async function listKnowledgeSourcesByAgentId(agentId: string): Promise<Kn
       content: knowledgeSources.content,
       createdAt: knowledgeSources.createdAt,
       updatedAt: knowledgeSources.updatedAt,
+      chunkCount: count(knowledgeChunks.id),
     })
     .from(knowledgeSources)
+    .leftJoin(knowledgeChunks, eq(knowledgeChunks.sourceId, knowledgeSources.id))
     .where(eq(knowledgeSources.agentId, agentId))
+    .groupBy(
+      knowledgeSources.id,
+      knowledgeSources.agentId,
+      knowledgeSources.title,
+      knowledgeSources.type,
+      knowledgeSources.content,
+      knowledgeSources.createdAt,
+      knowledgeSources.updatedAt
+    )
     .orderBy(desc(knowledgeSources.updatedAt));
 
-  const withCounts = await Promise.all(
-    rows.map(async (row) => {
-      const [chunkStats] = await db
-        .select({ total: count(knowledgeChunks.id) })
-        .from(knowledgeChunks)
-        .where(eq(knowledgeChunks.sourceId, row.id));
-
-      return {
-        ...row,
-        chunkCount: Number(chunkStats?.total ?? 0),
-      };
-    })
-  );
-
-  return withCounts;
+  return rows.map((row) => ({ ...row, chunkCount: Number(row.chunkCount ?? 0) }));
 }
 
 export async function createKnowledgeSource(input: { agentId: string; title: string; content: string }) {
@@ -75,7 +102,6 @@ export async function createKnowledgeSource(input: { agentId: string; title: str
   }
 
   const sourceId = crypto.randomUUID();
-  const chunks = chunkText(input.content);
   const now = new Date();
 
   await db.insert(knowledgeSources).values({
@@ -88,25 +114,12 @@ export async function createKnowledgeSource(input: { agentId: string; title: str
     updatedAt: now,
   });
 
-  if (chunks.length > 0) {
-    let embeddings: number[][] = [];
-    try {
-      embeddings = await generateEmbeddings(chunks);
-    } catch (error) {
-      console.warn("Failed to generate embeddings:", error);
-    }
-    
-    await db.insert(knowledgeChunks).values(
-      chunks.map((chunk, index) => ({
-        id: crypto.randomUUID(),
-        sourceId,
-        agentId: input.agentId,
-        chunkText: chunk,
-        embedding: embeddings[index] ? `[${embeddings[index].join(",")}]` : null,
-        createdAt: now,
-      }))
-    );
-  }
+  await persistChunksWithEmbeddings({
+    sourceId,
+    agentId: input.agentId,
+    content: input.content,
+    now,
+  });
 
   return { ok: true as const, sourceId };
 }
@@ -127,7 +140,6 @@ export async function updateKnowledgeSource(input: {
     return { ok: false as const, error: "Knowledge source not found" };
   }
 
-  const chunks = chunkText(input.content);
   const now = new Date();
 
   await db
@@ -137,25 +149,12 @@ export async function updateKnowledgeSource(input: {
 
   await db.delete(knowledgeChunks).where(eq(knowledgeChunks.sourceId, input.id));
 
-  if (chunks.length > 0) {
-    let embeddings: number[][] = [];
-    try {
-      embeddings = await generateEmbeddings(chunks);
-    } catch (error) {
-      console.warn("Failed to generate embeddings:", error);
-    }
-    
-    await db.insert(knowledgeChunks).values(
-      chunks.map((chunk, index) => ({
-        id: crypto.randomUUID(),
-        sourceId: input.id,
-        agentId: input.agentId,
-        chunkText: chunk,
-        embedding: embeddings[index] ? `[${embeddings[index].join(",")}]` : null,
-        createdAt: now,
-      }))
-    );
-  }
+  await persistChunksWithEmbeddings({
+    sourceId: input.id,
+    agentId: input.agentId,
+    content: input.content,
+    now,
+  });
 
   return { ok: true as const };
 }

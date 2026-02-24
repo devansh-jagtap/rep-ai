@@ -4,31 +4,15 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Briefcase, Bot, Users, Sparkles, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { CopyButton } from "@/components/dashboard/copy-button";
-import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { getDashboardData } from "./actions";
-import { db } from "@/lib/db";
-import { agentLeads } from "@/lib/schema";
-import { eq, count, gte, and } from "drizzle-orm";
-import { getProfileById } from "@/lib/db";
+import { getDashboardOverviewData } from "@/app/dashboard/_lib/dashboard-overview-service";
 
-const MODEL_LABELS: Record<string, string> = {
-  "moonshotai/Kimi-K2.5": "Kimi K2.5",
-  "MiniMaxAI/MiniMax-M2.1": "MiniMax M2.1",
-  "zai-org/GLM-4.7-FP8": "GLM 4.7",
-  "openai/gpt-oss-120b": "GPT-OSS 120B",
-};
 
 export default async function OverviewPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/auth/signin");
+  const overview = await getDashboardOverviewData();
+  if (!overview.session?.user?.id) redirect("/auth/signin");
 
-  const [data, profile] = await Promise.all([
-    getDashboardData(),
-    getProfileById(session.user.id),
-  ]);
-
-  if (!data) {
+  if (!overview.data) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <AlertCircle className="size-12 text-muted-foreground" />
@@ -43,31 +27,8 @@ export default async function OverviewPage() {
     );
   }
 
+  const { data, profile, hasContent, modelLabel, newLeads, portfolioLink, totalLeads, session } = overview;
   const { portfolio, agent } = data;
-
-  const [totalLeadsResult] = await db
-    .select({ count: count() })
-    .from(agentLeads)
-    .where(eq(agentLeads.portfolioId, portfolio.id));
-
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-  const [newLeadsResult] = await db
-    .select({ count: count() })
-    .from(agentLeads)
-    .where(
-      and(
-        eq(agentLeads.portfolioId, portfolio.id),
-        gte(agentLeads.createdAt, sevenDaysAgo)
-      )
-    );
-
-  const totalLeads = totalLeadsResult.count;
-  const newLeads = newLeadsResult.count;
-  const hasContent = !!portfolio.content;
-  const modelLabel = agent ? MODEL_LABELS[agent.model] || agent.model : "Not configured";
-  const portfolioLink = `${process.env.NEXT_PUBLIC_BASE_URL || ""}/${portfolio.handle}`;
 
   return (
     <div className="flex flex-col gap-6">

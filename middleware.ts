@@ -19,7 +19,7 @@ const authRoutes = [
 
 export default auth((request) => {
   const { pathname } = request.nextUrl;
-  const isAuth = !!request.auth;
+  const isAuth = Boolean(request.auth?.user?.id);
 
   // Check if the user is trying to access an authentication route
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
@@ -58,5 +58,6 @@ export const config = {
     "/api/onboarding/:path*",
     "/api/profile",
     "/api/leads/:path*",
+    "/api/analytics/:path*",
   ],
 };

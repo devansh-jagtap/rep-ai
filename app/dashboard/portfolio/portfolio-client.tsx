@@ -9,9 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { ExternalLink, Sparkles, Loader2, Globe, FileText, Briefcase, Megaphone } from "lucide-react";
 import Link from "next/link";
-import { useState, useTransition } from "react";
-import { togglePublish, updateTemplate, regeneratePortfolio } from "../actions";
-import { toast } from "sonner";
+import { usePortfolioActions } from "@/app/dashboard/portfolio/_hooks/use-portfolio-actions";
 
 interface PortfolioContent {
   hero?: { headline?: string; subheadline?: string };
@@ -32,51 +30,14 @@ interface PortfolioClientProps {
 }
 
 export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
-  const [isPending, startTransition] = useTransition();
-  const [isPublished, setIsPublished] = useState(portfolio.isPublished);
-  const [isRegenerating, setIsRegenerating] = useState(false);
-
-  const handlePublishChange = (checked: boolean) => {
-    if (checked && !content) {
-      toast.error("Generate your portfolio content first before publishing.");
-      return;
-    }
-    setIsPublished(checked);
-    startTransition(async () => {
-      try {
-        await togglePublish(checked);
-        toast.success(checked ? "Portfolio is now live!" : "Portfolio hidden from public.");
-      } catch (error) {
-        setIsPublished(!checked);
-        toast.error(error instanceof Error ? error.message : "Failed to update");
-      }
-    });
-  };
-
-  const handleTemplateChange = (value: string) => {
-    startTransition(async () => {
-      try {
-        await updateTemplate(value);
-        toast.success("Template updated");
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Failed to update");
-      }
-    });
-  };
-
-  const handleRegenerate = async () => {
-    setIsRegenerating(true);
-    try {
-      await regeneratePortfolio();
-      toast.success("Portfolio content regenerated with AI!", {
-        description: "Refresh to see the updated content preview.",
-      });
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to regenerate");
-    } finally {
-      setIsRegenerating(false);
-    }
-  };
+  const {
+    isPending,
+    isPublished,
+    isRegenerating,
+    handlePublishChange,
+    handleTemplateChange,
+    handleRegenerate,
+  } = usePortfolioActions(Boolean(content), portfolio.isPublished);
 
   const portfolioLink = `/${portfolio.handle}`;
 
