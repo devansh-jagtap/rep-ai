@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
-import { useTransition, useRef, useCallback, useEffect } from "react";
+import { useTransition, useRef, useEffect } from "react";
 import { Save, BotMessageSquare, Sparkles, SendHorizontal, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { saveAgentConfig } from "../actions";
@@ -17,6 +17,7 @@ import {
   type ConversationStrategyMode,
 } from "@/lib/agent/strategy-modes";
 import { useAgentStore } from "@/lib/stores/agent-store";
+import { useAgentActions } from "@/app/dashboard/agent/_hooks/use-agent-actions";
 
 const MODELS = [
   { value: "moonshotai/Kimi-K2.5", label: "Kimi K2.5", description: "Fast & accurate" },
@@ -99,45 +100,16 @@ export function AgentClient({ agent, portfolioHandle, hasContent }: AgentClientP
     });
   };
 
-  const sendTestMessage = useCallback(async () => {
-    const msg = chatInput.trim();
-    if (!msg || isChatLoading) return;
-
-    if (!hasContent) {
-      toast.error("Generate your portfolio content first before testing the agent.");
-      return;
-    }
-
-    addChatMessage({ role: "user", content: msg });
-    setChatInput("");
-    setIsChatLoading(true);
-
-    try {
-      const res = await fetch("/api/public-chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          handle: portfolioHandle,
-          message: msg,
-          history: chatMessages.slice(-10),
-        }),
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error || `Request failed (${res.status})`);
-      }
-
-      const data = await res.json();
-      addChatMessage({ role: "assistant", content: data.reply });
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Agent unavailable";
-      addChatMessage({ role: "assistant", content: `Error: ${errorMsg}` });
-    } finally {
-      setIsChatLoading(false);
-      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-    }
-  }, [chatInput, isChatLoading, hasContent, portfolioHandle, chatMessages, addChatMessage, setChatInput, setIsChatLoading]);
+  const { sendTestMessage } = useAgentActions({
+    chatInput,
+    isChatLoading,
+    hasContent,
+    portfolioHandle,
+    chatMessages,
+    addChatMessage,
+    setChatInput,
+    setIsChatLoading,
+  });
 
   const canTest = config.isEnabled && hasContent;
 
