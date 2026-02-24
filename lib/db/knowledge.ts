@@ -1,4 +1,4 @@
-import { and, count, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { agents, knowledgeChunks, knowledgeSources, portfolios } from "@/lib/schema";
 
@@ -177,7 +177,7 @@ export async function getKnowledgeChunksWithoutEmbeddings(agentId: string) {
       chunkText: knowledgeChunks.chunkText,
     })
     .from(knowledgeChunks)
-    .where(and(eq(knowledgeChunks.agentId, agentId), eq(knowledgeChunks.embedding, null)));
+    .where(and(eq(knowledgeChunks.agentId, agentId), isNull(knowledgeChunks.embedding)));
 }
 
 export async function updateChunkEmbedding(input: { chunkId: string; embedding: string }) {

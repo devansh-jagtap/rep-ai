@@ -5,10 +5,22 @@ const NEBIUS_EMBEDDING_BASE_URL =
   process.env.NEBIUS_EMBEDDING_BASE_URL || "https://api.tokenfactory.nebius.com/v1/";
 const NEBIUS_API_KEY = process.env.NEBIUS_API_KEY;
 
-export const embeddingClient = new OpenAI({
-  apiKey: NEBIUS_API_KEY,
-  baseURL: NEBIUS_EMBEDDING_BASE_URL,
-});
+let embeddingClient: OpenAI | null = null;
+
+function getEmbeddingClient() {
+  if (!NEBIUS_API_KEY) {
+    throw new Error("NEBIUS_API_KEY is required for embedding generation");
+  }
+
+  if (!embeddingClient) {
+    embeddingClient = new OpenAI({
+      apiKey: NEBIUS_API_KEY,
+      baseURL: NEBIUS_EMBEDDING_BASE_URL,
+    });
+  }
+
+  return embeddingClient;
+}
 
 export const EMBEDDING_MODEL = "Qwen/Qwen3-Embedding-8B";
 export const EMBEDDING_DIMENSIONS = 4096;
@@ -19,7 +31,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
   }
 
   try {
-    const response = await embeddingClient.embeddings.create({
+    const response = await getEmbeddingClient().embeddings.create({
       model: EMBEDDING_MODEL,
       input: text.slice(0, 8000),
       dimensions: EMBEDDING_DIMENSIONS,
@@ -39,7 +51,7 @@ export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
   }
 
   try {
-    const response = await embeddingClient.embeddings.create({
+    const response = await getEmbeddingClient().embeddings.create({
       model: EMBEDDING_MODEL,
       input: filteredTexts.map((t) => t.slice(0, 8000)),
       dimensions: EMBEDDING_DIMENSIONS,

@@ -35,7 +35,7 @@ export default async function OverviewPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Overview</h1>
         <p className="text-muted-foreground">
-          Welcome back, {profile?.name || session.user.name || "there"}! Here's your dashboard at a glance.
+          Welcome back, {profile?.name || session.user.name || "there"}! Here’s your dashboard at a glance.
         </p>
       </div>
 

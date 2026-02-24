@@ -55,8 +55,8 @@ export function OnboardingPreviewCard({
   return (
     <JSXPreview
       jsx={PREVIEW_JSX}
-      components={{ Card, CardHeader, CardTitle, CardContent, EditButton, ConfirmButton }}
-      data={{ data, servicesList, projectList }}
+      components={{ Card, CardHeader, CardTitle, CardContent, EditButton, ConfirmButton } as any}
+      bindings={{ data, servicesList, projectList }}
       onError={(err) => console.error("JSX Preview error:", err)}
     >
       <JSXPreviewContent />

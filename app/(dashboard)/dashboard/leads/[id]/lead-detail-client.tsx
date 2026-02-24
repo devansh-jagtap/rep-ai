@@ -27,14 +27,15 @@ async function patchStatus(id: string, status: LeadStatus) {
 
 export function LeadDetailClient({ lead: initialLead }: { lead: LeadDetailData }) {
   const router = useRouter()
-  const [lead, setLead] = useState<LeadDetailData>(initialLead)
+  const [lead, setLead] = useState<LeadDetailData>(() =>
+    initialLead.isRead === false ? { ...initialLead, isRead: true } : initialLead
+  )
 
   useEffect(() => {
     if (lead.isRead === false) {
-      setLead((prev) => ({ ...prev, isRead: true }))
       void patchRead(lead.id)
     }
-  }, [lead.id]) // intentionally run once per id
+  }, [lead.id, lead.isRead])
 
   const handleStatusChange = async (status: LeadStatus) => {
     const previous = (lead.status ?? "new") as LeadStatus

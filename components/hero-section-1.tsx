@@ -34,7 +34,7 @@ export default function HeroSection() {
                         <div className="relative z-10 mx-auto w-full max-w-5xl px-6">
                             <div className="mx-auto max-w-md text-center">
                                 <h1 className="text-balance font-serif text-4xl font-medium sm:text-5xl">Your 24/7 AI representative.</h1>
-                                <p className="text-muted-foreground mt-4 text-balance">Ref helps you build personal AI agents that generate leads and showcase your skills, even when you're offline.</p>
+                                <p className="text-muted-foreground mt-4 text-balance">Ref helps you build personal AI agents that generate leads and showcase your skills, even when you’re offline.</p>
 
                                 <Button
                                     asChild

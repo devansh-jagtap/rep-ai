@@ -235,7 +235,7 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
             <Sparkles className="size-10 text-muted-foreground mx-auto mb-4" />
             <h3 className="font-semibold text-lg mb-1">No Content Generated Yet</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Click "Generate Content" above to create your portfolio using AI based on your onboarding data.
+              Click &quot;Generate Content&quot; above to create your portfolio using AI based on your onboarding data.
             </p>
           </CardContent>
         </Card>

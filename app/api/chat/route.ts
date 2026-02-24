@@ -35,7 +35,7 @@ export async function POST(request: Request) {
   let reply: string;
   try {
     reply = await generateChatReply(prompt);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to generate reply" }, { status: 500 });
   }
 
