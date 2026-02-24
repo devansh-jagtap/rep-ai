@@ -10,11 +10,16 @@ export interface PortfolioProjectInput {
 }
 
 export interface PortfolioOnboardingData {
+  setupPath?: "existing-site" | "build-new";
   name: string;
   title: string;
   bio: string;
   services: string[];
-  projects: PortfolioProjectInput[];
+  projects?: PortfolioProjectInput[];
+  siteUrl?: string;
+  targetAudience?: string;
+  contactPreferences?: string;
+  faqs?: string[];
   tone: PortfolioTone;
   handle: string;
 }
