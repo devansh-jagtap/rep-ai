@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ThemeSwitcher } from './theme-switcher'
 
 const links = [
+    { label: 'Explore', href: '/explore' },
     { label: 'Features', href: '#' },
     { label: 'Pricing', href: '#' },
     { label: 'About', href: '#' },

@@ -91,6 +91,26 @@ export async function getPortfolioByHandle(handle: string) {
   }
 }
 
+/** Returns all published portfolios, newest first. Used for explore/discovery. */
+export async function getAllPublishedPortfolios() {
+  try {
+    return await db
+      .select({
+        handle: portfolios.handle,
+        template: portfolios.template,
+        content: portfolios.content,
+        name: portfolios.name,
+        createdAt: portfolios.createdAt,
+      })
+      .from(portfolios)
+      .where(eq(portfolios.isPublished, true))
+      .orderBy(desc(portfolios.createdAt));
+  } catch (error) {
+    console.error("Failed to fetch published portfolios", error);
+    return [];
+  }
+}
+
 export async function getPublishedPortfolioByHandle(handle: string) {
   try {
     const [portfolio] = await db
