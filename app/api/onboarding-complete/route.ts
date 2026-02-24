@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { onboardingDrafts } from "@/lib/schema";
 import { createPortfolio, getPortfolioByHandle } from "@/lib/db/portfolio";
+import { ACTIVE_PORTFOLIO_COOKIE } from "@/lib/active-portfolio";
 import type { OnboardingData } from "@/lib/onboarding/types";
 import { validateFinalOnboardingState } from "@/lib/onboarding/validation";
 
@@ -53,10 +54,6 @@ export async function POST(request: Request) {
       onboardingData: finalState,
     });
 
-    if (!created.ok && created.reason === "exists") {
-      return NextResponse.json({ ok: true, redirectTo: "/dashboard" });
-    }
-
     if (!created.ok) {
       return NextResponse.json(
         { ok: false, error: "Unable to save onboarding data right now." },
@@ -64,8 +61,20 @@ export async function POST(request: Request) {
       );
     }
 
+    // Clean up the draft
     await db.delete(onboardingDrafts).where(eq(onboardingDrafts.userId, session.user.id));
-    return NextResponse.json({ ok: true, redirectTo: "/dashboard/preview" });
+
+    // Set the newly-created portfolio as active so the user lands in it
+    const response = NextResponse.json({ ok: true, redirectTo: "/dashboard" });
+    response.cookies.set(ACTIVE_PORTFOLIO_COOKIE, created.portfolioId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+    });
+
+    return response;
   } catch (error) {
     console.error("Failed to complete onboarding", error);
     return NextResponse.json({ ok: false, error: "Unable to complete onboarding right now." }, { status: 500 });

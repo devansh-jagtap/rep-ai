@@ -8,8 +8,8 @@ import {
 import { classifyAiError, logPublicAgentEvent } from "@/lib/ai/safe-logging";
 import { saveLeadWithDedup } from "@/lib/db/agent-leads";
 import {
-  getPublishedPortfolioWithAgentByAgentId,
-  getPublishedPortfolioWithAgentByHandle,
+  getPortfolioWithAgentByAgentId,
+  getPortfolioWithAgentByHandle,
 } from "@/lib/db/portfolio";
 import { isBehaviorPresetType } from "@/lib/agent/behavior-presets";
 import { isSupportedAgentModel } from "@/lib/agent/models";
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
 
     const authResult = await requireUserId();
     const userId = authResult.ok ? authResult.userId : null;
-    
+
     if (userId) {
       const currentCredits = await getCredits(userId);
       if (currentCredits < CREDIT_COST) {
@@ -104,12 +104,17 @@ export async function POST(request: Request) {
     }
 
     const portfolio = parsed.agentId
-      ? await getPublishedPortfolioWithAgentByAgentId(parsed.agentId)
-      : await getPublishedPortfolioWithAgentByHandle(parsed.handle ?? "");
+      ? await getPortfolioWithAgentByAgentId(parsed.agentId)
+      : await getPortfolioWithAgentByHandle(parsed.handle ?? "");
 
     if (!portfolio || !portfolio.content) {
       return NextResponse.json({ error: "Portfolio not found" }, { status: 404 });
     }
+
+    if (!portfolio.isPublished && portfolio.userId !== userId) {
+      return NextResponse.json({ error: "Portfolio not found" }, { status: 404 });
+    }
+
 
     if (!portfolio.agentId || !portfolio.agentIsEnabled || !portfolio.agentModel) {
       return NextResponse.json({ error: "Agent unavailable" }, { status: 404 });
@@ -199,7 +204,7 @@ export async function POST(request: Request) {
 
     const sessionId = parsed.sessionId || crypto.randomUUID();
     const isFirstMessage = !parsed.history || parsed.history.length === 0;
-    
+
     if (isFirstMessage) {
       await trackAnalytics({
         portfolioId: portfolio.id,
@@ -207,7 +212,7 @@ export async function POST(request: Request) {
         sessionId,
       });
     }
-    
+
     await trackAnalytics({
       portfolioId: portfolio.id,
       type: "chat_message",

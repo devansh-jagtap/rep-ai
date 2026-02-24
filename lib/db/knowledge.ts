@@ -47,13 +47,21 @@ async function persistChunksWithEmbeddings(input: {
   );
 }
 
-export async function getUserAgent(userId: string) {
+/** Get agent by userId — looks up the active portfolio via cookie first, then falls back to first portfolio. */
+export async function getUserAgent(userId: string, portfolioId?: string) {
+  if (portfolioId) {
+    // Scope to the specific (active) portfolio
+    const [agent] = await db
+      .select({ id: agents.id, portfolioId: agents.portfolioId, isEnabled: agents.isEnabled })
+      .from(agents)
+      .where(eq(agents.portfolioId, portfolioId))
+      .limit(1);
+    return agent ?? null;
+  }
+
+  // Legacy: grab agent from first portfolio belonging to the user
   const [agent] = await db
-    .select({
-      id: agents.id,
-      portfolioId: agents.portfolioId,
-      isEnabled: agents.isEnabled,
-    })
+    .select({ id: agents.id, portfolioId: agents.portfolioId, isEnabled: agents.isEnabled })
     .from(agents)
     .innerJoin(portfolios, eq(portfolios.id, agents.portfolioId))
     .where(eq(portfolios.userId, userId))
@@ -121,6 +129,7 @@ export async function createKnowledgeSource(input: { agentId: string; title: str
     now,
   });
 
+
   return { ok: true as const, sourceId };
 }
 
@@ -155,6 +164,7 @@ export async function updateKnowledgeSource(input: {
     content: input.content,
     now,
   });
+
 
   return { ok: true as const };
 }

@@ -26,6 +26,8 @@ export const users = pgTable("users", {
   plan: varchar("plan", { length: 20 }).notNull().default("free"),
   credits: integer("credits").notNull().default(500),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  // Tracks the currently active portfolio for this user (nullable = not yet set)
+  activePortfolioId: uuid("active_portfolio_id"),
 });
 
 export const accounts = pgTable(
@@ -93,6 +95,7 @@ export const portfolios = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 80 }).notNull().default("My Portfolio"),
     handle: varchar("handle", { length: 30 }).notNull(),
     subdomain: varchar("subdomain", { length: 30 }),
     onboardingData: jsonb("onboarding_data").notNull(),
@@ -104,10 +107,9 @@ export const portfolios = pgTable(
     updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
   },
   (table) => [
-    unique("portfolios_user_id_unique_constraint").on(table.userId),
+    // NOTE: No unique constraint on userId — one user can have many portfolios
     unique("portfolios_handle_unique_constraint").on(table.handle),
     unique("portfolios_subdomain_unique_constraint").on(table.subdomain),
-    uniqueIndex("portfolios_user_id_unique").on(table.userId),
     uniqueIndex("portfolios_handle_unique").on(table.handle),
     uniqueIndex("portfolios_subdomain_unique").on(table.subdomain),
     index("portfolios_user_id_idx").on(table.userId),

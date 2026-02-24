@@ -5,8 +5,8 @@ import { db } from "@/lib/db";
 import { portfolios, agents } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { getPortfolioByUserId } from "@/lib/db/portfolio";
-import { configureAgentForUser, type ConfigureAgentInput } from "@/lib/agent/configure";
+import { getActivePortfolio } from "@/lib/active-portfolio";
+import { getAgentByPortfolioId, configureAgentForPortfolio, type ConfigureAgentInput } from "@/lib/agent/configure";
 import { generatePortfolio } from "@/lib/ai/generate-portfolio";
 import { validateHandle } from "@/lib/validation/handle";
 
@@ -16,14 +16,23 @@ async function requireAuth() {
   return session.user.id;
 }
 
-export async function togglePublish(publish: boolean) {
+export async function getDashboardData() {
   const userId = await requireAuth();
 
-  if (publish) {
-    const portfolio = await getPortfolioByUserId(userId);
-    if (!portfolio) throw new Error("Portfolio not found");
-    if (!portfolio.content) throw new Error("Generate portfolio content first");
+  const portfolio = await getActivePortfolio(userId);
+  if (!portfolio) return null;
 
+  const agent = await getAgentByPortfolioId(portfolio.id);
+
+  return { portfolio, agent };
+}
+export async function togglePublish(publish: boolean) {
+  const userId = await requireAuth();
+  const portfolio = await getActivePortfolio(userId);
+  if (!portfolio) throw new Error("Portfolio not found");
+
+  if (publish) {
+    if (!portfolio.content) throw new Error("Generate portfolio content first");
     await db.update(portfolios).set({
       isPublished: true,
       updatedAt: new Date(),
@@ -32,7 +41,7 @@ export async function togglePublish(publish: boolean) {
     await db.update(portfolios).set({
       isPublished: false,
       updatedAt: new Date(),
-    }).where(eq(portfolios.userId, userId));
+    }).where(eq(portfolios.id, portfolio.id));
   }
 
   revalidatePath("/dashboard");
@@ -41,7 +50,7 @@ export async function togglePublish(publish: boolean) {
 
 export async function updateTemplate(template: string) {
   const userId = await requireAuth();
-  const portfolio = await getPortfolioByUserId(userId);
+  const portfolio = await getActivePortfolio(userId);
   if (!portfolio) throw new Error("Portfolio not found");
 
   await db.update(portfolios).set({
@@ -54,10 +63,10 @@ export async function updateTemplate(template: string) {
 
 export async function regeneratePortfolio() {
   const userId = await requireAuth();
-  const portfolio = await getPortfolioByUserId(userId);
+  const portfolio = await getActivePortfolio(userId);
   if (!portfolio) throw new Error("Portfolio not found");
 
-  await generatePortfolio(userId);
+  await generatePortfolio(userId, portfolio.id);
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/portfolio");
@@ -65,7 +74,10 @@ export async function regeneratePortfolio() {
 
 export async function saveAgentConfig(input: ConfigureAgentInput) {
   const userId = await requireAuth();
-  const result = await configureAgentForUser(userId, input);
+  const portfolio = await getActivePortfolio(userId);
+  if (!portfolio) throw new Error("Portfolio not found");
+
+  const result = await configureAgentForPortfolio(portfolio.id, input);
 
   if (!result.ok) {
     throw new Error(result.error);
@@ -77,7 +89,7 @@ export async function saveAgentConfig(input: ConfigureAgentInput) {
 
 export async function updateHandle(newHandle: string) {
   const userId = await requireAuth();
-  const portfolio = await getPortfolioByUserId(userId);
+  const portfolio = await getActivePortfolio(userId);
   if (!portfolio) throw new Error("Portfolio not found");
 
   const validation = validateHandle(newHandle);
@@ -96,6 +108,23 @@ export async function updateHandle(newHandle: string) {
 
   await db.update(portfolios).set({
     handle: validation.value,
+    updatedAt: new Date(),
+  }).where(eq(portfolios.id, portfolio.id));
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/settings");
+}
+
+export async function updatePortfolioName(name: string) {
+  const userId = await requireAuth();
+  const portfolio = await getActivePortfolio(userId);
+  if (!portfolio) throw new Error("Portfolio not found");
+
+  const trimmed = name.trim();
+  if (!trimmed || trimmed.length > 80) throw new Error("Invalid portfolio name");
+
+  await db.update(portfolios).set({
+    name: trimmed,
     updatedAt: new Date(),
   }).where(eq(portfolios.id, portfolio.id));
 

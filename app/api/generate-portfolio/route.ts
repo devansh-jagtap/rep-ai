@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { getPortfolioByUserId } from "@/lib/db/portfolio";
+import { getActivePortfolio } from "@/lib/active-portfolio";
 import {
   generatePortfolio,
   PortfolioGenerationError,
@@ -14,12 +14,12 @@ export async function POST() {
   }
 
   try {
-    const portfolio = await getPortfolioByUserId(session.user.id);
-    if (!portfolio || portfolio.userId !== session.user.id) {
+    const portfolio = await getActivePortfolio(session.user.id);
+    if (!portfolio) {
       return NextResponse.json({ ok: false, error: "Portfolio not found" }, { status: 404 });
     }
 
-    await generatePortfolio(session.user.id);
+    await generatePortfolio(session.user.id, portfolio.id);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

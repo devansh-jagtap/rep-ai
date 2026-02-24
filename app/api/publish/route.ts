@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { portfolios } from "@/lib/schema";
 import { requireUserId } from "@/lib/api/route-helpers";
+import { getActivePortfolio } from "@/lib/active-portfolio";
 import type { InferInsertModel } from "drizzle-orm";
 
 type PortfolioUpdate = Partial<Pick<InferInsertModel<typeof portfolios>, "isPublished" | "updatedAt" | "template">>;
@@ -19,14 +20,10 @@ export async function POST(request: Request) {
       const text = await request.text();
       if (text) body = JSON.parse(text);
     } catch {
-      // ignore
+      // ignore parse errors
     }
 
-    const [portfolio] = await db
-      .select({ id: portfolios.id, content: portfolios.content })
-      .from(portfolios)
-      .where(eq(portfolios.userId, authResult.userId))
-      .limit(1);
+    const portfolio = await getActivePortfolio(authResult.userId);
 
     if (!portfolio) {
       return NextResponse.json(
