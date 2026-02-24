@@ -1,5 +1,5 @@
 import { signIn } from "@/auth"
-import { SignedUpToast } from "@/components/signed-up-toast"
+import { SignedUpToast } from "@/app/auth/_components/signed-up-toast"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"

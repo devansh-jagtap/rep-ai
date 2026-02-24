@@ -16,11 +16,13 @@ export function useMediaQuery(query: string) {
       return () => media.removeEventListener("change", update)
     }
 
-    // Safari < 14
-    // eslint-disable-next-line deprecation/deprecation
-    media.addListener(update)
-    // eslint-disable-next-line deprecation/deprecation
-    return () => media.removeListener(update)
+    const legacyMedia = media as MediaQueryList & {
+      addListener?: (listener: (event: MediaQueryListEvent) => void) => void
+      removeListener?: (listener: (event: MediaQueryListEvent) => void) => void
+    }
+
+    legacyMedia.addListener?.(update)
+    return () => legacyMedia.removeListener?.(update)
   }, [query])
 
   return matches

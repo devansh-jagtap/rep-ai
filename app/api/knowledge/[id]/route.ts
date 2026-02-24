@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { parseJsonBody, requireUserId } from "@/lib/api/route-helpers";
-import { deleteKnowledgeSource, getUserAgent, updateKnowledgeSource } from "@/lib/db/knowledge";
+import { deleteKnowledgeSource, getUserAgent } from "@/lib/db/knowledge";
+import { updateKnowledgeSource } from "@/lib/knowledge/service";
 import { parseKnowledgeInput } from "@/lib/validation/knowledge";
 import { getActivePortfolio } from "@/lib/active-portfolio";
 

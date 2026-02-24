@@ -1,4 +1,4 @@
-import { hybridSearchKnowledgeByAgentId } from "@/lib/db/knowledge";
+import { hybridSearchKnowledgeByAgentId } from "@/lib/knowledge/service";
 import type { AgentMessage, GenerateAgentReplyInput } from "./types";
 
 export function trimHistory(history: AgentMessage[]): AgentMessage[] {

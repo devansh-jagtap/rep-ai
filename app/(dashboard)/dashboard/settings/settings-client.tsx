@@ -26,15 +26,16 @@ interface SettingsClientProps {
 
 export function SettingsClient({ user, portfolio }: SettingsClientProps) {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const [isPending, startTransition] = useTransition();
   const [handle, setHandle] = useState(portfolio.handle);
   const [handleError, setHandleError] = useState("");
   const [isDeletingPortfolio, setIsDeletingPortfolio] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const validateHandleFormat = (value: string) => {
     if (value.length < 3) {

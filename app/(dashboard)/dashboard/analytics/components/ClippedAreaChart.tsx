@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartConfig, ChartContainer } from "@/components/ui/chart";
+import { ChartContainer } from "@/components/ui/chart";
 import { useSpring, useMotionValueEvent } from "motion/react";
 import { PAGE_VIEWS_CHART_CONFIG } from "../constants";
 import type { ChartDataPoint } from "../types";
@@ -23,6 +23,7 @@ export function ClippedAreaChart({
 }: ClippedAreaChartProps) {
   const chartRef = useRef<HTMLDivElement>(null);
   const [axis, setAxis] = useState(0);
+  const [containerWidth, setContainerWidth] = useState(0);
 
   const springX = useSpring(0, { damping: 30, stiffness: 100 });
   const springY = useSpring(
@@ -34,7 +35,18 @@ export function ClippedAreaChart({
     setAxis(latest);
   });
 
-  const containerWidth = chartRef.current?.getBoundingClientRect().width ?? 0;
+  useEffect(() => {
+    const node = chartRef.current;
+    if (!node) return;
+
+    const updateWidth = () => setContainerWidth(node.getBoundingClientRect().width);
+    updateWidth();
+
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
   const clipRight = Math.max(0, containerWidth - axis);
 
   return (

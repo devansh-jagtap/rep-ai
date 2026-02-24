@@ -5,15 +5,8 @@ import { Bar, BarChart, Cell, XAxis, ReferenceLine } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer } from "@/components/ui/chart";
 import { AnimatePresence, useMotionValueEvent, useSpring } from "motion/react";
-import { JetBrains_Mono } from "next/font/google";
-import { cn } from "@/lib/utils";
 import { CHART_MARGIN, CHAT_SESSIONS_CHART_CONFIG } from "../constants";
 import type { ChartDataPoint } from "../types";
-
-const jetBrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
 
 interface ValueLineBarChartProps {
   data: ChartDataPoint[];
@@ -96,7 +89,7 @@ export function ValueLineBarChart({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <span
-            className={cn(jetBrainsMono.className, "text-2xl tracking-tighter")}
+            className="text-2xl tracking-tighter font-mono"
           >
             {maxValueIndex.value.toLocaleString()}
           </span>
