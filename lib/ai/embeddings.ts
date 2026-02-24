@@ -1,11 +1,13 @@
 import OpenAI from "openai";
 
-const NEBIUS_BASE_URL = process.env.NEBIUS_BASE_URL || "https://api.studio.nebius.com";
+// Embeddings use Token Factory API. See: https://api.tokenfactory.nebius.com/docs
+const NEBIUS_EMBEDDING_BASE_URL =
+  process.env.NEBIUS_EMBEDDING_BASE_URL || "https://api.tokenfactory.nebius.com/v1/";
 const NEBIUS_API_KEY = process.env.NEBIUS_API_KEY;
 
 export const embeddingClient = new OpenAI({
   apiKey: NEBIUS_API_KEY,
-  baseURL: NEBIUS_BASE_URL,
+  baseURL: NEBIUS_EMBEDDING_BASE_URL,
 });
 
 export const EMBEDDING_MODEL = "Qwen/Qwen3-Embedding-8B";
