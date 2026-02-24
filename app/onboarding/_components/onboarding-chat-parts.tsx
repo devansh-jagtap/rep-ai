@@ -8,6 +8,7 @@ import {
   JSXPreviewContent,
   JSXPreviewError,
 } from "@/components/ai-elements/jsx-preview";
+import type { JSXPreviewProps } from "@/components/ai-elements/jsx-preview";
 import { CheckIcon } from "lucide-react";
 
 const PREVIEW_JSX =
@@ -55,7 +56,7 @@ export function OnboardingPreviewCard({
   return (
     <JSXPreview
       jsx={PREVIEW_JSX}
-      components={{ Card, CardHeader, CardTitle, CardContent, EditButton, ConfirmButton } as any}
+      components={{ Card, CardHeader, CardTitle, CardContent, EditButton, ConfirmButton } as NonNullable<JSXPreviewProps["components"]>}
       bindings={{ data, servicesList, projectList }}
       onError={(err) => console.error("JSX Preview error:", err)}
     >
