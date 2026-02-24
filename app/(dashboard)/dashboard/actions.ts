@@ -12,6 +12,15 @@ import { validateHandle } from "@/lib/validation/handle";
 import { handlePublicChat, type PublicChatResult } from "@/lib/ai/public-chat-handler";
 import { sanitizeHistory } from "@/lib/validation/public-chat";
 
+export type PortfolioContent = {
+  hero?: { headline?: string; subheadline?: string };
+  about?: { paragraph?: string };
+  services?: { title: string; description: string }[];
+  projects?: { title: string; description: string; result: string }[];
+  cta?: { headline?: string; subtext?: string };
+  socialLinks?: { platform: "twitter" | "linkedin" | "github" | "instagram" | "youtube" | "facebook" | "website"; enabled: boolean; url: string }[];
+};
+
 async function requireAuth() {
   const session = await getSession();
   if (!session?.user?.id) throw new Error("Unauthorized");
@@ -162,4 +171,18 @@ export async function deleteActivePortfolio() {
   if (!result.ok) throw new Error("Failed to delete portfolio");
 
   revalidatePath("/dashboard");
+}
+
+export async function updatePortfolioContent(content: PortfolioContent) {
+  const userId = await requireAuth();
+  const portfolio = await getActivePortfolio(userId);
+  if (!portfolio) throw new Error("Portfolio not found");
+
+  await db.update(portfolios).set({
+    content,
+    updatedAt: new Date(),
+  }).where(eq(portfolios.id, portfolio.id));
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/portfolio");
 }

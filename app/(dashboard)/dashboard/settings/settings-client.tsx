@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTheme } from "next-themes";
 import { useState, useEffect, useTransition, useSyncExternalStore } from "react";
-import { updateHandle, deleteActivePortfolio } from "../actions";
+import { updateHandle, deleteActivePortfolio, regeneratePortfolio } from "../actions";
 import { toast } from "sonner";
 import { Zap, AlertTriangle, Trash2 } from "lucide-react";
 
@@ -35,6 +35,19 @@ export function SettingsClient({ user, portfolio }: SettingsClientProps) {
   const [handle, setHandle] = useState(portfolio.handle);
   const [handleError, setHandleError] = useState("");
   const [isDeletingPortfolio, setIsDeletingPortfolio] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [prevTheme, setPrevTheme] = useState(theme);
+
+  useEffect(() => {
+    if (mounted && theme && theme !== prevTheme) {
+      setPrevTheme(theme);
+      setIsRegenerating(true);
+      regeneratePortfolio()
+        .then(() => toast.success("Theme updated and portfolio content regenerated!"))
+        .catch((error) => toast.error(error instanceof Error ? error.message : "Failed to regenerate content"))
+        .finally(() => setIsRegenerating(false));
+    }
+  }, [theme, mounted, prevTheme]);
 
 
   const validateHandleFormat = (value: string) => {
@@ -187,16 +200,17 @@ export function SettingsClient({ user, portfolio }: SettingsClientProps) {
         <CardHeader>
           <CardTitle>Appearance</CardTitle>
           <CardDescription>
-            Customize how the dashboard looks.
+            Customize how the dashboard looks. Changing theme will regenerate your portfolio content to match the new style.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>Theme Preference</Label>
             {mounted && (
-              <Select value={theme} onValueChange={setTheme}>
+              <Select value={theme} onValueChange={setTheme} disabled={isRegenerating}>
                 <SelectTrigger className="w-[200px]">
                   <SelectValue placeholder="Select a theme" />
+                  {isRegenerating && <span className="ml-2 text-xs text-muted-foreground">(regenerating...)</span>}
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="light">Light</SelectItem>

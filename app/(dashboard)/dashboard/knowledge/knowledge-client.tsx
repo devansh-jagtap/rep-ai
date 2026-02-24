@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ApiError, fetchJson } from "@/lib/http/fetch-json";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -20,10 +21,7 @@ interface KnowledgeSource {
 const MAX_CONTENT_CHARS = 20_000;
 
 function fetchKnowledge(): Promise<{ sources: KnowledgeSource[] }> {
-  return fetch("/api/knowledge").then((res) => {
-    if (!res.ok) throw new Error("Failed to fetch");
-    return res.json();
-  });
+  return fetchJson("/api/knowledge");
 }
 
 export function KnowledgeClient() {
@@ -32,20 +30,18 @@ export function KnowledgeClient() {
   const [content, setContent] = useState("");
   const [editing, setEditing] = useState<KnowledgeSource | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["knowledge"],
     queryFn: fetchKnowledge,
   });
 
   const addMutation = useMutation({
     mutationFn: async (body: { title: string; content: string }) => {
-      const res = await fetch("/api/knowledge", {
+      await fetchJson("/api/knowledge", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error("Failed to add");
-      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["knowledge"] });
@@ -56,8 +52,7 @@ export function KnowledgeClient() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/knowledge/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete");
+      await fetchJson(`/api/knowledge/${id}`, { method: "DELETE" });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["knowledge"] });
@@ -66,12 +61,11 @@ export function KnowledgeClient() {
 
   const editMutation = useMutation({
     mutationFn: async ({ id, title, content }: { id: string; title: string; content: string }) => {
-      const res = await fetch(`/api/knowledge/${id}`, {
+      await fetchJson(`/api/knowledge/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, content }),
       });
-      if (!res.ok) throw new Error("Failed to update");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["knowledge"] });
@@ -80,9 +74,29 @@ export function KnowledgeClient() {
   });
 
   const sources = data?.sources ?? [];
+  const status = error instanceof ApiError ? error.status : null;
+  const message = error instanceof Error ? error.message : null;
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+      {isError && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{status === 401 ? "Sign in required" : "Unable to load knowledge base"}</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <p className="text-sm text-muted-foreground">
+              {status === 401 ? "Your session expired. Please sign in again." : message ?? "Request failed."}
+            </p>
+            {status === 401 ? (
+              <Button asChild variant="outline" className="w-fit">
+                <a href="/auth/signin">Sign in</a>
+              </Button>
+            ) : null}
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>Knowledge Base</CardTitle>

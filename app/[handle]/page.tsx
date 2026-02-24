@@ -5,6 +5,9 @@ import { VeilTemplate } from "@/components/templates/veil-template";
 import { BoldTemplate } from "@/components/templates/bold-template";
 import { EditorialTemplate } from "@/components/templates/editorial-template";
 import { LandingTemplate } from "@/components/templates/landing-template";
+import { GalleryTemplate } from "@/components/templates/gallery-template";
+import { MinimalTemplate } from "@/components/templates/minimal-template";
+import { InteractiveTemplate } from "@/components/templates/interactive-template";
 import { getPublishedPortfolioByHandle, getPublishedPortfolioWithAgentByHandle } from "@/lib/db/portfolio";
 import { validatePortfolioContent } from "@/lib/validation/portfolio-schema";
 import { AgentWidget } from "@/components/agent-widget";
@@ -87,6 +90,12 @@ export default async function PublicPortfolioPage({ params }: PublicPortfolioPag
         <BoldTemplate content={content} />
       ) : portfolio.template === "editorial" ? (
         <EditorialTemplate content={content} />
+      ) : portfolio.template === "gallery" ? (
+        <GalleryTemplate content={content} />
+      ) : portfolio.template === "minimal" ? (
+        <MinimalTemplate content={content} />
+      ) : portfolio.template === "interactive" ? (
+        <InteractiveTemplate content={content} />
       ) : (
         <ModernTemplate content={content} />
       )}

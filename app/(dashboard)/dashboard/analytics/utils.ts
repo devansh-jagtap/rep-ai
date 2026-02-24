@@ -1,9 +1,8 @@
 import type { AnalyticsData, DailyAnalytics, Period } from "./types";
+import { fetchJson } from "@/lib/http/fetch-json";
 
 export async function fetchAnalytics(period: Period): Promise<AnalyticsData> {
-  const res = await fetch(`/api/analytics/dashboard?period=${period}`);
-  if (!res.ok) throw new Error("Failed to fetch analytics");
-  return res.json();
+  return fetchJson<AnalyticsData>(`/api/analytics/dashboard?period=${period}`);
 }
 
 export function fillDateGaps(

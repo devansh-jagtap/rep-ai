@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+export type SocialPlatform = "twitter" | "linkedin" | "github" | "instagram" | "youtube" | "facebook" | "website";
+
+export type SocialLink = {
+  platform: SocialPlatform;
+  enabled: boolean;
+  url: string;
+};
+
 export type PortfolioContent = {
   hero: {
     headline: string;
@@ -22,6 +30,7 @@ export type PortfolioContent = {
     headline: string;
     subtext: string;
   };
+  socialLinks: SocialLink[];
 };
 
 const serviceSchema = z
@@ -36,6 +45,14 @@ const projectSchema = z
     title: z.string().min(1),
     description: z.string().min(1),
     result: z.string().min(1),
+  })
+  .strict();
+
+const socialLinkSchema = z
+  .object({
+    platform: z.enum(["twitter", "linkedin", "github", "instagram", "youtube", "facebook", "website"]),
+    enabled: z.boolean(),
+    url: z.string().url(),
   })
   .strict();
 
@@ -61,6 +78,7 @@ const portfolioContentSchema = z
         subtext: z.string().min(1),
       })
       .strict(),
+    socialLinks: z.array(socialLinkSchema).default([]),
   })
   .strict();
 

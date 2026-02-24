@@ -9,6 +9,9 @@ import { VeilTemplate } from "@/components/templates/veil-template";
 import { BoldTemplate } from "@/components/templates/bold-template";
 import { EditorialTemplate } from "@/components/templates/editorial-template";
 import { LandingTemplate } from "@/components/templates/landing-template";
+import { GalleryTemplate } from "@/components/templates/gallery-template";
+import { MinimalTemplate } from "@/components/templates/minimal-template";
+import { InteractiveTemplate } from "@/components/templates/interactive-template";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type PortfolioOnboardingData } from "@/lib/db/portfolio";
 import { getActivePortfolio } from "@/lib/active-portfolio";
@@ -65,6 +68,12 @@ export default async function DashboardPreviewPage(props: { searchParams?: Searc
             <BoldTemplate content={content} />
           ) : theme === "editorial" ? (
             <EditorialTemplate content={content} />
+          ) : theme === "gallery" ? (
+            <GalleryTemplate content={content} />
+          ) : theme === "minimal" ? (
+            <MinimalTemplate content={content} />
+          ) : theme === "interactive" ? (
+            <InteractiveTemplate content={content} />
           ) : (
             <ModernTemplate content={content} />
           )}

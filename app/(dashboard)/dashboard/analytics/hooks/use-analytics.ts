@@ -8,7 +8,7 @@ import type { ChartDataPoint, Period } from "../types";
 export function useAnalytics() {
   const { period, setPeriod } = useAnalyticsStore();
 
-  const { data, isLoading, isFetching } = useQuery({
+  const { data, isLoading, isFetching, isError, error } = useQuery({
     queryKey: ["analytics", period],
     queryFn: () => fetchAnalytics(period),
     staleTime: 30 * 1000,
@@ -44,6 +44,8 @@ export function useAnalytics() {
     period,
     isLoading,
     isFetching,
+    isError,
+    error,
     setPeriodFilter,
   };
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { TrendingUp } from "lucide-react";
 import { MessageSquare } from "lucide-react";
 import {
@@ -15,6 +16,7 @@ import {
 } from "./components";
 import { useAnalytics } from "./hooks";
 import { PERIOD_LABELS } from "./constants";
+import { ApiError } from "@/lib/http/fetch-json";
 
 const GRADIENT_ID = "gradient-clipped-area-pageviews";
 
@@ -26,10 +28,31 @@ export function AnalyticsClient() {
     period,
     isLoading,
     isFetching,
+    isError,
+    error,
     setPeriodFilter,
   } = useAnalytics();
 
   const periodLabel = PERIOD_LABELS[period].toLowerCase();
+
+  if (isError) {
+    const status = error instanceof ApiError ? error.status : null;
+    const message = error instanceof Error ? error.message : "Failed to load analytics";
+
+    return (
+      <EmptyChartState
+        title={status === 401 ? "Sign in required" : "Unable to load analytics"}
+        description={status === 401 ? "Your session expired. Please sign in again." : message}
+        action={
+          status === 401 ? (
+            <Button asChild variant="outline">
+              <a href="/auth/signin">Sign in</a>
+            </Button>
+          ) : undefined
+        }
+      />
+    );
+  }
 
   return (
     <div className="flex min-w-0 flex-col gap-6 overflow-hidden">

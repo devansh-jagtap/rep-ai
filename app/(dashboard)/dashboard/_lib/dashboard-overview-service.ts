@@ -3,6 +3,7 @@ import { getDashboardData } from "@/app/(dashboard)/dashboard/_lib/get-dashboard
 import { getProfileById } from "@/lib/db";
 import { db } from "@/lib/db";
 import { agentLeads } from "@/lib/schema";
+import { getAnalyticsSummary } from "@/lib/db/analytics";
 import { and, count, eq, gte } from "drizzle-orm";
 
 const MODEL_LABELS: Record<string, string> = {
@@ -30,6 +31,12 @@ export async function getDashboardOverviewData() {
     .from(agentLeads)
     .where(and(eq(agentLeads.portfolioId, portfolio.id), gte(agentLeads.createdAt, sevenDaysAgo)));
 
+  const analytics7d = await getAnalyticsSummary({
+    portfolioId: portfolio.id,
+    startDate: sevenDaysAgo,
+    endDate: new Date(),
+  });
+
   return {
     session,
     profile,
@@ -37,6 +44,7 @@ export async function getDashboardOverviewData() {
     hasContent: Boolean(portfolio.content),
     totalLeads: totalLeadsResult.count,
     newLeads: newLeadsResult.count,
+    analytics7d: analytics7d,
     modelLabel: agent ? MODEL_LABELS[agent.model] || agent.model : "Not configured",
     portfolioLink: `${process.env.NEXT_PUBLIC_BASE_URL || ""}/${portfolio.handle}`,
   };

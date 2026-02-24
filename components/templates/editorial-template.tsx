@@ -4,6 +4,45 @@ import type { PortfolioContent } from "@/lib/validation/portfolio-schema";
 import { Button } from "@/components/ui/button";
 import { ArrowUpRightIcon } from "lucide-react";
 import { AnimateIn, StaggerChildren, StaggerItem } from "@/components/animate-in";
+import { motion } from "motion/react";
+import { Twitter, Linkedin, Github, Instagram, Youtube, Facebook, Globe } from "lucide-react";
+
+const platformIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+  twitter: Twitter,
+  linkedin: Linkedin,
+  github: Github,
+  instagram: Instagram,
+  youtube: Youtube,
+  facebook: Facebook,
+  website: Globe,
+};
+
+function SocialLinks({ socialLinks }: { socialLinks: PortfolioContent["socialLinks"] }) {
+  if (!socialLinks || socialLinks.length === 0) return null;
+  
+  const enabledLinks = socialLinks.filter(link => link.enabled && link.url);
+  if (enabledLinks.length === 0) return null;
+
+  return (
+    <div className="flex items-center gap-4">
+      {enabledLinks.map((link) => {
+        const Icon = platformIcons[link.platform] || Globe;
+        return (
+          <a
+            key={link.platform}
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-zinc-500 hover:text-zinc-900 transition-colors"
+            aria-label={link.platform}
+          >
+            <Icon className="size-5" />
+          </a>
+        );
+      })}
+    </div>
+  );
+}
 
 export function EditorialTemplate({ content }: { content: PortfolioContent }) {
   return (
@@ -21,17 +60,21 @@ export function EditorialTemplate({ content }: { content: PortfolioContent }) {
             </div>
           </div>
           <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-medium tracking-widest uppercase text-zinc-600">
-            <a href="#prologue" className="hover:text-zinc-900 transition-colors">
+            <a href="#prologue" className="hover:text-zinc-900 transition-colors relative group">
               Prologue
+              <span className="absolute -bottom-1 left-0 h-px w-0 bg-zinc-900 transition-all duration-300 group-hover:w-full" />
             </a>
-            <a href="#expertise" className="hover:text-zinc-900 transition-colors">
+            <a href="#expertise" className="hover:text-zinc-900 transition-colors relative group">
               Expertise
+              <span className="absolute -bottom-1 left-0 h-px w-0 bg-zinc-900 transition-all duration-300 group-hover:w-full" />
             </a>
-            <a href="#index" className="hover:text-zinc-900 transition-colors">
+            <a href="#index" className="hover:text-zinc-900 transition-colors relative group">
               Index
+              <span className="absolute -bottom-1 left-0 h-px w-0 bg-zinc-900 transition-all duration-300 group-hover:w-full" />
             </a>
-            <a href="#contact" className="hover:text-zinc-900 transition-colors">
+            <a href="#contact" className="hover:text-zinc-900 transition-colors relative group">
               Contact
+              <span className="absolute -bottom-1 left-0 h-px w-0 bg-zinc-900 transition-all duration-300 group-hover:w-full" />
             </a>
           </nav>
         </header>
@@ -55,10 +98,10 @@ export function EditorialTemplate({ content }: { content: PortfolioContent }) {
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="rounded-full border-zinc-900 text-zinc-900 hover:bg-zinc-900 hover:text-white h-12 px-8 font-medium tracking-wide transition-all"
+                className="rounded-full border-zinc-900 text-zinc-900 hover:bg-zinc-900 hover:text-white h-12 px-8 font-medium tracking-wide transition-all group"
               >
                 {content.hero.ctaText}
-                <ArrowUpRightIcon className="ml-2 size-4" />
+                <ArrowUpRightIcon className="ml-2 size-4 transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1" />
               </Button>
             </AnimateIn>
             <AnimateIn from="bottom" delay={0.55} duration={0.8}>
@@ -108,14 +151,14 @@ export function EditorialTemplate({ content }: { content: PortfolioContent }) {
           <StaggerChildren stagger={0.15} className="grid md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-16">
             {content.services.map((service, i) => (
               <StaggerItem key={i} from="bottom">
-                <article className="space-y-4 group">
-                  <div className="text-xs font-mono text-zinc-400 border-b border-zinc-200 pb-4 mb-6">
+                <article className="space-y-4 group cursor-pointer">
+                  <div className="text-xs font-mono text-zinc-400 border-b border-zinc-200 pb-4 mb-6 group-hover:text-zinc-900 group-hover:border-zinc-900 transition-all duration-300">
                     No. {String(i + 1).padStart(2, "0")}
                   </div>
-                  <h3 className="text-2xl font-serif tracking-tight group-hover:italic transition-all">
+                  <h3 className="text-2xl font-serif tracking-tight group-hover:italic transition-all duration-300 group-hover:translate-x-2">
                     {service.title}
                   </h3>
-                  <p className="text-zinc-600 leading-relaxed text-sm md:text-base">
+                  <p className="text-zinc-600 leading-relaxed text-sm md:text-base group-hover:text-zinc-900 transition-colors duration-300">
                     {service.description}
                   </p>
                 </article>
@@ -137,14 +180,14 @@ export function EditorialTemplate({ content }: { content: PortfolioContent }) {
             {content.projects.map((project, i) => (
               <AnimateIn key={i} from="bottom" delay={i * 0.1}>
                 <div className="group grid md:grid-cols-[1fr_2fr_1fr] gap-8 md:gap-12 items-center py-12 border-t border-zinc-200 hover:bg-zinc-50 transition-colors px-6 -mx-6">
-                  <h3 className="text-3xl md:text-4xl font-serif tracking-tight group-hover:italic transition-all">
+                  <h3 className="text-3xl md:text-4xl font-serif tracking-tight group-hover:italic transition-all duration-300 group-hover:translate-x-2">
                     {project.title}
                   </h3>
-                  <p className="text-zinc-600 leading-relaxed text-lg">
+                  <p className="text-zinc-600 leading-relaxed text-lg group-hover:text-zinc-900 transition-colors duration-300">
                     {project.description}
                   </p>
                   <div className="flex justify-end mt-4 md:mt-0">
-                    <div className="border border-zinc-200 rounded-[2rem] p-5 text-[10px] sm:text-xs leading-relaxed font-medium tracking-widest uppercase text-zinc-500 bg-white max-w-[260px] text-center shadow-sm">
+                    <div className="border border-zinc-200 rounded-[2rem] p-5 text-[10px] sm:text-xs leading-relaxed font-medium tracking-widest uppercase text-zinc-500 bg-white max-w-[260px] text-center shadow-sm group-hover:border-zinc-400 group-hover:shadow-md transition-all duration-300">
                       {project.result}
                     </div>
                   </div>
@@ -168,11 +211,11 @@ export function EditorialTemplate({ content }: { content: PortfolioContent }) {
               <Button 
                 asChild
                 size="lg" 
-                className="bg-white text-zinc-900 hover:bg-zinc-200 rounded-full h-14 px-10 text-sm font-bold tracking-widest uppercase"
+                className="bg-white text-zinc-900 hover:bg-zinc-200 rounded-full h-14 px-10 text-sm font-bold tracking-widest uppercase group"
               >
                 <a href="#contact">
                   {content.hero.ctaText}
-                  <ArrowUpRightIcon className="ml-2 size-4" />
+                  <ArrowUpRightIcon className="ml-2 size-4 transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1" />
                 </a>
               </Button>
             </div>
@@ -180,9 +223,12 @@ export function EditorialTemplate({ content }: { content: PortfolioContent }) {
         </AnimateIn>
 
         <footer className="border-t border-zinc-200 pt-10 pb-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between text-xs font-medium tracking-widest uppercase text-zinc-500">
-          <a href="#" className="hover:text-zinc-900 transition-colors">
-            Back to top
-          </a>
+          <div className="flex items-center gap-4">
+            <SocialLinks socialLinks={content.socialLinks} />
+            <a href="#" className="hover:text-zinc-900 transition-colors">
+              Back to top
+            </a>
+          </div>
           <span>&copy; {new Date().getFullYear()}</span>
         </footer>
 

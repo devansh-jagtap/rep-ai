@@ -8,29 +8,59 @@ import { LogoIcon } from "@/components/logo";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { ArrowRight, Check } from "lucide-react";
 import { AnimateIn, StaggerChildren, StaggerItem } from "@/components/animate-in";
+import { Twitter, Linkedin, Github, Instagram, Youtube, Facebook, Globe } from "lucide-react";
+
+const platformIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+  twitter: Twitter,
+  linkedin: Linkedin,
+  github: Github,
+  instagram: Instagram,
+  youtube: Youtube,
+  facebook: Facebook,
+  website: Globe,
+};
+
+function SocialLinks({ socialLinks }: { socialLinks: PortfolioContent["socialLinks"] }) {
+  if (!socialLinks || socialLinks.length === 0) return null;
+  
+  const enabledLinks = socialLinks.filter(link => link.enabled && link.url);
+  if (enabledLinks.length === 0) return null;
+
+  return (
+    <div className="flex items-center gap-4">
+      {enabledLinks.map((link) => {
+        const Icon = platformIcons[link.platform] || Globe;
+        return (
+          <a
+            key={link.platform}
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+            aria-label={link.platform}
+          >
+            <Icon className="size-5" />
+          </a>
+        );
+      })}
+    </div>
+  );
+}
 
 export function LandingTemplate({ content }: { content: PortfolioContent }) {
   return (
-    <div className="bg-background text-foreground min-h-screen">
-      <header className="sticky top-0 z-20 border-b bg-background/70 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-4">
+    <div className="bg-background text-foreground min-h-screen font-sans">
+      <header className="sticky top-0 z-20 border-b bg-background/90 backdrop-blur-md">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-5">
           <a href="#" aria-label="Back to top" className="flex items-center gap-2">
             <LogoIcon uniColor className="size-5" />
             <span className="text-sm font-medium tracking-wide">Portfolio</span>
           </a>
-          <nav className="hidden items-center gap-4 text-sm text-muted-foreground sm:flex">
-            <a href="#about" className="hover:text-foreground transition-colors">
-              About
-            </a>
-            <a href="#services" className="hover:text-foreground transition-colors">
-              Services
-            </a>
-            <a href="#work" className="hover:text-foreground transition-colors">
-              Work
-            </a>
-            <a href="#contact" className="hover:text-foreground transition-colors">
-              Contact
-            </a>
+          <nav className="hidden items-center gap-6 text-sm text-muted-foreground sm:flex">
+            <a href="#about" className="hover:text-foreground transition-colors">About</a>
+            <a href="#services" className="hover:text-foreground transition-colors">Services</a>
+            <a href="#work" className="hover:text-foreground transition-colors">Work</a>
+            <a href="#contact" className="hover:text-foreground transition-colors">Contact</a>
           </nav>
           <ThemeSwitcher />
         </div>
@@ -40,39 +70,27 @@ export function LandingTemplate({ content }: { content: PortfolioContent }) {
         {/* Hero */}
         <section className="bg-background">
           <div className="relative py-24 md:py-32">
-            <div
-              aria-hidden
-              className="mask-radial-from-45% mask-radial-to-75% mask-radial-at-top mask-radial-[75%_100%] mask-t-from-50% absolute inset-0 aspect-square dark:opacity-10"
-            >
-              <Image
-                src="https://images.unsplash.com/photo-1740516367177-ae20098c8786?q=80&w=2268&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                alt=""
-                width={2268}
-                height={1740}
-                className="size-full object-cover object-top"
-                priority
-              />
-            </div>
-
             <div className="relative z-10 mx-auto w-full max-w-5xl px-6">
-              <div className="mx-auto max-w-2xl text-center">
-                <AnimateIn from="none" duration={0.8}>
-                  <h1 className="text-balance font-serif text-4xl font-medium sm:text-5xl md:text-6xl">
+              <div className="mx-auto max-w-3xl text-center space-y-8">
+                <AnimateIn from="bottom" duration={0.8}>
+                  <h1 className="text-balance font-serif text-5xl md:text-7xl font-medium tracking-tight text-foreground leading-[1.1]">
                     {content.hero.headline}
                   </h1>
                 </AnimateIn>
                 <AnimateIn delay={0.15}>
-                  <p className="text-muted-foreground mt-4 text-balance text-lg leading-relaxed sm:text-xl">
+                  <p className="text-muted-foreground text-balance text-xl leading-relaxed">
                     {content.hero.subheadline}
                   </p>
                 </AnimateIn>
                 <AnimateIn delay={0.3}>
-                  <Button asChild className="mt-8 gap-2">
-                    <a href="#contact">
-                      {content.hero.ctaText}
-                      <ArrowRight className="size-4" />
-                    </a>
-                  </Button>
+                  <div className="pt-4">
+                    <Button asChild size="lg" className="h-12 px-8 text-base group">
+                      <a href="#contact">
+                        {content.hero.ctaText}
+                        <ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
+                      </a>
+                    </Button>
+                  </div>
                 </AnimateIn>
               </div>
             </div>
@@ -80,51 +98,44 @@ export function LandingTemplate({ content }: { content: PortfolioContent }) {
         </section>
 
         {/* About */}
-        <section id="about" className="bg-background @container py-24">
+        <section id="about" className="bg-muted/30 py-24 border-y border-border/50">
           <div className="mx-auto max-w-5xl px-6">
             <AnimateIn>
-              <Card variant="outline" className="p-8 md:p-12">
-                <h2 className="text-balance font-serif text-3xl font-medium md:text-4xl">
+              <div className="max-w-3xl">
+                <h2 className="text-balance font-serif text-3xl md:text-4xl font-medium text-foreground mb-6">
                   About
                 </h2>
-                <p className="text-muted-foreground mt-4 text-balance text-lg leading-relaxed">
+                <p className="text-muted-foreground text-xl leading-relaxed">
                   {content.about.paragraph}
                 </p>
-              </Card>
+              </div>
             </AnimateIn>
           </div>
         </section>
 
         {/* Services */}
-        <section id="services" className="bg-background @container py-24">
+        <section id="services" className="py-24">
           <div className="mx-auto max-w-5xl px-6">
-            <div className="space-y-4">
-              <AnimateIn>
-                <h2 className="text-balance font-serif text-4xl font-medium">Services</h2>
-              </AnimateIn>
-              <AnimateIn delay={0.1}>
-                <p className="text-muted-foreground max-w-2xl text-balance">
-                  A clear set of offerings, with outcomes you can measure.
-                </p>
-              </AnimateIn>
-            </div>
+            <AnimateIn>
+              <div className="mb-16">
+                <h2 className="text-balance font-serif text-4xl font-medium text-foreground">Services</h2>
+              </div>
+            </AnimateIn>
 
-            <StaggerChildren stagger={0.08} className="@xl:grid-cols-3 mt-12 grid gap-6 sm:grid-cols-2">
+            <StaggerChildren stagger={0.1} className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
               {content.services.map((service, i) => (
-                <StaggerItem key={`${service.title}-${i}`}>
-                  <Card variant="mixed" className="h-full p-6">
-                    <div className="flex items-start gap-3">
-                      <div className="mt-1 flex size-5 items-center justify-center rounded-full border border-foreground/15">
-                        <Check className="size-3 text-muted-foreground" />
+                <StaggerItem key={i}>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-6 items-center justify-center rounded-full bg-primary/10">
+                        <Check className="size-3.5 text-primary" />
                       </div>
-                      <div className="space-y-2">
-                        <h3 className="text-foreground font-medium">{service.title}</h3>
-                        <p className="text-muted-foreground text-sm leading-relaxed">
-                          {service.description}
-                        </p>
-                      </div>
+                      <h3 className="text-foreground font-medium text-lg">{service.title}</h3>
                     </div>
-                  </Card>
+                    <p className="text-muted-foreground leading-relaxed">
+                      {service.description}
+                    </p>
+                  </div>
                 </StaggerItem>
               ))}
             </StaggerChildren>
@@ -132,36 +143,32 @@ export function LandingTemplate({ content }: { content: PortfolioContent }) {
         </section>
 
         {/* Projects */}
-        <section id="work" className="bg-background @container py-24">
+        <section id="work" className="bg-muted/30 py-24 border-y border-border/50">
           <div className="mx-auto max-w-5xl px-6">
             <AnimateIn>
-              <div className="text-center">
-                <h2 className="text-balance font-serif text-4xl font-medium">Selected work</h2>
-                <p className="text-muted-foreground mx-auto mt-4 max-w-2xl text-balance">
-                  A few recent projects, focused on results.
-                </p>
+              <div className="mb-16">
+                <h2 className="text-balance font-serif text-4xl font-medium text-foreground">Selected Work</h2>
               </div>
             </AnimateIn>
 
-            <StaggerChildren stagger={0.08} className="mt-12 grid gap-6 @xl:grid-cols-2">
+            <StaggerChildren stagger={0.15} className="space-y-16">
               {content.projects.map((project, i) => (
-                <StaggerItem key={`${project.title}-${i}`}>
-                  <Card variant="outline" className="p-6">
-                    <div className="space-y-4">
-                      <h3 className="text-balance font-serif text-2xl font-medium">
+                <StaggerItem key={i}>
+                  <div className="grid md:grid-cols-[1fr_2fr] gap-8 md:gap-16">
+                    <div className="space-y-2">
+                      <h3 className="text-2xl font-serif font-medium text-foreground">
                         {project.title}
                       </h3>
-                      <p className="text-muted-foreground leading-relaxed">
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Outcome: <span className="text-foreground">{project.result}</span>
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground leading-relaxed text-lg">
                         {project.description}
                       </p>
-                      <div className="rounded-xl border bg-muted/40 p-4">
-                        <div className="text-muted-foreground text-xs font-medium uppercase tracking-wider">
-                          Result
-                        </div>
-                        <div className="mt-1 text-sm font-medium">{project.result}</div>
-                      </div>
                     </div>
-                  </Card>
+                  </div>
                 </StaggerItem>
               ))}
             </StaggerChildren>
@@ -169,46 +176,36 @@ export function LandingTemplate({ content }: { content: PortfolioContent }) {
         </section>
 
         {/* CTA */}
-        <section id="contact" className="bg-background @container py-24">
-          <div className="mx-auto max-w-5xl px-6">
+        <section id="contact" className="py-32">
+          <div className="mx-auto max-w-5xl px-6 text-center">
             <AnimateIn>
-              <Card variant="outline" className="@xl:grid-cols-2 grid gap-8 p-6 md:p-10">
-                <div>
-                  <h2 className="text-balance font-serif text-3xl font-medium">
-                    {content.cta.headline}
-                  </h2>
-                  <p className="text-muted-foreground mt-3 text-balance">
-                    {content.cta.subtext}
-                  </p>
-                </div>
-                <div className="bg-muted/50 flex flex-col justify-center rounded-xl border p-6">
-                  <p className="text-muted-foreground text-sm">Next step</p>
-                  <p className="mt-1 font-serif text-3xl font-medium">Let’s talk</p>
-                  <Button asChild className="mt-6 gap-2">
+              <div className="max-w-2xl mx-auto space-y-8">
+                <h2 className="text-balance font-serif text-4xl md:text-5xl font-medium text-foreground">
+                  {content.cta.headline}
+                </h2>
+                <p className="text-muted-foreground text-xl">
+                  {content.cta.subtext}
+                </p>
+                <div className="pt-6">
+                  <Button asChild size="lg" className="h-14 px-10 text-base group">
                     <a href="#contact">
                       {content.hero.ctaText}
-                      <ArrowRight className="size-4" />
+                      <ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
                     </a>
                   </Button>
                 </div>
-              </Card>
+              </div>
             </AnimateIn>
           </div>
         </section>
 
-        <footer className="bg-background @container py-12">
-          <div className="mx-auto max-w-5xl px-6">
-            <div className="flex flex-col gap-6 border-t pt-8">
-              <div className="flex items-center justify-between gap-4">
-                <a href="#" aria-label="Back to top" className="flex items-center gap-2">
-                  <LogoIcon uniColor className="size-5" />
-                  <span className="text-sm text-muted-foreground">ref</span>
-                </a>
-                <ThemeSwitcher />
-              </div>
-              <p className="text-muted-foreground text-sm">
-                &copy; {new Date().getFullYear()} {content.hero.headline}
-              </p>
+        <footer className="py-8 border-t border-border/50">
+          <div className="mx-auto max-w-5xl px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+            <p>&copy; {new Date().getFullYear()} {content.hero.headline}</p>
+            <div className="flex items-center gap-6">
+              <SocialLinks socialLinks={content.socialLinks} />
+              <a href="#" className="hover:text-foreground transition-colors">Back to top</a>
+              <ThemeSwitcher />
             </div>
           </div>
         </footer>
