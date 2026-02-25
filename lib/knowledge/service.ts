@@ -48,10 +48,10 @@ export async function createKnowledgeSource(input: { agentId: string; title: str
     return { ok: false as const, error: "Knowledge source limit reached" };
   }
 
-  const { id, now } = await createKnowledgeSourceRecord(input);
-  await persistChunksWithEmbeddings({ sourceId: id, agentId: input.agentId, content: input.content, now });
+  const { sourceId, now } = await createKnowledgeSourceRecord(input);
+  await persistChunksWithEmbeddings({ sourceId, agentId: input.agentId, content: input.content, now });
 
-  return { ok: true as const, sourceId: id };
+  return { ok: true as const, sourceId };
 }
 
 export async function updateKnowledgeSource(input: {
@@ -66,7 +66,7 @@ export async function updateKnowledgeSource(input: {
   }
 
   const now = new Date();
-  await updateKnowledgeSourceRecord({ id: input.id, title: input.title, content: input.content, now });
+  await updateKnowledgeSourceRecord({ id: input.id, agentId: input.agentId, title: input.title, content: input.content, now });
   await deleteKnowledgeChunksBySourceId(input.id);
   await persistChunksWithEmbeddings({ sourceId: input.id, agentId: input.agentId, content: input.content, now });
 

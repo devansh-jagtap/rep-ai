@@ -1,6 +1,8 @@
 import { and, count, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { agents, knowledgeChunks, knowledgeSources, portfolios } from "@/lib/schema";
+import { chunkText } from "@/lib/knowledge/chunk-text";
+import { generateEmbeddings } from "@/lib/ai/embeddings";
 
 export interface KnowledgeSourceRecord {
   id: string;
@@ -124,14 +126,14 @@ export async function createKnowledgeSourceRecord(input: {
   });
 
   await persistChunksWithEmbeddings({
-    sourceId,
+    sourceId: id,
     agentId: input.agentId,
     content: input.content,
     now,
   });
 
 
-  return { ok: true as const, sourceId };
+  return { ok: true as const, sourceId: id, now };
 }
 
 export async function getKnowledgeSourceByIdAndAgent(input: { id: string; agentId: string }) {
@@ -146,6 +148,7 @@ export async function getKnowledgeSourceByIdAndAgent(input: { id: string; agentI
 
 export async function updateKnowledgeSourceRecord(input: {
   id: string;
+  agentId: string;
   title: string;
   content: string;
   now?: Date;

@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { chatWithAgent } from "@/app/(dashboard)/dashboard/actions";
+import { chatWithAgent } from "../../actions";
 
 export function useAgentActions(params: {
   chatInput: string;

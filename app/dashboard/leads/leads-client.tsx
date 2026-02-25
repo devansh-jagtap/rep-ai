@@ -82,7 +82,7 @@ export function LeadsClient({ leads: initialLeads }: { leads: LeadDetailData[] }
   return (
     <div className="flex flex-col gap-4 w-full max-w-6xl mx-auto">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Leads</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Leads</h1>
         <p className="text-muted-foreground">
           {leads.length} lead{leads.length === 1 ? "" : "s"} captured by your AI agent.
         </p>

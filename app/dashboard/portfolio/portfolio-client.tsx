@@ -12,9 +12,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ExternalLink, Sparkles, Loader2, Globe, FileText, Briefcase, Megaphone, Pencil, Save, X, Plus, Trash2, Share2 } from "lucide-react";
 import Link from "next/link";
-import { usePortfolioActions } from "@/app/(dashboard)/dashboard/portfolio/_hooks/use-portfolio-actions";
+import { usePortfolioActions } from "./_hooks/use-portfolio-actions";
 import { useState, useEffect } from "react";
-import type { PortfolioContent } from "@/app/(dashboard)/dashboard/actions";
+import type { PortfolioContent } from "../actions";
 import type { SocialLink, SocialPlatform } from "@/lib/validation/portfolio-schema";
 
 interface PortfolioClientProps {
@@ -49,7 +49,7 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
     if (!editedContent) return;
     setIsSaving(true);
     try {
-      const { updatePortfolioContent } = await import("@/app/(dashboard)/dashboard/actions");
+      const { updatePortfolioContent } = await import("@/app/dashboard/actions");
       await updatePortfolioContent(editedContent);
       setEditMode(false);
     } catch (error) {
@@ -178,7 +178,7 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
     <div className="flex flex-col gap-6 max-w-4xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Portfolio Management</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Portfolio Management</h1>
           <p className="text-muted-foreground">
             Control your public profile, content, and visibility.
           </p>

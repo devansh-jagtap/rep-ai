@@ -6,7 +6,7 @@ import {
   updateTemplate,
   updatePortfolioContent,
   type PortfolioContent,
-} from "@/app/(dashboard)/dashboard/actions";
+  } from "../../actions";
 
 export function usePortfolioActions(hasContent: boolean, initialPublished: boolean) {
   const [isPending, startTransition] = useTransition();

@@ -13,18 +13,18 @@ export function LeadList({
 }) {
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col">
-      <div className="px-4 py-3 border-b">
+      {/* <div className="px-4 py-3 border-b">
         <h2 className="text-sm font-semibold">Leads</h2>
         <p className="text-xs text-muted-foreground">
           {leads.length} lead{leads.length === 1 ? "" : "s"}
         </p>
-      </div>
+      </div> */}
 
       <ScrollArea className="flex-1 min-h-0 min-w-0 overflow-x-hidden">
         <div className="p-2 min-w-0">
           {leads.length === 0 ? (
             <div className="p-6 text-sm text-muted-foreground">
-              No leads yet.
+              
             </div>
           ) : (
             leads.map((lead) => (

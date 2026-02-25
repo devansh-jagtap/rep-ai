@@ -117,17 +117,16 @@ export function EngagementOverviewChart({ data }: EngagementOverviewChartProps) 
             <ChartTooltip
               content={
                 <ChartTooltipContent
-                  labelFormatter={(_, payload) =>
-                    payload?.[0]?.payload?.date
-                      ? new Date(
-                          payload[0].payload.date
-                        ).toLocaleDateString("en-US", {
+                  labelFormatter={(_, payload) => {
+                    const item = payload?.[0]?.payload as { date?: string } | undefined;
+                    return item?.date
+                      ? new Date(item.date).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",
                           year: "numeric",
                         })
-                      : ""
-                  }
+                      : "";
+                  }}
                 />
               }
             />

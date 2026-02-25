@@ -8,8 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { CodeBlock } from "@/components/ui/code-block";
 import { useTransition, useEffect, useMemo, useState } from "react";
-import { Save, BotMessageSquare, AlertCircle, Copy, ExternalLink, ArrowUpIcon, Loader2, MessageSquare } from "lucide-react";
+import { Save, AlertCircle, ExternalLink, ArrowUpIcon, Loader2, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { saveAgentConfig } from "../actions";
 import {
@@ -31,7 +32,7 @@ import {
   type ConversationStrategyMode,
 } from "@/lib/agent/strategy-modes";
 import { useAgentStore } from "@/lib/stores/agent-store";
-import { useAgentActions } from "@/app/(dashboard)/dashboard/agent/_hooks/use-agent-actions";
+import { useAgentActions } from "./_hooks/use-agent-actions";
 
 const MODELS = [
   { value: "moonshotai/Kimi-K2.5", label: "Kimi K2.5", description: "Fast & accurate" },
@@ -174,20 +175,10 @@ export function AgentClient({
       ? `<iframe src="${appOrigin}/embed/${agentId}" width="${widgetWidth}" height="${widgetHeight}" style="border:1px solid rgba(0,0,0,0.12);border-radius:12px;" loading="lazy" title="AI Assistant"></iframe>`
       : "";
 
-  const copyToClipboard = async (value: string, label: string) => {
-    if (!value) return;
-    try {
-      await navigator.clipboard.writeText(value);
-      toast.success(`${label} copied`);
-    } catch {
-      toast.error(`Could not copy ${label.toLowerCase()}`);
-    }
-  };
-
   return (
     <div className="max-w-6xl mx-auto flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">AI Agent</h1>
+        <h1 className="text-3xl font-bold tracking-tight">AI Agent</h1>
         <p className="text-muted-foreground">
           Configure your assistant, test responses, and install the widget on your own site.
         </p>
@@ -418,28 +409,25 @@ export function AgentClient({
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label>Script Install Snippet</Label>
-                      <Button variant="secondary" size="sm" onClick={() => copyToClipboard(scriptSnippet, "Script snippet")}>
-                        <Copy className="size-4 mr-2" />
-                        Copy
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Label>Script Install Snippet</Label>
+                        <Badge variant="secondary" className="text-xs">Recommended</Badge>
+                      </div>
                     </div>
-                    <pre className="rounded-md border bg-muted/40 p-3 text-xs overflow-x-auto whitespace-pre-wrap break-all">
-                      {scriptSnippet}
-                    </pre>
+                    <CodeBlock
+                      code={scriptSnippet}
+                      language="html"
+                    />
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label>Iframe Fallback</Label>
-                      <Button variant="secondary" size="sm" onClick={() => copyToClipboard(iframeSnippet, "Iframe snippet")}>
-                        <Copy className="size-4 mr-2" />
-                        Copy
-                      </Button>
                     </div>
-                    <pre className="rounded-md border bg-muted/40 p-3 text-xs overflow-x-auto whitespace-pre-wrap break-all">
-                      {iframeSnippet}
-                    </pre>
+                    <CodeBlock
+                      code={iframeSnippet}
+                      language="html"
+                    />
                   </div>
 
                   <div className="rounded-lg border bg-muted/30 p-4 text-sm space-y-2">
@@ -481,9 +469,6 @@ export function AgentClient({
             <CardHeader className="border-b px-4 py-3 pb-4 space-y-1 bg-muted/50 shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-md bg-primary text-primary-foreground">
-                    <BotMessageSquare className="size-4" />
-                  </div>
                   <CardTitle className="text-base">Test Agent</CardTitle>
                 </div>
                 {chatMessages.length > 0 && (
@@ -513,11 +498,11 @@ export function AgentClient({
                     }
                   />
                 ) : chatMessages.length === 0 ? (
-                  <ConversationEmptyState
-                    icon={<MessageSquare className="size-12 text-muted-foreground" />}
-                    title="Test your Agent"
-                    description="Send a message to test your visitor experience."
-                  />
+                  <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center">
+                    <p className="text-sm text-muted-foreground">
+                      Start chatting to test your agent
+                    </p>
+                  </div>
                 ) : (
                   chatMessages.map((message, index) => (
                     <Message key={index} from={message.role}>

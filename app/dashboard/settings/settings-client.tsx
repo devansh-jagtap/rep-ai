@@ -112,7 +112,7 @@ export function SettingsClient({ user, portfolio }: SettingsClientProps) {
   return (
     <div className="flex flex-col gap-6 max-w-4xl mx-auto">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
         <p className="text-muted-foreground">
           Manage your account settings and preferences.
         </p>

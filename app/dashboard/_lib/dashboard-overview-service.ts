@@ -1,10 +1,11 @@
 import { getSession } from "@/auth";
-import { getDashboardData } from "@/app/(dashboard)/dashboard/_lib/get-dashboard-data";
+
 import { getProfileById } from "@/lib/db";
 import { db } from "@/lib/db";
 import { agentLeads } from "@/lib/schema";
-import { getAnalyticsSummary } from "@/lib/db/analytics";
+import { getAnalyticsSummary, getDailyAnalytics } from "@/lib/db/analytics";
 import { and, count, eq, gte } from "drizzle-orm";
+import { getDashboardData } from "./get-dashboard-data";
 
 const MODEL_LABELS: Record<string, string> = {
   "moonshotai/Kimi-K2.5": "Kimi K2.5",
@@ -37,6 +38,12 @@ export async function getDashboardOverviewData() {
     endDate: new Date(),
   });
 
+  const dailyAnalytics = await getDailyAnalytics({
+    portfolioId: portfolio.id,
+    startDate: sevenDaysAgo,
+    endDate: new Date(),
+  });
+
   return {
     session,
     profile,
@@ -45,6 +52,7 @@ export async function getDashboardOverviewData() {
     totalLeads: totalLeadsResult.count,
     newLeads: newLeadsResult.count,
     analytics7d: analytics7d,
+    dailyAnalytics: dailyAnalytics,
     modelLabel: agent ? MODEL_LABELS[agent.model] || agent.model : "Not configured",
     portfolioLink: `${process.env.NEXT_PUBLIC_BASE_URL || ""}/${portfolio.handle}`,
   };
