@@ -6,9 +6,10 @@ import { nextCookies } from "better-auth/next-js";
 import { toNextJsHandler } from "better-auth/next-js";
 import { db } from "@/lib/db";
 import { users, sessions, accounts, verifications } from "@/lib/schema";
+import { ensureBaseUrl } from "@/lib/auth-url";
 
 const authInstance = betterAuth({
-  baseURL: process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+  baseURL: ensureBaseUrl(process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL),
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {
