@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Upload, FileText, X, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -100,6 +100,11 @@ export function FileUpload({ onUploadComplete, disabled }: FileUploadProps) {
         mimeType: file.type,
         fileSize: file.size,
       });
+      
+      setUploadProgress(0);
+      if (inputRef.current) {
+        inputRef.current.value = "";
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
     } finally {

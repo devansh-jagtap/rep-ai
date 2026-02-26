@@ -9,6 +9,7 @@ import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { CodeBlock } from "@/components/ui/code-block";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTransition, useEffect, useMemo, useState } from "react";
 import { Save, AlertCircle, ExternalLink, ArrowUpIcon, Loader2, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
@@ -177,15 +178,17 @@ export function AgentClient({
 
   return (
     <div className="max-w-6xl mx-auto flex flex-col gap-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">AI Agent</h1>
-        <p className="text-muted-foreground">
-          Configure your assistant, test responses, and install the widget on your own site.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">AI Agent</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
+            Configure your assistant, test responses, and install the widget.
+          </p>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="sm:col-span-1">
           <CardHeader className="pb-2">
             <CardDescription>Status</CardDescription>
             <CardTitle className="text-base">
@@ -197,7 +200,7 @@ export function AgentClient({
             </CardTitle>
           </CardHeader>
         </Card>
-        <Card>
+        <Card className="sm:col-span-1">
           <CardHeader className="pb-2">
             <CardDescription>Portfolio</CardDescription>
             <CardTitle className="text-base">
@@ -209,7 +212,7 @@ export function AgentClient({
             </CardTitle>
           </CardHeader>
         </Card>
-        <Card>
+        <Card className="sm:col-span-1">
           <CardHeader className="pb-2">
             <CardDescription>Model</CardDescription>
             <CardTitle className="text-base">
@@ -217,16 +220,31 @@ export function AgentClient({
             </CardTitle>
           </CardHeader>
         </Card>
-        <Card>
+        <Card className="sm:col-span-1">
           <CardHeader className="pb-2">
-            <CardDescription>Conversation Mode</CardDescription>
+            <CardDescription>Mode</CardDescription>
             <CardTitle className="text-base capitalize">{config.strategyMode}</CardTitle>
           </CardHeader>
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
-        <div className="flex flex-col gap-6">
+      <Tabs defaultValue="settings" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsTrigger value="settings" className="gap-2">
+            <Save className="size-4" />
+            <span className="hidden sm:inline">Settings</span>
+          </TabsTrigger>
+          <TabsTrigger value="widget" className="gap-2">
+            <ExternalLink className="size-4" />
+            <span className="hidden sm:inline">Widget</span>
+          </TabsTrigger>
+          <TabsTrigger value="test" className="gap-2">
+            <MessageSquare className="size-4" />
+            <span className="hidden sm:inline">Test Chat</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="settings" className="mt-0">
           <Card>
             <CardHeader>
               <CardTitle>Agent Settings</CardTitle>
@@ -234,7 +252,7 @@ export function AgentClient({
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between rounded-lg border p-4">
-                <Label className="flex flex-col space-y-1">
+                <Label className="flex flex-col items-start space-y-1">
                   <span>Enable AI Assistant</span>
                   <span className="font-normal text-sm text-muted-foreground">
                     Responds to visitor questions and captures leads.
@@ -343,7 +361,9 @@ export function AgentClient({
               </Button>
             </CardFooter>
           </Card>
+        </TabsContent>
 
+        <TabsContent value="widget" className="mt-0">
           <Card>
             <CardHeader>
               <CardTitle>Get Agent Widget</CardTitle>
@@ -462,10 +482,10 @@ export function AgentClient({
               )}
             </CardContent>
           </Card>
-        </div>
+        </TabsContent>
 
-        <div className="w-full lg:w-[400px]">
-          <Card className="flex flex-col sticky top-24 h-[600px]">
+        <TabsContent value="test" className="mt-0">
+          <Card className="flex flex-col h-[600px]">
             <CardHeader className="border-b px-4 py-3 pb-4 space-y-1 bg-muted/50 shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -571,8 +591,8 @@ export function AgentClient({
               </InputGroup>
             </form>
           </Card>
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

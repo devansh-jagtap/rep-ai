@@ -42,6 +42,7 @@ export function KnowledgeClient() {
   const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [inputMode, setInputMode] = useState<"text" | "file">("text");
   const [editing, setEditing] = useState<KnowledgeSource | null>(null);
   const [uploadedFile, setUploadedFile] = useState<{
     fileUrl: string;
@@ -68,6 +69,7 @@ export function KnowledgeClient() {
       setTitle("");
       setContent("");
       setUploadedFile(null);
+      setInputMode("text");
     },
   });
 
@@ -100,9 +102,11 @@ export function KnowledgeClient() {
   };
 
   const handleAddFile = () => {
-    if (!title.trim() || !uploadedFile) return;
+    if (!uploadedFile) return;
+    const fileTitle = uploadedFile.fileName.replace(/\.pdf$/i, "");
+    const finalTitle = title.trim() || fileTitle;
     addMutation.mutate({
-      title,
+      title: finalTitle,
       fileUrl: uploadedFile.fileUrl,
       mimeType: uploadedFile.mimeType,
       fileSize: uploadedFile.fileSize,
@@ -165,10 +169,33 @@ export function KnowledgeClient() {
           <Input
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            placeholder="Source title"
+            placeholder={inputMode === "file" ? "Title (auto-generated if empty)" : "Source title"}
           />
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="flex gap-2 border-b">
+            <button
+              onClick={() => setInputMode("text")}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                inputMode === "text"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Text
+            </button>
+            <button
+              onClick={() => setInputMode("file")}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                inputMode === "file"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Upload PDF
+            </button>
+          </div>
+
+          {inputMode === "text" ? (
             <div className="space-y-3">
               <Textarea
                 value={content}
@@ -187,7 +214,7 @@ export function KnowledgeClient() {
                 </Button>
               </div>
             </div>
-
+          ) : (
             <div className="space-y-3">
               <FileUpload
                 onUploadComplete={(result) => {
@@ -205,15 +232,18 @@ export function KnowledgeClient() {
                   />
                   <Button
                     onClick={handleAddFile}
-                    disabled={addMutation.isPending || !title.trim()}
+                    disabled={addMutation.isPending}
                     className="w-full"
                   >
                     {addMutation.isPending ? "Processing..." : "Add PDF"}
                   </Button>
+                  <p className="text-xs text-muted-foreground text-center">
+                    Title will be auto-generated using AI
+                  </p>
                 </div>
               )}
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 

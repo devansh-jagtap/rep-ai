@@ -6,8 +6,31 @@ import { generateEmbeddings } from "@/lib/ai/embeddings";
 import { chunkText } from "@/lib/knowledge/chunk-text";
 import { insertKnowledgeChunks, deleteKnowledgeChunksBySourceId } from "@/lib/db/knowledge";
 import { getKeyFromUrl, getFileBuffer } from "@/lib/storage/s3";
+import { createOpenAI } from "@ai-sdk/openai";
+import { generateText } from "ai";
+
+const nebius = createOpenAI({
+  apiKey: process.env.NEBIUS_API_KEY,
+  baseURL: process.env.NEBIUS_BASE_URL ?? "https://api.studio.nebius.com/v1",
+});
+
+const MODEL = "Qwen/Qwen2.5-72B-Instruct";
 
 export type ProcessingStatus = "pending" | "processing" | "complete" | "failed";
+
+async function generateTitleFromContent(content: string, originalTitle: string): Promise<string> {
+  const preview = content.slice(0, 4000);
+  
+  const result = await generateText({
+    model: nebius.chat(MODEL),
+    system: "You are a helpful assistant that generates concise titles for documents. Generate a short, descriptive title (max 100 characters) for the given document content. Return only the title, nothing else.",
+    prompt: `Generate a title for this document. Original title hint: "${originalTitle}"\n\nDocument preview:\n${preview}`,
+    maxOutputTokens: 100,
+  });
+
+  const title = result.text.trim().slice(0, 100);
+  return title || originalTitle;
+}
 
 export async function updateKnowledgeSourceStatus(
   sourceId: string,
@@ -28,6 +51,7 @@ export async function processKnowledgeSource(sourceId: string): Promise<{ succes
     .select({
       id: knowledgeSources.id,
       agentId: knowledgeSources.agentId,
+      title: knowledgeSources.title,
       fileUrl: knowledgeSources.fileUrl,
       mimeType: knowledgeSources.mimeType,
       content: knowledgeSources.content,
@@ -44,6 +68,7 @@ export async function processKnowledgeSource(sourceId: string): Promise<{ succes
     await updateKnowledgeSourceStatus(sourceId, "processing");
 
     let content = source.content;
+    let title = source.title;
 
     if (source.fileUrl && source.mimeType === "application/pdf") {
       const s3Key = getKeyFromUrl(source.fileUrl);
@@ -52,9 +77,15 @@ export async function processKnowledgeSource(sourceId: string): Promise<{ succes
         : await extractTextFromUrl(source.fileUrl);
       content = extraction.text;
 
+      try {
+        title = await generateTitleFromContent(content, source.title);
+      } catch (error) {
+        console.warn("Failed to generate title:", error);
+      }
+
       await db
         .update(knowledgeSources)
-        .set({ content, updatedAt: new Date() })
+        .set({ content, title, updatedAt: new Date() })
         .where(eq(knowledgeSources.id, sourceId));
     }
 
