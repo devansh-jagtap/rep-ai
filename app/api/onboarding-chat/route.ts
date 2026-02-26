@@ -54,11 +54,6 @@ export async function POST(request: Request) {
     }
   }
 
-  const nextStep = getNextStep(currentStep);
-  const nextQuestionConfig = nextStep ? getQuestionForStep(nextStep) : null;
-  const nextAssistantMessage = nextQuestionConfig?.blocks[0]?.prompt
-    ?? "Perfect. You are done with onboarding. Saving your portfolio now.";
-
   const shouldRefine = ["name", "title", "bio", "sections", "services", "projects"].includes(currentStep);
 
   let finalValue: unknown = validation.value;
@@ -78,9 +73,9 @@ export async function POST(request: Request) {
   };
 
   const nextStep = getNextStep(currentStep, mergedState);
-  const nextAssistantMessage = nextStep
-    ? getQuestionForStep(nextStep)
-    : "Perfect. You are done with onboarding. Saving your portfolio now.";
+  const nextQuestionConfig = nextStep ? getQuestionForStep(nextStep) : null;
+  const nextAssistantMessage = nextQuestionConfig?.blocks[0]?.prompt
+    ?? "Perfect. You are done with onboarding. Saving your portfolio now.";
 
   return NextResponse.json({
     ok: true,

@@ -4,12 +4,16 @@ import {
   mergeVisibleSections,
   PORTFOLIO_SECTION_REGISTRY,
 } from "@/lib/portfolio/section-registry";
+import type { PortfolioSectionKey } from "@/lib/portfolio/section-registry";
 import { validateHandle } from "@/lib/validation/handle";
-import type {
-  OnboardingData,
-  OnboardingProjectInput,
-  OnboardingSetupPath,
-  OnboardingStep,
+import {
+  DEFAULT_ONBOARDING_SECTIONS,
+  withDefaultSelectedSections,
+  type OnboardingData,
+  type OnboardingProjectInput,
+  type OnboardingSelectedSections,
+  type OnboardingSetupPath,
+  type OnboardingStep,
 } from "@/lib/onboarding/types";
 
 const ALLOWED_TONES: PortfolioTone[] = ["Professional", "Friendly", "Bold", "Minimal"];
@@ -18,12 +22,37 @@ type ValidationResult<T> =
   | { ok: true; value: T }
   | { ok: false; message: string };
 
+/** Derive visible section keys from selectedSections (used when request_preview omits sections). */
+function sectionsFromSelectedSections(selected: OnboardingSelectedSections): PortfolioSectionKey[] {
+  return PORTFOLIO_SECTION_REGISTRY.filter(
+    (s) => selected[s.key as keyof OnboardingSelectedSections] === true
+  ).map((s) => s.key);
+}
+
 function normalizeWhitespace(value: string) {
   return value.replace(/\s+/g, " ").trim();
 }
 
 function parseSelectedSections(input: string): OnboardingSelectedSections {
-  const normalized = input.toLowerCase();
+  const trimmed = input.trim();
+  if (trimmed.startsWith("{")) {
+    try {
+      const o = JSON.parse(trimmed) as Record<string, unknown>;
+      if (o && typeof o === "object") {
+        return {
+          hero: true,
+          about: !!o.about,
+          services: !!o.services,
+          projects: !!o.projects,
+          cta: !!o.cta,
+          socials: !!o.socials,
+        };
+      }
+    } catch {
+      // fall through to text parsing
+    }
+  }
+  const normalized = trimmed.toLowerCase();
   const parseToggle = (key: keyof Omit<OnboardingSelectedSections, "hero">) => {
     if (normalized.includes(`${key}:on`) || normalized.includes(`${key}=on`) || normalized.includes(`${key}=true`)) return true;
     if (normalized.includes(`${key}:off`) || normalized.includes(`${key}=off`) || normalized.includes(`${key}=false`)) return false;
@@ -202,6 +231,11 @@ export function validateFinalOnboardingState(state: Partial<OnboardingData> | un
     return { ok: false, message: "Invalid onboarding state." };
   }
 
+  const stateWithSections =
+    Array.isArray(stateWithDefaults.sections) && stateWithDefaults.sections.length > 0
+      ? stateWithDefaults
+      : { ...stateWithDefaults, sections: sectionsFromSelectedSections(stateWithDefaults.selectedSections!) };
+
   const commonRequired: Array<keyof OnboardingData> = [
     "setupPath",
     "name",
@@ -215,25 +249,25 @@ export function validateFinalOnboardingState(state: Partial<OnboardingData> | un
   ];
 
   for (const key of commonRequired) {
-    if (stateWithDefaults[key] === undefined || stateWithDefaults[key] === null) {
+    if (stateWithSections[key] === undefined || stateWithSections[key] === null) {
       return { ok: false, message: `Missing onboarding field: ${key}` };
     }
   }
 
-  if (stateWithDefaults.selectedSections.services) {
-    if (!Array.isArray(stateWithDefaults.services) || stateWithDefaults.services.length < 1) {
+  if (stateWithSections.selectedSections!.services) {
+    if (!Array.isArray(stateWithSections.services) || stateWithSections.services.length < 1) {
       return { ok: false, message: "Missing onboarding field: services" };
     }
   }
 
-  if (stateWithDefaults.setupPath === "build-new" && stateWithDefaults.selectedSections.projects) {
-    if (!Array.isArray(stateWithDefaults.projects) || stateWithDefaults.projects.length < 1) {
+  if (stateWithSections.setupPath === "build-new" && stateWithSections.selectedSections!.projects) {
+    if (!Array.isArray(stateWithSections.projects) || stateWithSections.projects.length < 1) {
       return { ok: false, message: "Missing onboarding field: projects" };
     }
   }
 
-  if (stateWithDefaults.setupPath === "existing-site") {
-    if (!stateWithDefaults.siteUrl) {
+  if (stateWithSections.setupPath === "existing-site") {
+    if (!stateWithSections.siteUrl) {
       return { ok: false, message: "Missing onboarding field: siteUrl" };
     }
   }
@@ -242,7 +276,7 @@ export function validateFinalOnboardingState(state: Partial<OnboardingData> | un
     ok: true,
     value: {
       ...(state as OnboardingData),
-      sections: mergeVisibleSections(state.sections, getDefaultVisibleSections()),
+      sections: mergeVisibleSections(stateWithSections.sections, getDefaultVisibleSections()),
     },
   };
 }

@@ -102,18 +102,6 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
     });
   };
 
-  const updateSectionVisibility = (section: keyof typeof defaultVisibleSections, value: boolean) => {
-    if (!editedContent) return;
-    setEditedContent({
-      ...editedContent,
-      visibleSections: {
-        ...defaultVisibleSections,
-        ...editedContent.visibleSections,
-        [section]: value,
-      },
-    });
-  };
-
   const updateService = (index: number, field: string, value: string) => {
     if (!editedContent?.services) return;
     const newServices = [...editedContent.services];
@@ -435,10 +423,10 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
                       <div key={item.key} className="flex items-center justify-between rounded-lg bg-muted p-3">
                         <Label className="text-sm font-medium">{item.label}</Label>
                         <Switch
-                          checked={visibleSections[item.key as keyof typeof defaultVisibleSections]}
+                          checked={isContentSectionVisible(item.key as PortfolioSectionKey)}
                           onCheckedChange={(checked) => {
                             if (editMode) {
-                              updateSectionVisibility(item.key as keyof typeof defaultVisibleSections, checked);
+                              updateVisibleSection(item.key as PortfolioSectionKey, checked);
                             }
                           }}
                           disabled={!editMode}

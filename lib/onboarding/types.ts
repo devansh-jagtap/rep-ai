@@ -22,7 +22,7 @@ export const ONBOARDING_STEPS = [
 
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 
-export type OnboardingBlockType = "text" | "selector" | "text_input" | "multi_input" | "confirm";
+export type OnboardingBlockType = "text" | "selector" | "text_input" | "multi_input" | "confirm" | "tag_selector" | "card_editor" | "accordion_editor" | "input_with_validation";
 
 interface OnboardingBlockBase {
   id: string;
@@ -35,13 +35,19 @@ export interface OnboardingTextBlock extends OnboardingBlockBase {
   type: "text";
 }
 
+export interface OnboardingSelectorOption {
+  id: string;
+  label: string;
+  value: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+}
+
 export interface OnboardingSelectorBlock extends OnboardingBlockBase {
   type: "selector";
-  options: Array<{
-    id: string;
-    label: string;
-    value: string;
-  }>;
+  options: OnboardingSelectorOption[];
+  layout?: "inline" | "cards" | "chips";
 }
 
 export interface OnboardingTextInputBlock extends OnboardingBlockBase {
@@ -61,12 +67,47 @@ export interface OnboardingConfirmBlock extends OnboardingBlockBase {
   rejectLabel?: string;
 }
 
+export interface OnboardingTagSelectorBlock extends OnboardingBlockBase {
+  type: "tag_selector";
+  presets?: string[];
+  allowCustom?: boolean;
+  max?: number;
+}
+
+export interface OnboardingCardEditorBlock extends OnboardingBlockBase {
+  type: "card_editor";
+  fields: Array<{
+    id: string;
+    label: string;
+    type: "text" | "textarea" | "url";
+    placeholder?: string;
+    required?: boolean;
+  }>;
+  maxItems?: number;
+  minItems?: number;
+}
+
+export interface OnboardingAccordionEditorBlock extends OnboardingBlockBase {
+  type: "accordion_editor";
+  itemLabel?: string;
+}
+
+export interface OnboardingInputWithValidationBlock extends OnboardingBlockBase {
+  type: "input_with_validation";
+  validationType?: "handle" | "url" | "email";
+  placeholder?: string;
+}
+
 export type OnboardingBlock =
   | OnboardingTextBlock
   | OnboardingSelectorBlock
   | OnboardingTextInputBlock
   | OnboardingMultiInputBlock
-  | OnboardingConfirmBlock;
+  | OnboardingConfirmBlock
+  | OnboardingTagSelectorBlock
+  | OnboardingCardEditorBlock
+  | OnboardingAccordionEditorBlock
+  | OnboardingInputWithValidationBlock;
 
 export type OnboardingSection = "setup" | "profile" | "work" | "existingSite" | "preferences";
 

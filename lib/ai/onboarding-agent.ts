@@ -142,7 +142,7 @@ export async function streamOnboardingChat({
           value: z.union([
             z.string(),
             z.object({
-              hero: z.literal(true),
+              hero: z.enum(["on"]),
               about: z.boolean(),
               services: z.boolean(),
               projects: z.boolean(),
@@ -159,20 +159,24 @@ export async function streamOnboardingChat({
           ]),
         }),
         execute: async ({ step, value }) => {
+          let normalizedValue = value;
+          if (step === "selectedSections" && typeof value === "object" && value !== null && "hero" in value) {
+            normalizedValue = { ...value, hero: (value as { hero?: unknown }).hero === "on" ? true : (value as { hero: boolean }).hero };
+          }
           const stringValue =
-            typeof value === "string"
-              ? value
+            typeof normalizedValue === "string"
+              ? normalizedValue
               : step === "services"
-                ? (value as string[]).join(", ")
+                ? (normalizedValue as string[]).join(", ")
                 : step === "projects"
-                  ? (value as { title: string; description: string }[])
+                  ? (normalizedValue as { title: string; description: string }[])
                     .map((p) => `${p.title}: ${p.description}`)
                     .join("\n")
                   : step === "faqs"
-                    ? (value as string[]).join("\n")
+                    ? (normalizedValue as string[]).join("\n")
                     : step === "selectedSections"
-                      ? JSON.stringify(value)
-                      : String(value);
+                      ? JSON.stringify(normalizedValue)
+                      : String(normalizedValue);
 
           const validation = validateStepInput(
             step as OnboardingStep,
@@ -227,7 +231,7 @@ export async function streamOnboardingChat({
             )
             .optional(),
           selectedSections: z.object({
-            hero: z.literal(true),
+            hero: z.enum(["on"]),
             about: z.boolean(),
             services: z.boolean(),
             projects: z.boolean(),
@@ -250,6 +254,9 @@ export async function streamOnboardingChat({
           handle: z.string(),
         }),
         execute: async (data) => {
+          if (data.selectedSections && (data.selectedSections as { hero?: unknown }).hero === "on") {
+            data = { ...data, selectedSections: { ...data.selectedSections!, hero: true as const } };
+          }
           console.log("[request_preview] execute called with:", data);
           const parsed = validateFinalOnboardingState(data);
           if (!parsed.ok) {

@@ -14,7 +14,7 @@ import { sanitizeHistory } from "@/lib/validation/public-chat";
 import { defaultVisibleSections, type PortfolioContent as ValidatedPortfolioContent } from "@/lib/validation/portfolio-schema";
 
 import { validatePortfolioContent } from "@/lib/validation/portfolio-schema";
-import type { PortfolioSectionKey } from "@/lib/portfolio/section-registry";
+import { mergeVisibleSections, type PortfolioSectionKey } from "@/lib/portfolio/section-registry";
 
 export type PortfolioContent = {
   visibleSections?: ValidatedPortfolioContent["visibleSections"];
@@ -24,7 +24,6 @@ export type PortfolioContent = {
   projects?: { title: string; description: string; result: string }[];
   cta?: { headline?: string; subtext?: string };
   socialLinks?: { platform: "twitter" | "linkedin" | "github" | "instagram" | "youtube" | "facebook" | "website"; enabled: boolean; url: string }[];
-  visibleSections?: PortfolioSectionKey[];
 };
 
 async function requireAuth() {
@@ -186,10 +185,7 @@ export async function updatePortfolioContent(content: PortfolioContent) {
 
   const normalizedContent: PortfolioContent = {
     ...content,
-    visibleSections: {
-      ...defaultVisibleSections,
-      ...content.visibleSections,
-    },
+    visibleSections: mergeVisibleSections(content.visibleSections),
   };
 
   await db.update(portfolios).set({

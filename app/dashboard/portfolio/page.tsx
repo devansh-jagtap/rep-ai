@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getDashboardData } from "../_lib/get-dashboard-data";
 import { PortfolioClient } from "./portfolio-client";
 import type { PortfolioSectionKey } from "@/lib/portfolio/section-registry";
+import type { PortfolioContent } from "../actions";
 
 export default async function PortfolioPage() {
   const session = await getSession();
@@ -13,14 +14,7 @@ export default async function PortfolioPage() {
 
   const { portfolio } = data;
 
-  const content = portfolio.content as {
-    hero?: { headline?: string; subheadline?: string };
-    about?: { paragraph?: string };
-    services?: { title: string; description: string }[];
-    projects?: { title: string; description: string; result: string }[];
-    cta?: { headline?: string; subtext?: string };
-    visibleSections?: PortfolioSectionKey[];
-  } | null;
+  const content = portfolio.content as PortfolioContent | null;
 
   return (
     <PortfolioClient

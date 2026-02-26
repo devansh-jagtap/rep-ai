@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/input-group";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { MessageSquare, ArrowUpIcon } from "lucide-react";
+import { MessageSquare, ArrowUpIcon, Paperclip, Upload, Loader2, CheckCircle } from "lucide-react";
 import {
   getDefaultSectionSelection,
   OnboardingMessageResponse,
@@ -28,6 +28,20 @@ import { useOnboardingChatState } from "@/app/onboarding/_hooks/use-onboarding-c
 import type { OnboardingBlock } from "@/lib/onboarding/types";
 import { renderOnboardingBlocks } from "@/app/onboarding/_components/onboarding-block-renderer";
 import { trackOnboardingBlockEvent } from "@/lib/onboarding/analytics";
+import type { OnboardingSelectedSections } from "@/lib/onboarding/types";
+import { toast } from "sonner";
+import {
+  SetupPathSelector,
+  ToneSelectorCards,
+  ServicesTagSelector,
+  TargetAudienceChips,
+  ContactPreferencesChips,
+  HandleInputWithValidation,
+  FAQAccordionEditor,
+  ProjectsCardEditor,
+  TitleSuggestions,
+  SectionSelectorCards,
+} from "@/app/onboarding/_components/onboarding-generative-ui";
 
 function getBlocksFromMessageParts(parts: MessagePartLike[], fallbackId: string): OnboardingBlock[] {
   const blockParts = parts.filter(
@@ -72,6 +86,26 @@ export function OnboardingChat() {
   const [isUploadingResume, setIsUploadingResume] = useState(false);
   const resumeSentRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [selectedTone, setSelectedTone] = useState<string | null>(null);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [selectedProjects, setSelectedProjects] = useState<{ title: string; description: string }[]>([]);
+  const [selectedTargetAudience, setSelectedTargetAudience] = useState<string | null>(null);
+  const [selectedContactPreference, setSelectedContactPreference] = useState<string | null>(null);
+  const [handleValue, setHandleValue] = useState("");
+  const [selectedFAQs, setSelectedFAQs] = useState<string[]>([]);
+  const [selectedTitle, setSelectedTitle] = useState<string>("");
+
+  const getMessageText = useCallback((message: { parts?: MessagePartLike[]; content?: string; role: string }) => {
+    if (message.role !== "assistant") return "";
+    const parts = (message.parts || []) as MessagePartLike[];
+    const textFromParts = parts
+      .filter((part): part is { type: "text"; text: string } => part.type === "text" && typeof part.text === "string")
+      .map((part) => part.text)
+      .join(" ");
+    const textFromContent = typeof message.content === "string" ? message.content : "";
+    return (textFromParts + " " + textFromContent).toLowerCase();
+  }, []);
 
   const handleResumeUpload = async (file: File) => {
     if (file.type !== "application/pdf") {
@@ -135,17 +169,66 @@ export function OnboardingChat() {
     setInput("");
     setShowUpload(false);
   }, [input, resumeUrl, sendMessage, status]);
-  const shouldShowSectionSelector = useMemo(() => {
+
+  // Detect which step the AI is asking about - only ONE at a time (priority order)
+  const { step: detectedStep } = useMemo(() => {
     const last = messages[messages.length - 1];
-    if (!last || last.role !== "assistant") return false;
-    const parts = last.parts as MessagePartLike[];
-    if (parts.some((part) => part.type === "section_selector")) return true;
-    const text = parts
-      .filter((part): part is { type: "text"; text: string } => part.type === "text" && typeof part.text === "string")
-      .map((part) => part.text.toLowerCase())
-      .join(" ");
-    return text.includes("choose which sections") || text.includes("hero is always on");
-  }, [messages]);
+    if (!last || last.role !== "assistant") return { step: null };
+    
+    const text = getMessageText(last);
+    
+    // Priority order - check most specific first
+    if (text.includes("handle") || text.includes("public") || text.includes(".io/")) {
+      return { step: "handle" };
+    }
+    if (text.includes("tone") || text.includes("professional") || text.includes("friendly") || 
+        text.includes("bold") || text.includes("minimal")) {
+      return { step: "tone" };
+    }
+    if (text.includes("faq") || text.includes("frequently asked")) {
+      return { step: "faqs" };
+    }
+    if (text.includes("contact") || text.includes("reach you")) {
+      return { step: "contact" };
+    }
+    if (text.includes("target audience") || text.includes("who is your") || text.includes("who should")) {
+      return { step: "target" };
+    }
+    if (text.includes("projects") || text.includes("tell me about") || text.includes("project")) {
+      return { step: "projects" };
+    }
+    if (text.includes("services") || text.includes("work do you offer")) {
+      return { step: "services" };
+    }
+    if (text.includes("sections") || text.includes("about") || text.includes("hero")) {
+      return { step: "sections" };
+    }
+    if (text.includes("title") || text.includes("professional title")) {
+      return { step: "title" };
+    }
+    if (text.includes("setup") || text.includes("portfolio") || text.includes("from scratch") || 
+        text.includes("already have a website") || text.includes("get started")) {
+      return { step: "setup" };
+    }
+    
+    return { step: null };
+  }, [messages, getMessageText]);
+
+  // Map detected step to individual booleans
+  const shouldShowSetupPath = detectedStep === "setup";
+  const shouldShowTitleSuggestions = detectedStep === "title";
+  const shouldShowSectionSelector = detectedStep === "sections";
+  const shouldShowServicesSelector = detectedStep === "services";
+  const shouldShowProjectsEditor = detectedStep === "projects";
+  const shouldShowTargetAudience = detectedStep === "target";
+  const shouldShowContactPreferences = detectedStep === "contact";
+  const shouldShowFAQsEditor = detectedStep === "faqs";
+  const shouldShowToneSelector = detectedStep === "tone";
+  const shouldShowHandleInput = detectedStep === "handle";
+
+  const shouldShowAnyEnhancedUI = shouldShowSectionSelector || shouldShowSetupPath || shouldShowToneSelector || 
+    shouldShowServicesSelector || shouldShowProjectsEditor || shouldShowHandleInput || 
+    shouldShowTargetAudience || shouldShowContactPreferences || shouldShowFAQsEditor || shouldShowTitleSuggestions;
 
   const handleSectionsSubmit = async () => {
     setIsSavingSections(true);
@@ -163,6 +246,48 @@ export function OnboardingChat() {
     }
   };
 
+  const handleSetupPathSubmit = (value: string) => {
+    sendMessage({ text: value });
+  };
+
+  const handleToneSubmit = (value: string) => {
+    setSelectedTone(value);
+    sendMessage({ text: value });
+  };
+
+  const handleServicesSubmit = () => {
+    const asText = selectedServices.join(", ");
+    sendMessage({ text: asText });
+  };
+
+  const handleProjectsSubmit = () => {
+    const asText = selectedProjects.map(p => `${p.title}: ${p.description}`).join("\n");
+    sendMessage({ text: asText });
+  };
+
+  const handleHandleSubmit = () => {
+    sendMessage({ text: handleValue });
+  };
+
+  const handleTargetAudienceSubmit = (value: string) => {
+    setSelectedTargetAudience(value);
+    sendMessage({ text: value });
+  };
+
+  const handleContactPreferenceSubmit = (value: string) => {
+    setSelectedContactPreference(value);
+    sendMessage({ text: value });
+  };
+
+  const handleFAQsSubmit = () => {
+    sendMessage({ text: selectedFAQs.join("\n") });
+  };
+
+  const handleTitleSubmit = (value: string) => {
+    setSelectedTitle(value);
+    sendMessage({ text: value });
+  };
+
   return (
     <div className="fixed inset-0 flex flex-col bg-background">
       <header className="flex shrink-0 items-center justify-center border-b px-4 py-3">
@@ -178,52 +303,128 @@ export function OnboardingChat() {
             ) : (
               messages.map((message) => (
                 <Message key={message.id} from={message.role}>
-                  <MessageContent className={cn("text-base max-w-2xl break-words", message.role === "assistant" && "text-primary")}>
+                  <MessageContent className={cn("text-base max-w-2xl", message.role === "assistant" && "text-primary")}>
                     {(() => {
-                      const parts = (message.parts || []) as MessagePartLike[];
-                      if (parts.length === 0 && (message as any).content) {
+                      const messageParts = (message.parts || []) as MessagePartLike[];
+                      if (messageParts.length === 0 && (message as any).content) {
                         const cleaned = (message as any).content.replace(/\[Attached Resume:[^\]]*\]\([^\)]+\)/g, '').trim();
                         return cleaned ? <OnboardingMessageResponse key={`${message.id}-content`}>{cleaned}</OnboardingMessageResponse> : null;
                       }
 
-                      const textParts = parts.filter((part): part is { type: "text"; text: string } => part.type === "text" && typeof part.text === "string");
+                      const textParts = messageParts.filter((part): part is { type: "text"; text: string } => part.type === "text" && typeof part.text === "string");
                       // v6: tool parts are "tool-save_step" with output, legacy: "tool-invocation" with result
-                      const saveStepResults = parts.filter((p: any) => {
+                      const hasSaveStepSuccess = messageParts.some((p: any) => {
                         const isToolPart = p.type === "tool-save_step" || p.type === "tool-invocation" || (p.type === "dynamic-tool" && p.toolName === "save_step");
                         if (!isToolPart) return false;
                         const output = p.output ?? p.result;
                         return output?.success;
                       });
 
-                      if (textParts.length > 0) {
-                        return textParts.map((part, index) => {
-                          const displayTxt = part.text.replace(/\[Attached Resume:[^\]]*\]\([^\)]+\)/g, '').trim();
-                          if (!displayTxt) return null;
-                          return <OnboardingMessageResponse key={`${message.id}-${index}`}>{displayTxt}</OnboardingMessageResponse>;
-                        });
-                      }
-                      if (saveStepResults.length > 0) {
-                        return <OnboardingMessageResponse key={`${message.id}-saved`}>Saved! What would you like to add next?</OnboardingMessageResponse>;
-                      }
-                      return null;
-                      const parts = message.parts as MessagePartLike[];
-                      const textParts = parts.filter((p) => p.type === "text");
-                      const saveStepResults = parts.filter((p) => p.type === "tool-invocation" && p.toolName === "save_step" && p.result?.success);
                       return (
                         <>
-                          {textParts.map((part, index) => (
-                            <OnboardingMessageResponse key={`${message.id}-${index}`}>{part.text}</OnboardingMessageResponse>
-                          ))}
-                          {saveStepResults.length > 0 ? (
-                            <OnboardingMessageResponse key={`${message.id}-saved`}>Saved! What would you like to add next?</OnboardingMessageResponse>
-                          ) : null}
+                          {textParts.map((part, index) => {
+                            const displayTxt = part.text.replace(/\[Attached Resume:[^\]]*\]\([^\)]+\)/g, '').trim();
+                            if (!displayTxt) return null;
+                            return <OnboardingMessageResponse key={`${message.id}-${index}`}>{displayTxt}</OnboardingMessageResponse>;
+                          })}
+
                           {message.role === "assistant" && shouldShowSectionSelector && message.id === messages[messages.length - 1]?.id ? (
                             <div className="mt-3">
-                              <SectionSelectorMessage
+                              <SectionSelectorCards
                                 value={selectedSections}
                                 onChange={setSelectedSections}
                                 onSubmit={handleSectionsSubmit}
                                 disabled={status === "streaming" || isSavingSections}
+                              />
+                            </div>
+                          ) : null}
+                          {message.role === "assistant" && shouldShowSetupPath && message.id === messages[messages.length - 1]?.id ? (
+                            <div className="mt-3">
+                              <SetupPathSelector
+                                options={[
+                                  { id: "existing-site", label: "Agent Rep Only", value: "I already have a website", description: "Quick 2-min setup • Connect your existing website with an AI agent", icon: "bot", color: "blue" },
+                                  { id: "build-new", label: "Agent Rep + Portfolio", value: "Build me a portfolio + agent", description: "Full portfolio site • AI-powered agent included", icon: "globe", color: "green" },
+                                ]}
+                                onSelect={handleSetupPathSubmit}
+                                disabled={status === "streaming"}
+                              />
+                            </div>
+                          ) : null}
+                          {message.role === "assistant" && shouldShowToneSelector && message.id === messages[messages.length - 1]?.id ? (
+                            <div className="mt-3">
+                              <ToneSelectorCards
+                                options={[
+                                  { id: "professional", label: "Professional", value: "Professional", description: '"I help enterprise teams build scalable solutions."', icon: "briefcase" },
+                                  { id: "friendly", label: "Friendly", value: "Friendly", description: '"Hey there! I\'d love to help you with your project."', icon: "smile" },
+                                  { id: "bold", label: "Bold", value: "Bold", description: '"I don\'t just design products—I transform businesses."', icon: "zap" },
+                                  { id: "minimal", label: "Minimal", value: "Minimal", description: '"I design clean, focused solutions."', icon: "minus" },
+                                ]}
+                                onSelect={handleToneSubmit}
+                                disabled={status === "streaming"}
+                              />
+                            </div>
+                          ) : null}
+                          {message.role === "assistant" && shouldShowServicesSelector && message.id === messages[messages.length - 1]?.id ? (
+                            <div className="mt-3">
+                              <ServicesTagSelector
+                                presets={["Web Development", "Mobile App Development", "UI/UX Design", "Graphic Design", "Content Writing", "Marketing", "SEO", "Social Media Management", "Consulting", "Data Analytics", "Video Production", "Photography"]}
+                                onChange={setSelectedServices}
+                                onSubmit={handleServicesSubmit}
+                                disabled={status === "streaming"}
+                                max={10}
+                              />
+                            </div>
+                          ) : null}
+                          {message.role === "assistant" && shouldShowProjectsEditor && message.id === messages[messages.length - 1]?.id ? (
+                            <div className="mt-3">
+                              <ProjectsCardEditor
+                                onChange={setSelectedProjects}
+                                onSubmit={handleProjectsSubmit}
+                                disabled={status === "streaming"}
+                                maxItems={3}
+                              />
+                            </div>
+                          ) : null}
+                          {message.role === "assistant" && shouldShowHandleInput && message.id === messages[messages.length - 1]?.id ? (
+                            <div className="mt-3">
+                              <HandleInputWithValidation
+                                onChange={setHandleValue}
+                                onSubmit={handleHandleSubmit}
+                                disabled={status === "streaming"}
+                              />
+                            </div>
+                          ) : null}
+                          {message.role === "assistant" && shouldShowTargetAudience && message.id === messages[messages.length - 1]?.id ? (
+                            <div className="mt-3">
+                              <TargetAudienceChips
+                                onSelect={handleTargetAudienceSubmit}
+                                disabled={status === "streaming"}
+                              />
+                            </div>
+                          ) : null}
+                          {message.role === "assistant" && shouldShowContactPreferences && message.id === messages[messages.length - 1]?.id ? (
+                            <div className="mt-3">
+                              <ContactPreferencesChips
+                                onSelect={handleContactPreferenceSubmit}
+                                disabled={status === "streaming"}
+                              />
+                            </div>
+                          ) : null}
+                          {message.role === "assistant" && shouldShowFAQsEditor && message.id === messages[messages.length - 1]?.id ? (
+                            <div className="mt-3">
+                              <FAQAccordionEditor
+                                onChange={setSelectedFAQs}
+                                onSubmit={handleFAQsSubmit}
+                                disabled={status === "streaming"}
+                              />
+                            </div>
+                          ) : null}
+                          {message.role === "assistant" && shouldShowTitleSuggestions && message.id === messages[messages.length - 1]?.id ? (
+                            <div className="mt-3">
+                              <TitleSuggestions
+                                suggestions={["Product Designer", "Software Engineer", "Frontend Developer", "Full Stack Developer", "UI/UX Designer", "Marketing Manager", "Consultant", "Freelancer", "Founder", "Data Scientist"]}
+                                onSelect={handleTitleSubmit}
+                                disabled={status === "streaming"}
                               />
                             </div>
                           ) : null}
@@ -302,7 +503,7 @@ export function OnboardingChat() {
               {/* Resume uploaded badge */}
               {resumeUrl && !resumeSentRef.current && (
                 <div className="mx-auto max-w-3xl flex items-center gap-2 p-3 bg-primary/10 text-primary rounded-md text-sm font-medium">
-                  <CheckCircleIcon className="size-4" />
+                  <CheckCircle className="size-4" />
                   Resume uploaded! Send a message (or just hit enter) to attach it.
                   <Button type="button" variant="ghost" size="sm" className="ml-auto p-0 h-auto" onClick={() => { setResumeUrl(null); setShowUpload(false); }}>
                     Remove
@@ -320,14 +521,13 @@ export function OnboardingChat() {
                     className="text-muted-foreground"
                     onClick={() => setShowUpload(prev => !prev)}
                     title="Upload Resume PDF for autofill"
+                    disabled={shouldShowAnyEnhancedUI}
                   >
-                    <PaperclipIcon className="size-4" />
+                    <Paperclip className="size-4" />
                   </InputGroupButton>
                 </InputGroupAddon>
-                <InputGroupInput value={input} onChange={(e) => setInput(e.target.value)} placeholder="Type your message or upload a resume..." disabled={status === "streaming"} className="text-base md:text-base pl-1" />
-                <InputGroupAddon align="inline-end"><InputGroupButton type="submit" variant="default" size="icon-sm" disabled={(!input.trim() && !resumeUrl) || status === "streaming"}><ArrowUpIcon className="size-4" /></InputGroupButton></InputGroupAddon>
-                <InputGroupInput value={input} onChange={(e) => setInput(e.target.value)} placeholder="Type your message..." disabled={status === "streaming" || shouldShowSectionSelector} className="text-base md:text-base" />
-                <InputGroupAddon align="inline-end"><InputGroupButton type="submit" variant="default" size="icon-sm" disabled={!input.trim() || status === "streaming" || shouldShowSectionSelector}><ArrowUpIcon className="size-4" /></InputGroupButton></InputGroupAddon>
+                <InputGroupInput value={input} onChange={(e) => setInput(e.target.value)} placeholder="Type your message or upload a resume..." disabled={status === "streaming" || shouldShowAnyEnhancedUI} className="text-base md:text-base pl-1" />
+                <InputGroupAddon align="inline-end"><InputGroupButton type="submit" variant="default" size="icon-sm" disabled={(!input.trim() && !resumeUrl) || status === "streaming" || shouldShowAnyEnhancedUI}><ArrowUpIcon className="size-4" /></InputGroupButton></InputGroupAddon>
               </InputGroup>
             </form>
           </div>

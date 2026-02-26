@@ -4,6 +4,20 @@ import { agents, portfolios } from "@/lib/schema";
 
 export type PortfolioTone = "Professional" | "Friendly" | "Bold" | "Minimal";
 
+export async function isHandleAvailable(handle: string): Promise<boolean> {
+  try {
+    const [existing] = await db
+      .select({ id: portfolios.id })
+      .from(portfolios)
+      .where(eq(portfolios.handle, handle))
+      .limit(1);
+    return !existing;
+  } catch (error) {
+    console.error("Failed to check handle availability", error);
+    return false;
+  }
+}
+
 export interface PortfolioProjectInput {
   title: string;
   description: string;
