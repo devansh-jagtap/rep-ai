@@ -13,7 +13,9 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { ExternalLink, Sparkles, Loader2, Globe, FileText, Briefcase, Megaphone, Pencil, Save, X, Plus, Trash2, Share2 } from "lucide-react";
 import Link from "next/link";
 import { usePortfolioActions } from "./_hooks/use-portfolio-actions";
-import { useState, useEffect } from "react";
+import { usePortfolioEditorStore } from "./_hooks/use-portfolio-editor-store";
+import { useEffect } from "react";
+import { useMutation } from "@tanstack/react-query";
 import type { PortfolioContent } from "../actions";
 import type { SocialLink, SocialPlatform } from "@/lib/validation/portfolio-schema";
 
@@ -37,25 +39,26 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
     handleRegenerate,
   } = usePortfolioActions(Boolean(content), portfolio.isPublished);
 
-  const [editMode, setEditMode] = useState(false);
-  const [editedContent, setEditedContent] = useState<PortfolioContent | null>(content);
-  const [isSaving, setIsSaving] = useState(false);
+  const { editMode, editedContent, setEditMode, setEditedContent, resetFromServer } = usePortfolioEditorStore();
+
+  const saveMutation = useMutation({
+    mutationFn: async (nextContent: PortfolioContent) => {
+      const { updatePortfolioContent } = await import("@/app/dashboard/actions");
+      await updatePortfolioContent(nextContent);
+    },
+    onSuccess: () => setEditMode(false),
+  });
 
   useEffect(() => {
-    setEditedContent(content);
-  }, [content]);
+    resetFromServer(content);
+  }, [content, resetFromServer]);
 
   const handleSave = async () => {
     if (!editedContent) return;
-    setIsSaving(true);
     try {
-      const { updatePortfolioContent } = await import("@/app/dashboard/actions");
-      await updatePortfolioContent(editedContent);
-      setEditMode(false);
+      await saveMutation.mutateAsync(editedContent);
     } catch (error) {
       console.error("Failed to save:", error);
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -191,12 +194,12 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
         )}
         {editMode && (
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleCancel} disabled={isSaving}>
+            <Button variant="outline" onClick={handleCancel} disabled={saveMutation.isPending}>
               <X className="size-4 mr-2" />
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={isSaving}>
-              {isSaving ? <Loader2 className="size-4 mr-2 animate-spin" /> : <Save className="size-4 mr-2" />}
+            <Button onClick={handleSave} disabled={saveMutation.isPending}>
+              {saveMutation.isPending ? <Loader2 className="size-4 mr-2 animate-spin" /> : <Save className="size-4 mr-2" />}
               Save Changes
             </Button>
           </div>

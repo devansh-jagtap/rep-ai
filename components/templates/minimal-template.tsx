@@ -65,7 +65,7 @@ export function MinimalTemplate({ content }: { content: PortfolioContent }) {
           <a href="#" className="font-medium tracking-tight">
             {content.hero.headline.split(" ")[0]}
           </a>
-          <nav className="hidden items-center gap-6 text-sm text-stone-500 sm:flex">
+          <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-stone-500">
             <a href="#about" className="hover:text-stone-900 transition-colors">About</a>
             <a href="#services" className="hover:text-stone-900 transition-colors">Services</a>
             <a href="#work" className="hover:text-stone-900 transition-colors">Work</a>

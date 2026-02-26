@@ -55,7 +55,7 @@ export function ModernTemplate({ content }: { content: PortfolioContent }) {
             <LogoIcon uniColor className="size-5" />
             <span className="text-sm font-medium tracking-wide">Portfolio</span>
           </a>
-          <nav className="hidden items-center gap-6 text-sm text-muted-foreground sm:flex">
+          <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
             <a href="#about" className="hover:text-foreground transition-colors">About</a>
             <a href="#services" className="hover:text-foreground transition-colors">Services</a>
             <a href="#work" className="hover:text-foreground transition-colors">Work</a>

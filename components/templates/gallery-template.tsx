@@ -88,7 +88,7 @@ export function GalleryTemplate({ content }: { content: PortfolioContent }) {
           <a href="#" className="flex items-center gap-2">
             <span className="text-sm font-semibold tracking-wide">Gallery</span>
           </a>
-          <nav className="hidden items-center gap-6 text-sm font-medium sm:flex">
+          <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-medium">
             <a href="#about" className="text-muted-foreground hover:text-foreground transition-colors">About</a>
             <a href="#work" className="text-muted-foreground hover:text-foreground transition-colors">Work</a>
             <a href="#contact" className="text-muted-foreground hover:text-foreground transition-colors">Contact</a>
