@@ -1,4 +1,10 @@
 import { z } from "zod";
+import {
+  getDefaultVisibleSections,
+  mergeVisibleSections,
+  PORTFOLIO_SECTION_REGISTRY,
+  type PortfolioSectionKey,
+} from "@/lib/portfolio/section-registry";
 
 export type SocialPlatform = "twitter" | "linkedin" | "github" | "instagram" | "youtube" | "facebook" | "website";
 
@@ -39,6 +45,7 @@ export type PortfolioContent = {
     subtext: string;
   };
   socialLinks: SocialLink[];
+  visibleSections: PortfolioSectionKey[];
 };
 
 export const defaultVisibleSections = {
@@ -64,6 +71,14 @@ const projectSchema = z
     result: z.string().min(1),
   })
   .strict();
+
+
+const portfolioSectionKeySchema = z.enum(
+  PORTFOLIO_SECTION_REGISTRY.map((section) => section.key) as [
+    PortfolioSectionKey,
+    ...PortfolioSectionKey[]
+  ]
+);
 
 const socialLinkSchema = z
   .object({
@@ -106,6 +121,7 @@ const portfolioContentSchema = z
       })
       .strict(),
     socialLinks: z.array(socialLinkSchema).default([]),
+    visibleSections: z.array(portfolioSectionKeySchema).default(getDefaultVisibleSections()),
   })
   .strict();
 
@@ -116,5 +132,8 @@ export function validatePortfolioContent(data: unknown): PortfolioContent {
     throw new Error(`Invalid portfolio content: ${parsed.error.issues[0]?.message ?? "unknown error"}`);
   }
 
-  return parsed.data;
+  return {
+    ...parsed.data,
+    visibleSections: mergeVisibleSections(parsed.data.visibleSections, getDefaultVisibleSections()),
+  };
 }

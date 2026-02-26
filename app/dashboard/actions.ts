@@ -13,6 +13,8 @@ import { handlePublicChat, type PublicChatResult } from "@/lib/ai/public-chat-ha
 import { sanitizeHistory } from "@/lib/validation/public-chat";
 import { defaultVisibleSections, type PortfolioContent as ValidatedPortfolioContent } from "@/lib/validation/portfolio-schema";
 
+import { validatePortfolioContent } from "@/lib/validation/portfolio-schema";
+import type { PortfolioSectionKey } from "@/lib/portfolio/section-registry";
 
 export type PortfolioContent = {
   visibleSections?: ValidatedPortfolioContent["visibleSections"];
@@ -22,6 +24,7 @@ export type PortfolioContent = {
   projects?: { title: string; description: string; result: string }[];
   cta?: { headline?: string; subtext?: string };
   socialLinks?: { platform: "twitter" | "linkedin" | "github" | "instagram" | "youtube" | "facebook" | "website"; enabled: boolean; url: string }[];
+  visibleSections?: PortfolioSectionKey[];
 };
 
 async function requireAuth() {
