@@ -77,6 +77,11 @@ export async function POST(request: Request) {
     [currentStep]: finalValue,
   };
 
+  const nextStep = getNextStep(currentStep, mergedState);
+  const nextAssistantMessage = nextStep
+    ? getQuestionForStep(nextStep)
+    : "Perfect. You are done with onboarding. Saving your portfolio now.";
+
   return NextResponse.json({
     ok: true,
     step: currentStep,
