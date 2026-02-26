@@ -78,7 +78,7 @@ export function InteractiveTemplate({ content }: { content: PortfolioContent }) 
       <header className="sticky top-0 z-20 border-b border-border/50 bg-background/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <a href="#" className="font-semibold tracking-wide">Interactive</a>
-          <nav className="hidden items-center gap-6 text-sm font-medium sm:flex">
+          <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-medium">
             <a href="#work" className="text-muted-foreground hover:text-foreground transition-colors">Projects</a>
             <a href="#services" className="text-muted-foreground hover:text-foreground transition-colors">Services</a>
             <a href="#contact" className="text-muted-foreground hover:text-foreground transition-colors">Contact</a>

@@ -1,4 +1,5 @@
-import { useCallback, useState, useTransition } from "react";
+import { useCallback, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   regeneratePortfolio,
@@ -6,77 +7,87 @@ import {
   updateTemplate,
   updatePortfolioContent,
   type PortfolioContent,
-  } from "../../actions";
+} from "../../actions";
 
 export function usePortfolioActions(hasContent: boolean, initialPublished: boolean) {
-  const [isPending, startTransition] = useTransition();
   const [isPublished, setIsPublished] = useState(initialPublished);
-  const [isRegenerating, setIsRegenerating] = useState(false);
+
+  const publishMutation = useMutation({
+    mutationFn: async (checked: boolean) => togglePublish(checked),
+    onSuccess: (_, checked) => {
+      toast.success(checked ? "Portfolio is now live!" : "Portfolio hidden from public.");
+    },
+    onError: (error, checked) => {
+      setIsPublished(!checked);
+      toast.error(error instanceof Error ? error.message : "Failed to update");
+    },
+  });
+
+  const templateMutation = useMutation({
+    mutationFn: async (value: string) => updateTemplate(value),
+    onSuccess: () => toast.success("Template updated"),
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Failed to update"),
+  });
+
+  const regenerateMutation = useMutation({
+    mutationFn: async () => regeneratePortfolio(),
+    onSuccess: () => {
+      toast.success("Portfolio content regenerated with AI!", {
+        description: "Refresh to see the updated content preview.",
+      });
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Failed to regenerate"),
+  });
 
   const handlePublishChange = useCallback((checked: boolean) => {
     if (checked && !hasContent) {
       toast.error("Generate your portfolio content first before publishing.");
       return;
     }
+
     setIsPublished(checked);
-    startTransition(async () => {
-      try {
-        await togglePublish(checked);
-        toast.success(checked ? "Portfolio is now live!" : "Portfolio hidden from public.");
-      } catch (error) {
-        setIsPublished(!checked);
-        toast.error(error instanceof Error ? error.message : "Failed to update");
-      }
-    });
-  }, [hasContent]);
+    publishMutation.mutate(checked);
+  }, [hasContent, publishMutation]);
 
   const handleTemplateChange = useCallback((value: string) => {
-    startTransition(async () => {
-      try {
-        await updateTemplate(value);
-        toast.success("Template updated");
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Failed to update");
-      }
-    });
-  }, []);
+    templateMutation.mutate(value);
+  }, [templateMutation]);
 
   const handleRegenerate = useCallback(async () => {
-    setIsRegenerating(true);
-    try {
-      await regeneratePortfolio();
-      toast.success("Portfolio content regenerated with AI!", {
-        description: "Refresh to see the updated content preview.",
-      });
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to regenerate");
-    } finally {
-      setIsRegenerating(false);
-    }
-  }, []);
+    await regenerateMutation.mutateAsync();
+  }, [regenerateMutation]);
 
-  return { isPending, isPublished, isRegenerating, handlePublishChange, handleTemplateChange, handleRegenerate };
+  return {
+    isPending: publishMutation.isPending || templateMutation.isPending,
+    isPublished,
+    isRegenerating: regenerateMutation.isPending,
+    handlePublishChange,
+    handleTemplateChange,
+    handleRegenerate,
+  };
 }
 
 export function usePortfolioContent(initialContent: PortfolioContent | null) {
-  const [isPending, startTransition] = useTransition();
   const [content, setContent] = useState(initialContent);
+
+  const saveMutation = useMutation({
+    mutationFn: async (newContent: PortfolioContent) => updatePortfolioContent(newContent),
+    onSuccess: (_, newContent) => {
+      setContent(newContent);
+      toast.success("Content saved successfully!");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Failed to save content");
+    },
+  });
 
   const updateContent = useCallback((newContent: PortfolioContent) => {
     setContent(newContent);
   }, []);
 
   const saveContent = useCallback(async (newContent: PortfolioContent) => {
-    startTransition(async () => {
-      try {
-        await updatePortfolioContent(newContent);
-        setContent(newContent);
-        toast.success("Content saved successfully!");
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Failed to save content");
-      }
-    });
-  }, []);
+    await saveMutation.mutateAsync(newContent);
+  }, [saveMutation]);
 
-  return { content, updateContent, saveContent, isPending };
+  return { content, updateContent, saveContent, isPending: saveMutation.isPending };
 }

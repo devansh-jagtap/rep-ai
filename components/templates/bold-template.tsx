@@ -2,6 +2,7 @@
 
 import type { PortfolioContent } from "@/lib/validation/portfolio-schema";
 import { Button } from "@/components/ui/button";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 import { AnimateIn, StaggerChildren, StaggerItem } from "@/components/animate-in";
 import { Twitter, Linkedin, Github, Instagram, Youtube, Facebook, Globe } from "lucide-react";
 
@@ -53,12 +54,13 @@ export function BoldTemplate({ content }: { content: PortfolioContent }) {
             </span>
             <span className="text-sm font-bold tracking-widest uppercase">Bold</span>
           </a>
-          <nav className="hidden items-center gap-8 text-xs font-bold tracking-widest uppercase text-zinc-500 sm:flex">
+          <nav className="flex flex-wrap items-center gap-x-8 gap-y-2 text-xs font-bold tracking-widest uppercase text-zinc-500">
             <a href="#about" className="hover:text-zinc-50 transition-colors">About</a>
             <a href="#services" className="hover:text-zinc-50 transition-colors">Services</a>
             <a href="#work" className="hover:text-zinc-50 transition-colors">Work</a>
             <a href="#contact" className="hover:text-zinc-50 transition-colors">Contact</a>
           </nav>
+          <ThemeSwitcher />
         </div>
       </header>
 

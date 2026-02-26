@@ -3,6 +3,8 @@ export const SUPPORTED_AGENT_MODELS = [
   "MiniMaxAI/MiniMax-M2.1",
   "zai-org/GLM-4.7-FP8",
   "openai/gpt-oss-120b",
+  "google/gemini-3-flash",
+  "openai/gpt-5-mini",
 ] as const;
 
 export type SupportedAgentModel = (typeof SUPPORTED_AGENT_MODELS)[number];

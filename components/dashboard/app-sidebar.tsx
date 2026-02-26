@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { signOut } from "@/auth-client";
 import { PortfolioSwitcher } from "./portfolio-switcher";
 import { useTheme } from "next-themes";
@@ -80,6 +81,12 @@ export function AppSidebar({ credits, userName, userEmail, userImage }: AppSideb
 
   
 
+
+  useEffect(() => {
+    navigation.forEach((item) => {
+      router.prefetch(item.url);
+    });
+  }, [router]);
 
   const handleSignOut = async () => {
     await signOut();
