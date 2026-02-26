@@ -1,10 +1,10 @@
 "use client";
 
+import { defaultVisibleSections, type PortfolioContent } from "@/lib/validation/portfolio-schema";
 import type { PortfolioContent } from "@/lib/validation/portfolio-schema";
 import { isSectionVisible, mergeVisibleSections } from "@/lib/portfolio/section-registry";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { LogoIcon } from "@/components/logo";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { ArrowRightIcon } from "lucide-react";
 import { AnimateIn, StaggerChildren, StaggerItem } from "@/components/animate-in";
@@ -48,6 +48,17 @@ function SocialLinks({ socialLinks }: { socialLinks: PortfolioContent["socialLin
 }
 
 export function ModernTemplate({ content }: { content: PortfolioContent }) {
+  const visibleSections = {
+    ...defaultVisibleSections,
+    ...content.visibleSections,
+  };
+  const hasServices = content.services.length > 0;
+  const hasProjects = content.projects.length > 0;
+  const showAbout = visibleSections.about && Boolean(content.about?.paragraph);
+  const showServices = visibleSections.services && hasServices;
+  const showProjects = visibleSections.projects && hasProjects;
+  const showCta = visibleSections.cta && Boolean(content.cta?.headline || content.cta?.subtext);
+  const showSocials = visibleSections.socials;
   const visibleSections = mergeVisibleSections(content.visibleSections);
 
   return (
@@ -58,6 +69,10 @@ export function ModernTemplate({ content }: { content: PortfolioContent }) {
             <span className="text-sm font-medium tracking-wide">Portfolio</span>
           </a>
           <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
+            {showAbout && <a href="#about" className="hover:text-foreground transition-colors">About</a>}
+            {showServices && <a href="#services" className="hover:text-foreground transition-colors">Services</a>}
+            {showProjects && <a href="#work" className="hover:text-foreground transition-colors">Work</a>}
+            {showCta && <a href="#contact" className="hover:text-foreground transition-colors">Contact</a>}
             {isSectionVisible(visibleSections, "about") && <a href="#about" className="hover:text-foreground transition-colors">About</a>}
             {isSectionVisible(visibleSections, "services") && <a href="#services" className="hover:text-foreground transition-colors">Services</a>}
             {isSectionVisible(visibleSections, "projects") && <a href="#work" className="hover:text-foreground transition-colors">Work</a>}
@@ -84,6 +99,7 @@ export function ModernTemplate({ content }: { content: PortfolioContent }) {
           <AnimateIn delay={0.3}>
             <div className="pt-4">
               <Button asChild size="lg" className="h-12 px-8 text-base">
+                <a href={showCta ? "#contact" : "#"}>
                 <a href={isSectionVisible(visibleSections, "cta") ? "#contact" : "#"}>
                   {content.hero.ctaText}
                 </a>
@@ -94,6 +110,22 @@ export function ModernTemplate({ content }: { content: PortfolioContent }) {
         )}
 
         {/* About */}
+        {showAbout && (
+          <section id="about" className="grid sm:grid-cols-[1fr_2fr] gap-8 items-start">
+            <AnimateIn>
+              <h2 className="text-3xl font-medium text-foreground">About</h2>
+            </AnimateIn>
+            <AnimateIn delay={0.1}>
+              <p className="text-muted-foreground text-lg sm:text-xl leading-relaxed">
+                {content.about.paragraph}
+              </p>
+            </AnimateIn>
+          </section>
+        )}
+
+        {/* Services */}
+        {showServices && (
+          <section id="services" className="space-y-12">
         {isSectionVisible(visibleSections, "about") && (
         <section id="about" className="grid sm:grid-cols-[1fr_2fr] gap-8 items-start">
           <AnimateIn>
@@ -125,6 +157,12 @@ export function ModernTemplate({ content }: { content: PortfolioContent }) {
               </StaggerItem>
             ))}
           </StaggerChildren>
+          </section>
+        )}
+
+        {/* Projects */}
+        {showProjects && (
+          <section id="work" className="space-y-12">
         </section>
         )}
 
@@ -154,6 +192,12 @@ export function ModernTemplate({ content }: { content: PortfolioContent }) {
               </StaggerItem>
             ))}
           </StaggerChildren>
+          </section>
+        )}
+
+        {/* CTA */}
+        {showCta && (
+          <section id="contact" className="py-12 border-t border-border/50">
         </section>
         )}
 
@@ -170,6 +214,7 @@ export function ModernTemplate({ content }: { content: PortfolioContent }) {
               </p>
               <div className="pt-4">
                 <Button asChild size="lg" className="h-12 px-8 text-base group">
+                  <a href={showCta ? "#contact" : "#"}>
                   <a href={isSectionVisible(visibleSections, "cta") ? "#contact" : "#"}>
                     {content.hero.ctaText}
                     <ArrowRightIcon className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
@@ -178,6 +223,7 @@ export function ModernTemplate({ content }: { content: PortfolioContent }) {
               </div>
             </div>
           </AnimateIn>
+          </section>
         </section>
         )}
       </main>
@@ -186,7 +232,7 @@ export function ModernTemplate({ content }: { content: PortfolioContent }) {
         <div className="mx-auto max-w-5xl px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} {content.hero.headline}</p>
           <div className="flex items-center gap-4">
-            <SocialLinks socialLinks={content.socialLinks} />
+            {showSocials && <SocialLinks socialLinks={content.socialLinks} />}
             <a href="#" className="hover:text-foreground transition-colors">Back to top</a>
           </div>
         </div>

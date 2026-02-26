@@ -11,11 +11,14 @@ import { generatePortfolio } from "@/lib/ai/generate-portfolio";
 import { validateHandle } from "@/lib/validation/handle";
 import { handlePublicChat, type PublicChatResult } from "@/lib/ai/public-chat-handler";
 import { sanitizeHistory } from "@/lib/validation/public-chat";
+import { defaultVisibleSections, type PortfolioContent as ValidatedPortfolioContent } from "@/lib/validation/portfolio-schema";
+
 import { validatePortfolioContent } from "@/lib/validation/portfolio-schema";
 import type { PortfolioSectionKey } from "@/lib/portfolio/section-registry";
 
 export type PortfolioContent = {
-  hero?: { headline?: string; subheadline?: string };
+  visibleSections?: ValidatedPortfolioContent["visibleSections"];
+  hero?: { headline?: string; subheadline?: string; ctaText?: string };
   about?: { paragraph?: string };
   services?: { title: string; description: string }[];
   projects?: { title: string; description: string; result: string }[];
@@ -181,7 +184,13 @@ export async function updatePortfolioContent(content: PortfolioContent) {
   const portfolio = await getActivePortfolio(userId);
   if (!portfolio) throw new Error("Portfolio not found");
 
-  const normalizedContent = validatePortfolioContent(content);
+  const normalizedContent: PortfolioContent = {
+    ...content,
+    visibleSections: {
+      ...defaultVisibleSections,
+      ...content.visibleSections,
+    },
+  };
 
   await db.update(portfolios).set({
     content: normalizedContent,
