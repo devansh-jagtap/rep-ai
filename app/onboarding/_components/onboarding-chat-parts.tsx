@@ -2,7 +2,7 @@ import { Streamdown } from "streamdown";
 import { cjk } from "@streamdown/cjk";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { OnboardingData } from "@/lib/onboarding/types";
+import { DEFAULT_ONBOARDING_SECTIONS, type OnboardingData, type OnboardingSelectedSections } from "@/lib/onboarding/types";
 import {
   JSXPreview,
   JSXPreviewContent,
@@ -69,4 +69,61 @@ export function OnboardingPreviewCard({
       <JSXPreviewError />
     </JSXPreview>
   );
+}
+
+
+const SECTION_LABELS: Array<{ key: keyof OnboardingSelectedSections; label: string; locked?: boolean }> = [
+  { key: "hero", label: "Hero", locked: true },
+  { key: "about", label: "About" },
+  { key: "services", label: "Services" },
+  { key: "projects", label: "Projects" },
+  { key: "cta", label: "CTA" },
+  { key: "socials", label: "Socials" },
+];
+
+export function SectionSelectorMessage({
+  value,
+  onChange,
+  onSubmit,
+  disabled,
+}: {
+  value: OnboardingSelectedSections;
+  onChange: (next: OnboardingSelectedSections) => void;
+  onSubmit: () => void;
+  disabled: boolean;
+}) {
+  return (
+    <div className="space-y-3 rounded-xl border bg-card p-4">
+      <p className="text-sm font-medium">Choose portfolio sections</p>
+      <div className="flex flex-wrap gap-2">
+        {SECTION_LABELS.map((section) => {
+          const enabled = value[section.key];
+          return (
+            <Button
+              key={section.key}
+              type="button"
+              size="sm"
+              variant={enabled ? "default" : "outline"}
+              disabled={disabled || section.locked}
+              onClick={() => {
+                if (section.locked) return;
+                onChange({ ...value, [section.key]: !enabled });
+              }}
+              className="rounded-full"
+            >
+              {section.label}
+              {section.locked ? " (always on)" : ""}
+            </Button>
+          );
+        })}
+      </div>
+      <Button type="button" size="sm" onClick={onSubmit} disabled={disabled}>
+        Continue
+      </Button>
+    </div>
+  );
+}
+
+export function getDefaultSectionSelection() {
+  return DEFAULT_ONBOARDING_SECTIONS;
 }

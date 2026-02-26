@@ -5,7 +5,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { onboardingDrafts } from "@/lib/schema";
 import { getPortfolioByHandle } from "@/lib/db/portfolio";
-import type { OnboardingData, OnboardingStep } from "@/lib/onboarding/types";
+import { withDefaultSelectedSections, type OnboardingData, type OnboardingStep } from "@/lib/onboarding/types";
 import {
   validateFinalOnboardingState,
   validateStepInput,
@@ -21,13 +21,14 @@ const MODEL = process.env.NEBIUS_MODEL ?? "moonshotai/Kimi-K2.5";
 
 function buildSystemPrompt(collected: Partial<OnboardingData>): string {
   const steps = ONBOARDING_STEPS;
-  const collectedKeys = Object.keys(collected) as OnboardingStep[];
+  const collectedWithDefaults = withDefaultSelectedSections(collected) ?? collected;
+  const collectedKeys = Object.keys(collectedWithDefaults) as OnboardingStep[];
   const nextStep = steps.find((s) => !collectedKeys.includes(s)) ?? null;
 
   const stateDesc =
     Object.keys(collected).length === 0
       ? "Nothing collected yet."
-      : JSON.stringify(collected, null, 2);
+      : JSON.stringify(collectedWithDefaults, null, 2);
 
   return `You are a friendly, chill onboarding assistant for ref, a portfolio platform. Your job is to collect the following information from the user in this exact order.
 
@@ -40,16 +41,17 @@ function buildSystemPrompt(collected: Partial<OnboardingData>): string {
    - "I already have a website" (agent only)
    - "Build me a portfolio + agent" (from scratch)
 2. **name** - Full name for their portfolio (2-80 chars)
-3. **title** - Professional title (2-100 chars)
-4. **bio** - Elevator pitch / short bio, at least 20 characters, max 400
-5. **services** - Services/work offered (comma or newline separated, at least one)
-6. **projects** - ONLY for build-new path: 1-3 projects as "Title: Description" on new lines
-7. **siteUrl** - ONLY for existing-site path: website URL to ingest
-8. **targetAudience** - ONLY for existing-site path
-9. **contactPreferences** - ONLY for existing-site path
-10. **faqs** - ONLY for existing-site path, one per line
-11. **tone** - One of: Professional, Friendly, Bold, Minimal
-12. **handle** - Public URL handle (3-30 chars, lowercase letters, numbers, hyphens only)
+3. **selectedSections** - Ask user which sections they want enabled: About, Services, Projects, CTA, Socials. Hero is always enabled and cannot be turned off
+4. **title** - Professional title (2-100 chars)
+5. **bio** - Elevator pitch / short bio, at least 20 characters, max 400
+6. **services** - ONLY if Services section is enabled
+7. **projects** - ONLY if Projects section is enabled and setupPath is build-new
+8. **siteUrl** - ONLY for existing-site path: website URL to ingest
+9. **targetAudience** - ONLY for existing-site path
+10. **contactPreferences** - ONLY if CTA section is enabled and setupPath is existing-site
+11. **faqs** - ONLY if Socials section is enabled and setupPath is existing-site
+12. **tone** - One of: Professional, Friendly, Bold, Minimal
+13. **handle** - Public URL handle (3-30 chars, lowercase letters, numbers, hyphens only)
 
 **Collected so far:**
 ${stateDesc}
@@ -66,8 +68,9 @@ ${stateDesc}
 
 **Special rules:**
 - **Combined messages:** If the user confirms AND gives the next answer in one message (e.g. "yes developer" when confirming name), save the current step, then treat the rest as the next step's answer. E.g. save name, then ask "So your title is Developer—is that correct?"
+- For **selectedSections**: save an object with keys { hero: true, about, services, projects, cta, socials }.
 - For **services**: parse into an array of strings (comma or newline separated)
-- For **projects**: parse into array of { title, description } objects. Format: "Title: Description" per line. Need 1-3 projects for build-new path only.
+- For **projects**: parse into array of { title, description } objects. Format: "Title: Description" per line. Need 1-3 projects when enabled.
 - For **handle**: must be unique - if taken, ask user to pick another
 - If the user's input is invalid, explain what you need and ask again in a friendly way.
 - When required fields for the chosen path are collected and confirmed, call request_preview with the full data. Do NOT call complete_onboarding—the user will confirm via the preview UI.
@@ -102,6 +105,7 @@ export async function streamOnboardingChat({
           step: z.enum([
             "setupPath",
             "name",
+            "selectedSections",
             "title",
             "bio",
             "services",
@@ -115,6 +119,14 @@ export async function streamOnboardingChat({
           ]),
           value: z.union([
             z.string(),
+            z.object({
+              hero: z.literal(true),
+              about: z.boolean(),
+              services: z.boolean(),
+              projects: z.boolean(),
+              cta: z.boolean(),
+              socials: z.boolean(),
+            }),
             z.array(z.string()),
             z.array(
               z.object({
@@ -136,7 +148,9 @@ export async function streamOnboardingChat({
                       .join("\n")
                   : step === "faqs"
                     ? (value as string[]).join("\n")
-                    : String(value);
+                    : step === "selectedSections"
+                      ? JSON.stringify(value)
+                      : String(value);
 
           const validation = validateStepInput(step as OnboardingStep, stringValue);
           if (!validation.ok) {
@@ -175,7 +189,15 @@ export async function streamOnboardingChat({
           name: z.string(),
           title: z.string(),
           bio: z.string(),
-          services: z.array(z.string()),
+          selectedSections: z.object({
+            hero: z.literal(true),
+            about: z.boolean(),
+            services: z.boolean(),
+            projects: z.boolean(),
+            cta: z.boolean(),
+            socials: z.boolean(),
+          }).optional(),
+          services: z.array(z.string()).optional(),
           projects: z.array(
             z.object({
               title: z.string(),

@@ -5,6 +5,7 @@ export type OnboardingSetupPath = "existing-site" | "build-new";
 export const ONBOARDING_STEPS = [
   "setupPath",
   "name",
+  "selectedSections",
   "title",
   "bio",
   "services",
@@ -27,6 +28,7 @@ export interface OnboardingProjectInput {
 export interface OnboardingData {
   setupPath: OnboardingSetupPath;
   name: string;
+  selectedSections: OnboardingSelectedSections;
   title: string;
   bio: string;
   services: string[];
@@ -37,6 +39,44 @@ export interface OnboardingData {
   faqs?: string[];
   tone: PortfolioTone;
   handle: string;
+}
+
+export interface OnboardingSelectedSections {
+  hero: true;
+  about: boolean;
+  services: boolean;
+  projects: boolean;
+  cta: boolean;
+  socials: boolean;
+}
+
+export const DEFAULT_ONBOARDING_SECTIONS: OnboardingSelectedSections = {
+  hero: true,
+  about: true,
+  services: true,
+  projects: true,
+  cta: true,
+  socials: true,
+};
+
+export function withDefaultSelectedSections(
+  state: Partial<OnboardingData> | null | undefined
+): Partial<OnboardingData> | null {
+  if (!state || typeof state !== "object") {
+    return null;
+  }
+
+  const current = state.selectedSections;
+  const merged = {
+    ...DEFAULT_ONBOARDING_SECTIONS,
+    ...(current && typeof current === "object" ? current : {}),
+    hero: true as const,
+  };
+
+  return {
+    ...state,
+    selectedSections: merged,
+  };
 }
 
 export interface OnboardingChatRequest {
@@ -59,6 +99,8 @@ export const ONBOARDING_QUESTIONS: Record<OnboardingStep, string> = {
   setupPath: "Choose a setup path: I already have a website, or Build me a portfolio + agent.",
   name: "Great to meet you. What full name should appear on your portfolio?",
   title: "Nice. What professional title best describes your work?",
+  selectedSections:
+    "Choose which sections to include: About, Services, Projects, CTA, and Socials. Hero is always on.",
   bio: "Share your elevator pitch or short bio (at least 20 characters).",
   services:
     "What services/work do you offer? Share them in plain language, one per line or comma-separated.",
