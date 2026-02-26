@@ -2,12 +2,11 @@
 
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMediaQuery } from "@/lib/hooks/use-media-query";
 import { LeadList } from "@/components/leads/LeadList";
 import { LeadViewer } from "@/components/leads/LeadViewer";
-import { NotificationSheet } from "@/components/leads/NotificationSheet";
 import type { LeadDetailData, LeadStatus } from "@/components/leads/types";
 
 async function patchRead(id: string) {
@@ -28,10 +27,20 @@ async function patchStatus(id: string, status: LeadStatus) {
 
 export function LeadsClient({ leads: initialLeads }: { leads: LeadDetailData[] }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const isMobile = useMediaQuery("(max-width: 767px)");
 
   const [leads, setLeads] = useState<LeadDetailData[]>(initialLeads);
-  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(
+    searchParams.get("selected") || null
+  );
+
+  useEffect(() => {
+    const selected = searchParams.get("selected");
+    if (selected) {
+      setSelectedLeadId(selected);
+    }
+  }, [searchParams]);
 
   const selectedLead = useMemo(
     () => (selectedLeadId ? leads.find((l) => l.id === selectedLeadId) ?? null : null),
@@ -84,13 +93,11 @@ export function LeadsClient({ leads: initialLeads }: { leads: LeadDetailData[] }
     <div className="flex flex-col gap-4 w-full max-w-6xl mx-auto">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Leads</h1>
+          <h1 className="text-3xl tracking-tight">Leads</h1>
           <p className="text-muted-foreground">
             {leads.length} lead{leads.length === 1 ? "" : "s"} captured by your AI agent.
           </p>
         </div>
-
-        <NotificationSheet leads={leads} onSelectLead={handleSelectLead} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-[320px_1fr] md:min-h-0 md:h-[calc(100vh-11rem)]">

@@ -1,10 +1,10 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Bell } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Sheet,
   SheetContent,
@@ -35,8 +35,9 @@ export function NotificationSheet({
   onSelectLead,
 }: {
   leads: LeadListItemData[]
-  onSelectLead: (leadId: string) => void
+  onSelectLead?: (leadId: string) => void
 }) {
+  const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [state, setState] = useState<NotificationState>({ notifications: [], lastOpenedAt: null })
   const [isHydrated, setIsHydrated] = useState(false)
@@ -65,7 +66,7 @@ export function NotificationSheet({
   }, [isHydrated, state])
 
   useEffect(() => {
-    if (!isHydrated) return
+    if (!isHydrated || !state.lastOpenedAt) return
 
     const lastOpened = new Date(state.lastOpenedAt).getTime()
     if (!Number.isFinite(lastOpened)) return
@@ -126,7 +127,11 @@ export function NotificationSheet({
         notification.id === notificationId ? { ...notification, isRead: true } : notification
       ),
     }))
-    onSelectLead(leadId)
+    if (onSelectLead) {
+      onSelectLead(leadId)
+    } else {
+      router.push(`/dashboard/leads?selected=${leadId}`)
+    }
     setIsOpen(false)
   }
 
@@ -142,63 +147,73 @@ export function NotificationSheet({
       </SheetTrigger>
       <SheetContent side="right" className="w-full sm:max-w-md">
         <SheetHeader>
-          <SheetTitle>Notifications</SheetTitle>
+          <SheetTitle className="text-3xl">Notifications</SheetTitle>
           <SheetDescription>New leads and your weekly rundown.</SheetDescription>
         </SheetHeader>
 
-        <div className="mt-6 space-y-6">
-          <section className="space-y-3">
+        <div className="mt-6 flex flex-col px-6 gap-8">
+          <section className="space-y-4">
             <div className="flex items-center justify-between gap-3">
-              <h3 className="text-sm font-semibold">New leads</h3>
+              <h3 className="text-sm font-sans font-semibold">New leads</h3>
               {hasUnread ? (
-                <Button variant="ghost" size="sm" onClick={markAllRead}>
+                <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={markAllRead}>
                   Mark all as read
                 </Button>
               ) : null}
             </div>
 
             {state.notifications.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                You&apos;re all caught up. No new leads since you last checked.
-              </p>
+              <div className="rounded-xl border border-dashed p-6 text-center">
+                <p className="text-sm text-muted-foreground">
+                  You&apos;re all caught up.
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  No new leads since you last checked.
+                </p>
+              </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {state.notifications.map((notification) => {
-                  const lead = leads.find((item) => item.id === notification.leadId)
                   return (
                     <button
                       key={notification.id}
                       type="button"
                       onClick={() => handleOpenNotification(notification.id, notification.leadId)}
                       className={cn(
-                        "w-full rounded-xl border p-3 text-left transition-colors hover:bg-muted/40",
-                        !notification.isRead && "border-primary/30 bg-primary/5"
+                        "w-full rounded-xl border p-4 text-left transition-all hover:bg-muted/50",
+                        !notification.isRead ? "border-primary/30 bg-primary/5 shadow-sm" : "bg-background"
                       )}
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="font-medium">{notification.title}</p>
-                          <p className="text-xs text-muted-foreground">{formatDate(notification.createdAt)}</p>
+                      <div className="flex items-start justify-between gap-3 mb-1.5">
+                        <div className="flex items-center gap-2">
+                          {!notification.isRead && (
+                            <span className="flex size-2 rounded-full bg-primary shrink-0" />
+                          )}
+                          <p className={cn("text-sm", !notification.isRead ? "font-semibold text-foreground" : "font-medium text-foreground/90")}>
+                            {notification.title}
+                          </p>
                         </div>
+                        <p className="text-xs text-muted-foreground whitespace-nowrap pt-0.5">{formatDate(notification.createdAt)}</p>
+                      </div>
+
+                      <p className={cn("text-sm text-muted-foreground line-clamp-2", !notification.isRead ? "pl-4" : "")}>
+                        {notification.message}
+                      </p>
+
+                      <div className={cn("mt-3 flex items-center gap-2", !notification.isRead ? "pl-4" : "")}>
                         {notification.confidence !== undefined ? (
                           <Badge
                             variant="outline"
-                            className={cn("rounded-full", getLeadConfidenceBadgeClass(notification.confidence))}
+                            className={cn("rounded-full text-[10px] font-medium px-2 py-0 h-5", getLeadConfidenceBadgeClass(notification.confidence))}
                           >
-                            {getLeadConfidenceLabel(notification.confidence)} ({Math.round(notification.confidence)}%)
+                            {getLeadConfidenceLabel(notification.confidence)}
                           </Badge>
                         ) : null}
-                      </div>
-
-                      <p className="mt-1 text-sm text-muted-foreground">{notification.message}</p>
-
-                      <div className="mt-2 flex items-center gap-2">
                         {notification.budget ? (
-                          <Badge variant="secondary" className="rounded-full">
+                          <Badge variant="secondary" className="rounded-full text-[10px] font-medium px-2 py-0 h-5">
                             {notification.budget}
                           </Badge>
                         ) : null}
-                        <span className="text-xs text-muted-foreground">{lead?.name || "Anonymous"}</span>
                       </div>
                     </button>
                   )
@@ -208,29 +223,28 @@ export function NotificationSheet({
           </section>
 
           <section className="space-y-3">
-            <h3 className="text-sm font-semibold">Weekly rundown</h3>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Weekly rundown</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                {weekly.total === 0 ? (
-                  <p className="text-muted-foreground">No leads in the last 7 days.</p>
-                ) : (
-                  <>
-                    <p>You had {weekly.total} new leads this week.</p>
-                    <p className="text-muted-foreground text-xs">
-                      Hot: {weekly.hot} • Warm: {weekly.warm} • Cold: {weekly.cold}
-                    </p>
-                    {weekly.topBudget ? (
+            <h3 className="text-sm font-sans font-semibold">Weekly rundown</h3>
+            <div className="rounded-xl border bg-muted/30 p-4 text-sm">
+              {weekly.total === 0 ? (
+                <p className="text-muted-foreground text-center py-2">No leads in the last 7 days.</p>
+              ) : (
+                <div className="space-y-4">
+                  <p className="font-medium text-foreground/90">You had {weekly.total} new leads this week.</p>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    <Badge variant="secondary" className="bg-red-500/10 text-red-600 hover:bg-red-500/20 border-red-500/20 font-medium">Hot: {weekly.hot}</Badge>
+                    <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-700 hover:bg-yellow-500/20 border-yellow-500/20 font-medium">Warm: {weekly.warm}</Badge>
+                    <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 border-blue-500/20 font-medium">Cold: {weekly.cold}</Badge>
+                  </div>
+                  {weekly.topBudget ? (
+                    <div className="pt-3 border-t border-border/50">
                       <p className="text-xs text-muted-foreground">
-                        Highest stated budget: {weekly.topBudget}
+                        Highest stated budget: <span className="font-medium text-foreground">{weekly.topBudget}</span>
                       </p>
-                    ) : null}
-                  </>
-                )}
-              </CardContent>
-            </Card>
+                    </div>
+                  ) : null}
+                </div>
+              )}
+            </div>
           </section>
         </div>
       </SheetContent>

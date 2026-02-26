@@ -14,34 +14,19 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   LayoutDashboard,
   Briefcase,
   Bot,
   Users,
-  Settings,
-  LogOut,
   BookText,
   BarChart3,
   Coins,
   User,
-  Moon,
-  Sun,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { signOut } from "@/auth-client";
 import { PortfolioSwitcher } from "./portfolio-switcher";
-import { useTheme } from "next-themes";
-import { Button } from "../ui/button";
-import { useState } from "react";
 
 interface AppSidebarProps {
   credits: number;
@@ -62,37 +47,12 @@ const navigation = [
 export function AppSidebar({ credits, userName, userEmail, userImage }: AppSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { setTheme } = useTheme();
-  const [index, setIndex] = useState(0);
-
-
-  const themes = [
-    { name: "light", icon: Sun },
-    { name: "dark", icon: Moon }
-  ] as const;
-
-  const { name, icon: Icon } = themes[index];
-
-  function handleClick() {
-    const nextIndex = (index + 1) % themes.length;
-    setIndex(nextIndex);
-    setTheme(themes[nextIndex].name);
-  }
-
-  
-
 
   useEffect(() => {
     navigation.forEach((item) => {
       router.prefetch(item.url);
     });
   }, [router]);
-
-  const handleSignOut = async () => {
-    await signOut();
-    router.push("/auth/signin");
-    router.refresh();
-  };
 
   return (
     <Sidebar collapsible="icon">
@@ -111,71 +71,55 @@ export function AppSidebar({ credits, userName, userEmail, userImage }: AppSideb
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigation.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={pathname === item.url}>
-                    <Link href={item.url}>
-                      <item.icon className="size-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {navigation.map((item) => {
+                const isActive = pathname === item.url;
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      className={isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""}
+                    >
+                      <Link href={item.url}>
+                        <item.icon className="size-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
       {/* ── Footer: credits + user menu ── */}
-      <SidebarFooter className="border-t border-border/50">
-        <div className="flex items-center gap-2 px-2 py-3">
-          <Coins className="size-4 text-muted-foreground" />
-          <span className="text-sm font-medium group-data-[collapsible=icon]:hidden">
-            {credits} credits
+      <SidebarFooter className="border-t border-border/50 p-2 space-y-2">
+        <div className="flex items-center justify-between px-4 py-1.5">
+          <div className="flex items-center gap-2">
+            <Coins className="size-4 text-indigo-600 dark:text-indigo-400" />
+            <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 group-data-[collapsible=icon]:hidden">
+              Credits
+            </span>
+          </div>
+          <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 group-data-[collapsible=icon]:hidden">
+            {credits}
           </span>
         </div>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton className="w-full justify-start">
-              {userImage ? (
-                <img src={userImage} alt={userName} className="size-6 rounded-full" />
-              ) : (
-                <User className="size-4" />
-              )}
-              <span className="group-data-[collapsible=icon]:hidden truncate max-w-[100px]">
-                {userName}
-              </span>
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side="right" className="w-56">
-            <div className="px-2 py-1.5">
-              <p className="text-sm font-medium">{userName}</p>
-              <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
+        <div className="flex items-center gap-3 px-2 py-1.5 group-data-[collapsible=icon]:justify-center">
+          {userImage ? (
+            <img src={userImage} alt={userName} className="size-7 rounded-full border border-zinc-200 shadow-sm" />
+          ) : (
+            <div className="size-7 rounded-full bg-zinc-100 border border-zinc-200 shadow-sm flex items-center justify-center">
+              <User className="size-3.5 text-zinc-600" />
             </div>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Button variant="ghost" className="w-full justify-start py-1" onClick={handleClick}>
-                <Icon className="mr-2 size-4" />
-                <span className="capitalize">{name}</span>
-              </Button>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/dashboard/settings" className="cursor-pointer">
-                <Settings className="mr-2 size-4" />
-                Settings
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={handleSignOut}
-              className="cursor-pointer text-destructive focus:text-destructive"
-            >
-              <LogOut className="mr-2 size-4" />
-              Log out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          )}
+          <div className="flex flex-col group-data-[collapsible=icon]:hidden overflow-hidden">
+            <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">{userName}</span>
+            <span className="text-xs text-zinc-500 truncate">{userEmail}</span>
+          </div>
+        </div>
       </SidebarFooter>
 
       <SidebarRail />

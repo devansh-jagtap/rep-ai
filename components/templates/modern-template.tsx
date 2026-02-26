@@ -52,7 +52,6 @@ export function ModernTemplate({ content }: { content: PortfolioContent }) {
       <header className="sticky top-0 z-20 border-b bg-background/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-4">
           <a href="#" aria-label="Back to top" className="flex items-center gap-2">
-            <LogoIcon uniColor className="size-5" />
             <span className="text-sm font-medium tracking-wide">Portfolio</span>
           </a>
           <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
@@ -69,7 +68,7 @@ export function ModernTemplate({ content }: { content: PortfolioContent }) {
         {/* Hero */}
         <section className="space-y-8 max-w-3xl pt-8 sm:pt-12">
           <AnimateIn from="none" duration={0.8}>
-            <h1 className="text-balance text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight text-foreground">
+            <h1 className="text-balance text-4xl sm:text-5xl md:text-6xl tracking-tight text-foreground">
               {content.hero.headline}
             </h1>
           </AnimateIn>
@@ -92,7 +91,7 @@ export function ModernTemplate({ content }: { content: PortfolioContent }) {
         {/* About */}
         <section id="about" className="grid sm:grid-cols-[1fr_2fr] gap-8 items-start">
           <AnimateIn>
-            <h2 className="text-xl font-medium text-foreground">About</h2>
+            <h2 className="text-3xl font-medium text-foreground">About</h2>
           </AnimateIn>
           <AnimateIn delay={0.1}>
             <p className="text-muted-foreground text-lg sm:text-xl leading-relaxed">
@@ -104,7 +103,7 @@ export function ModernTemplate({ content }: { content: PortfolioContent }) {
         {/* Services */}
         <section id="services" className="space-y-12">
           <AnimateIn>
-            <h2 className="text-xl font-medium text-foreground">Services</h2>
+            <h2 className="text-3xl font-medium text-foreground">Services</h2>
           </AnimateIn>
           <StaggerChildren stagger={0.08} className="grid gap-6 sm:grid-cols-2">
             {content.services.map((service, i) => (
@@ -123,7 +122,7 @@ export function ModernTemplate({ content }: { content: PortfolioContent }) {
         {/* Projects */}
         <section id="work" className="space-y-12">
           <AnimateIn>
-            <h2 className="text-xl font-medium text-foreground">Selected Work</h2>
+            <h2 className="text-3xl font-medium text-foreground">Selected Work</h2>
           </AnimateIn>
           <StaggerChildren stagger={0.15} className="space-y-12">
             {content.projects.map((project, i) => (
