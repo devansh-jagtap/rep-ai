@@ -22,6 +22,10 @@ export async function PATCH(request: Request, context: RouteContext) {
   const parsed = parseKnowledgeInput(json.body);
   if (!parsed) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
 
+  if (parsed.type !== "text") {
+    return NextResponse.json({ error: "Can only edit text sources" }, { status: 400 });
+  }
+
   const portfolio = await getActivePortfolio(auth.userId);
   if (!portfolio) return NextResponse.json({ error: "Portfolio not found" }, { status: 404 });
 

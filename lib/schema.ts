@@ -194,12 +194,18 @@ export const knowledgeSources = pgTable(
     title: varchar("title", { length: 160 }).notNull(),
     type: varchar("type", { length: 20 }).notNull().default("text"),
     content: text("content").notNull(),
+    fileUrl: text("file_url"),
+    fileSize: integer("file_size"),
+    mimeType: varchar("mime_type", { length: 50 }),
+    status: varchar("status", { length: 20 }).notNull().default("complete"),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
   },
   (table) => [
     index("knowledge_sources_agent_id_idx").on(table.agentId),
-    check("knowledge_sources_type_check", sql`${table.type} IN ('text')`),
+    index("knowledge_sources_status_idx").on(table.status),
+    check("knowledge_sources_type_check", sql`${table.type} IN ('text', 'pdf')`),
+    check("knowledge_sources_status_check", sql`${table.status} IN ('pending', 'processing', 'complete', 'failed')`),
   ]
 );
 

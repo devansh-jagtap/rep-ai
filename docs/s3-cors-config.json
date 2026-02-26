@@ -1,0 +1,11 @@
+[
+  {
+    "AllowedHeaders": ["*"],
+    "AllowedMethods": ["PUT", "GET", "HEAD"],
+    "AllowedOrigins": [
+      "http://localhost:3000",
+      "https://rep-ai-nine.vercel.app"
+    ],
+    "ExposeHeaders": ["ETag"]
+  }
+]

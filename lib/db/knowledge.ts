@@ -10,6 +10,10 @@ export interface KnowledgeSourceRecord {
   title: string;
   type: string;
   content: string;
+  fileUrl: string | null;
+  fileSize: number | null;
+  mimeType: string | null;
+  status: string;
   createdAt: Date;
   updatedAt: Date;
   chunkCount: number;
@@ -76,6 +80,10 @@ export async function listKnowledgeSourcesByAgentId(agentId: string): Promise<Kn
       title: knowledgeSources.title,
       type: knowledgeSources.type,
       content: knowledgeSources.content,
+      fileUrl: knowledgeSources.fileUrl,
+      fileSize: knowledgeSources.fileSize,
+      mimeType: knowledgeSources.mimeType,
+      status: knowledgeSources.status,
       createdAt: knowledgeSources.createdAt,
       updatedAt: knowledgeSources.updatedAt,
       chunkCount: count(knowledgeChunks.id),
@@ -89,12 +97,22 @@ export async function listKnowledgeSourcesByAgentId(agentId: string): Promise<Kn
       knowledgeSources.title,
       knowledgeSources.type,
       knowledgeSources.content,
+      knowledgeSources.fileUrl,
+      knowledgeSources.fileSize,
+      knowledgeSources.mimeType,
+      knowledgeSources.status,
       knowledgeSources.createdAt,
       knowledgeSources.updatedAt
     )
     .orderBy(desc(knowledgeSources.updatedAt));
 
-  return rows.map((row) => ({ ...row, chunkCount: Number(row.chunkCount ?? 0) }));
+  return rows.map((row) => ({
+    ...row,
+    fileUrl: row.fileUrl ?? null,
+    fileSize: row.fileSize ?? null,
+    mimeType: row.mimeType ?? null,
+    chunkCount: Number(row.chunkCount ?? 0),
+  }));
 }
 
 export async function countKnowledgeSourcesByAgentId(agentId: string): Promise<number> {

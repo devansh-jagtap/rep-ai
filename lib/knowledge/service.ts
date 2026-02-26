@@ -1,4 +1,6 @@
 import { cosineSimilarity, generateEmbedding, generateEmbeddings } from "@/lib/ai/embeddings";
+import { db } from "@/lib/db";
+import { agents, knowledgeChunks, knowledgeSources, portfolios } from "@/lib/schema";
 import {
   countKnowledgeSourcesByAgentId,
   createKnowledgeSourceRecord,
@@ -12,6 +14,7 @@ import {
   updateKnowledgeSourceRecord,
 } from "@/lib/db/knowledge";
 import { chunkText } from "@/lib/knowledge/chunk-text";
+import { processKnowledgeSource } from "@/lib/knowledge/processor";
 
 const MAX_KNOWLEDGE_SOURCES_PER_AGENT = 50;
 
@@ -50,6 +53,40 @@ export async function createKnowledgeSource(input: { agentId: string; title: str
 
   const { sourceId, now } = await createKnowledgeSourceRecord(input);
   await persistChunksWithEmbeddings({ sourceId, agentId: input.agentId, content: input.content, now });
+
+  return { ok: true as const, sourceId };
+}
+
+export async function createKnowledgeSourceFromFile(input: {
+  agentId: string;
+  title: string;
+  fileUrl: string;
+  mimeType: string;
+  fileSize: number;
+}) {
+  const total = await countKnowledgeSourcesByAgentId(input.agentId);
+  if (total >= MAX_KNOWLEDGE_SOURCES_PER_AGENT) {
+    return { ok: false as const, error: "Knowledge source limit reached" };
+  }
+
+  const now = new Date();
+  const sourceId = crypto.randomUUID();
+
+  await db.insert(knowledgeSources).values({
+    id: sourceId,
+    agentId: input.agentId,
+    title: input.title,
+    type: "pdf",
+    content: "",
+    fileUrl: input.fileUrl,
+    mimeType: input.mimeType,
+    fileSize: input.fileSize,
+    status: "pending",
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  await processKnowledgeSource(sourceId);
 
   return { ok: true as const, sourceId };
 }
