@@ -2,6 +2,7 @@
 
 import type { PortfolioContent } from "@/lib/validation/portfolio-schema";
 import { Button } from "@/components/ui/button";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 import { ArrowUpRightIcon } from "lucide-react";
 import { AnimateIn, StaggerChildren, StaggerItem } from "@/components/animate-in";
 import { motion } from "motion/react";
@@ -77,6 +78,7 @@ export function EditorialTemplate({ content }: { content: PortfolioContent }) {
               <span className="absolute -bottom-1 left-0 h-px w-0 bg-zinc-900 transition-all duration-300 group-hover:w-full" />
             </a>
           </nav>
+          <ThemeSwitcher />
         </header>
 
         {/* Hero Section */}
@@ -229,7 +231,10 @@ export function EditorialTemplate({ content }: { content: PortfolioContent }) {
               Back to top
             </a>
           </div>
-          <span>&copy; {new Date().getFullYear()}</span>
+          <div className="flex items-center gap-3">
+            <ThemeSwitcher />
+            <span>&copy; {new Date().getFullYear()}</span>
+          </div>
         </footer>
 
       </div>
