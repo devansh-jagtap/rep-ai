@@ -12,6 +12,8 @@ const MODEL_LABELS: Record<string, string> = {
   "MiniMaxAI/MiniMax-M2.1": "MiniMax M2.1",
   "zai-org/GLM-4.7-FP8": "GLM 4.7",
   "openai/gpt-oss-120b": "GPT-OSS 120B",
+  "google/gemini-3-flash": "Gemini 3 Flash",
+  "openai/gpt-5-mini": "GPT-5 mini",
 };
 
 export async function getDashboardOverviewData() {
