@@ -18,6 +18,7 @@ import {
   InputGroupTextarea,
 } from "@/components/ui/input-group";
 import { MessageResponse } from "@/components/ai-elements/message";
+import { Shimmer } from "@/components/ai-elements/shimmer";
 import { widgetChatWithAgent } from "@/app/[handle]/actions";
 
 type ChatMessage = {
@@ -60,7 +61,7 @@ export function AgentWidget({ handle, agentName = "AI Assistant" }: AgentWidgetP
       const result = await widgetChatWithAgent({
         handle,
         message,
-        history: nextMessages.slice(-10),
+        history: messages.slice(-10),
         sessionId: sessionIdRef.current,
       });
 
@@ -165,11 +166,8 @@ export function AgentWidget({ handle, agentName = "AI Assistant" }: AgentWidgetP
               )}
               {loading && !streamingContent && (
                 <Message from="assistant">
-                  <MessageContent className="text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Loader2 className="size-3 animate-spin" />
-                      <span>Thinking...</span>
-                    </div>
+                  <MessageContent className="text-sm text-muted-foreground">
+                    <Shimmer>•••</Shimmer>
                   </MessageContent>
                 </Message>
               )}

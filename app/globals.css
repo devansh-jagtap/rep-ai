@@ -119,6 +119,15 @@
 }
 
 
+@keyframes shimmer-sweep {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

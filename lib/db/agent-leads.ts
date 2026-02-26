@@ -20,6 +20,7 @@ interface ExistingLead {
   budget: string | null;
   projectDetails: string | null;
   confidence: number;
+  sessionId: string | null;
 }
 
 export async function findExistingLead(portfolioId: string, email: string): Promise<ExistingLead | null> {
@@ -33,6 +34,7 @@ export async function findExistingLead(portfolioId: string, email: string): Prom
       budget: agentLeads.budget,
       projectDetails: agentLeads.projectDetails,
       confidence: agentLeads.confidence,
+      sessionId: agentLeads.sessionId,
     })
     .from(agentLeads)
     .where(

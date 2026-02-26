@@ -21,6 +21,7 @@ import {
   ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
+import { Shimmer } from "@/components/ai-elements/shimmer";
 import {
   InputGroup,
   InputGroupAddon,
@@ -538,11 +539,8 @@ export function AgentClient({
                 )}
                 {isChatLoading && (
                   <Message from="assistant">
-                    <MessageContent className="text-sm">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Loader2 className="size-3 animate-spin" />
-                        <span>Thinking...</span>
-                      </div>
+                    <MessageContent className="text-sm text-muted-foreground">
+                      <Shimmer>•••</Shimmer>
                     </MessageContent>
                   </Message>
                 )}

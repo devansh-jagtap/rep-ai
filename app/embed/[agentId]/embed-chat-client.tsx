@@ -15,6 +15,7 @@ import {
   InputGroupTextarea,
 } from "@/components/ui/input-group";
 import { MessageResponse } from "@/components/ai-elements/message";
+import { Shimmer } from "@/components/ai-elements/shimmer";
 import { ArrowUpIcon, Loader2, MessageSquare } from "lucide-react";
 import { embedChatWithAgent } from "./actions";
 
@@ -57,7 +58,7 @@ export function EmbedChatClient({ agentId, agentName = "AI Assistant" }: EmbedCh
       const result = await embedChatWithAgent({
         agentId,
         message: content,
-        history: nextMessages.slice(-8),
+        history: messages.slice(-8),
         sessionId: sessionIdRef.current,
       });
 
@@ -140,11 +141,8 @@ export function EmbedChatClient({ agentId, agentName = "AI Assistant" }: EmbedCh
           )}
           {loading && !streamingContent && (
             <Message from="assistant">
-              <MessageContent className="text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Loader2 className="size-3 animate-spin" />
-                  <span>Thinking...</span>
-                </div>
+              <MessageContent className="text-sm text-muted-foreground">
+                <Shimmer>•••</Shimmer>
               </MessageContent>
             </Message>
           )}
