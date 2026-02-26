@@ -41,6 +41,8 @@ const MODELS = [
   { value: "MiniMaxAI/MiniMax-M2.1", label: "MiniMax M2.1", description: "Balanced" },
   { value: "zai-org/GLM-4.7-FP8", label: "GLM 4.7", description: "Multi-purpose" },
   { value: "openai/gpt-oss-120b", label: "GPT-OSS 120B", description: "Large & powerful" },
+  { value: "google/gemini-3-flash", label: "Gemini 3 Flash", description: "Via Vercel AI Gateway" },
+  { value: "openai/gpt-5-mini", label: "GPT-5 mini", description: "Via Vercel AI Gateway" },
 ] as const;
 
 const BEHAVIOR_PRESETS = [

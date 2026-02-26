@@ -1,4 +1,3 @@
-import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import { buildPrompt } from "@/lib/ai/generate-agent-reply/prompt-builder";
 import {
@@ -14,6 +13,7 @@ import type {
   GenerateAgentReplyInput,
   GenerateAgentReplyOutput,
 } from "@/lib/ai/generate-agent-reply/types";
+import { resolveChatModel } from "@/lib/ai/model-provider";
 
 export type {
   AgentMessage,
@@ -21,11 +21,6 @@ export type {
   GenerateAgentReplyInput,
   GenerateAgentReplyOutput,
 } from "@/lib/ai/generate-agent-reply/types";
-
-const nebius = createOpenAI({
-  apiKey: process.env.NEBIUS_API_KEY,
-  baseURL: process.env.NEBIUS_BASE_URL ?? "https://api.studio.nebius.com/v1",
-});
 
 function isSafeTemperature(temperature: number): boolean {
   return Number.isFinite(temperature) && temperature >= 0.2 && temperature <= 0.8;
@@ -36,7 +31,7 @@ async function requestReply(input: GenerateAgentReplyInput): Promise<{ text: str
   const knowledgeBlocks = await prepareKnowledgeBlocks(input);
 
   const result = await generateText({
-    model: nebius.chat(input.model),
+    model: resolveChatModel(input.model),
     system: buildPrompt(input, knowledgeBlocks),
     messages: [...sanitizedHistory, { role: "user" as const, content: input.message }],
     temperature: input.temperature,
