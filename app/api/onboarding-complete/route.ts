@@ -1,15 +1,16 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getSession } from "@/auth";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { onboardingDrafts } from "@/lib/schema";
 import { createPortfolio, getPortfolioByHandle } from "@/lib/db/portfolio";
+import { generatePortfolio } from "@/lib/ai/generate-portfolio";
 import { ACTIVE_PORTFOLIO_COOKIE } from "@/lib/active-portfolio";
 import type { OnboardingData } from "@/lib/onboarding/types";
 import { validateFinalOnboardingState } from "@/lib/onboarding/validation";
 
 export async function POST(request: Request) {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
@@ -59,6 +60,17 @@ export async function POST(request: Request) {
         { ok: false, error: "Unable to save onboarding data right now." },
         { status: 500 }
       );
+    }
+
+    // For "I already have a website" (agent-only): auto-generate portfolio content from onboarding data
+    // so they don't need to manually generate—their site info becomes a minimal landing page + agent.
+    if (finalState.setupPath === "existing-site" && created.portfolioId) {
+      try {
+        await generatePortfolio(session.user.id, created.portfolioId);
+      } catch (err) {
+        console.error("[onboarding-complete] Auto-generate content failed:", err);
+        // Non-blocking: user can still generate manually from Portfolio page
+      }
     }
 
     // Clean up the draft

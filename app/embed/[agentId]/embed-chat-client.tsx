@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Conversation,
   ConversationContent,
@@ -15,7 +15,9 @@ import {
   InputGroupTextarea,
 } from "@/components/ui/input-group";
 import { MessageResponse } from "@/components/ai-elements/message";
+import { Shimmer } from "@/components/ai-elements/shimmer";
 import { ArrowUpIcon, Loader2, MessageSquare } from "lucide-react";
+import { embedChatWithAgent } from "./actions";
 
 type ChatMessage = { 
   id: string;
@@ -33,6 +35,7 @@ export function EmbedChatClient({ agentId, agentName = "AI Assistant" }: EmbedCh
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
+  const sessionIdRef = useRef<string | null>(null);
 
   const handleSubmit = useCallback(async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -52,22 +55,22 @@ export function EmbedChatClient({ agentId, agentName = "AI Assistant" }: EmbedCh
     setStreamingContent("");
 
     try {
-      const response = await fetch("/api/public-chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          agentId,
-          message: content,
-          history: nextMessages.slice(-8),
-        }),
+      const result = await embedChatWithAgent({
+        agentId,
+        message: content,
+        history: messages.slice(-8),
+        sessionId: sessionIdRef.current,
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to send message");
+      if (result.ok && result.sessionId) {
+        sessionIdRef.current = result.sessionId;
       }
 
-      const data = (await response.json()) as { reply?: string };
-      const reply = data.reply ?? "No response";
+      if (!result.ok) {
+        throw new Error(result.error);
+      }
+
+      const reply = result.reply;
 
       let streamed = "";
       for (const char of reply) {
@@ -138,11 +141,8 @@ export function EmbedChatClient({ agentId, agentName = "AI Assistant" }: EmbedCh
           )}
           {loading && !streamingContent && (
             <Message from="assistant">
-              <MessageContent className="text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Loader2 className="size-3 animate-spin" />
-                  <span>Thinking...</span>
-                </div>
+              <MessageContent className="text-sm text-muted-foreground">
+                <Shimmer>•••</Shimmer>
               </MessageContent>
             </Message>
           )}

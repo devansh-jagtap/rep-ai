@@ -26,46 +26,60 @@ export const users = pgTable("users", {
   plan: varchar("plan", { length: 20 }).notNull().default("free"),
   credits: integer("credits").notNull().default(500),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-  // Tracks the currently active portfolio for this user (nullable = not yet set)
   activePortfolioId: uuid("active_portfolio_id"),
+});
+
+export const sessions = pgTable("sessions", {
+  id: text("id").primaryKey(),
+  token: text("session_token").notNull().unique(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  expiresAt: timestamp("expires_at", { mode: "date" }).notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
 });
 
 export const accounts = pgTable(
   "accounts",
   {
+    id: text("id").primaryKey(),
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    type: text("type").$type<"oauth" | "oidc" | "email" | "credentials">().notNull(),
-    provider: text("provider").notNull(),
-    providerAccountId: text("provider_account_id").notNull(),
-    refresh_token: text("refresh_token"),
-    access_token: text("access_token"),
-    expires_at: integer("expires_at"),
-    token_type: text("token_type"),
+    accountId: text("account_id").notNull(),
+    providerId: text("provider_id").notNull(),
+    refreshToken: text("refresh_token"),
+    accessToken: text("access_token"),
+    idToken: text("id_token"),
+    accessTokenExpiresAt: timestamp("access_token_expires_at", { mode: "date" }),
+    refreshTokenExpiresAt: timestamp("refresh_token_expires_at", { mode: "date" }),
     scope: text("scope"),
-    id_token: text("id_token"),
-    session_state: text("session_state"),
+    password: text("password"),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" }).notNull(),
   },
-  (account) => [primaryKey({ columns: [account.provider, account.providerAccountId] })]
+  (account) => [
+    uniqueIndex("account_user_id_idx").on(account.userId),
+    uniqueIndex("account_provider_id_idx").on(account.providerId, account.accountId),
+  ]
 );
 
-export const sessions = pgTable("sessions", {
-  sessionToken: text("session_token").primaryKey(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  expires: timestamp("expires", { mode: "date" }).notNull(),
-});
-
-export const verificationTokens = pgTable(
-  "verification_tokens",
+export const verifications = pgTable(
+  "verifications",
   {
+    id: text("id").primaryKey(),
     identifier: text("identifier").notNull(),
-    token: text("token").notNull(),
-    expires: timestamp("expires", { mode: "date" }).notNull(),
+    value: text("value").notNull(),
+    expiresAt: timestamp("expires_at", { mode: "date" }).notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }),
+    updatedAt: timestamp("updated_at", { mode: "date" }),
   },
-  (vt) => [primaryKey({ columns: [vt.identifier, vt.token] })]
+  (verification) => [
+    uniqueIndex("verification_identifier_idx").on(verification.identifier, verification.value),
+  ]
 );
 
 export const leads = pgTable("leads", {
@@ -162,12 +176,25 @@ export const agentLeads = pgTable("agent_leads", {
   status: varchar("status", { length: 20 }).$type<"new" | "contacted" | "closed">().notNull().default("new"),
   isRead: boolean("is_read").notNull().default(false),
   confidence: real("confidence").notNull(),
+  sessionId: uuid("session_id"),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 }, (table) => [
   check(
     "agent_leads_status_check",
     sql`${table.status} IN ('new', 'contacted', 'closed')`
   ),
+]);
+
+export const leadChatMessages = pgTable("lead_chat_messages", {
+  id: uuid("id").primaryKey(),
+  leadId: uuid("lead_id").references(() => agentLeads.id, { onDelete: "cascade" }),
+  sessionId: uuid("session_id").notNull(),
+  role: varchar("role", { length: 20 }).$type<"user" | "assistant">().notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+}, (table) => [
+  index("lead_chat_messages_session_id_idx").on(table.sessionId),
+  index("lead_chat_messages_lead_id_idx").on(table.leadId),
 ]);
 
 export const knowledgeSources = pgTable(
@@ -180,12 +207,18 @@ export const knowledgeSources = pgTable(
     title: varchar("title", { length: 160 }).notNull(),
     type: varchar("type", { length: 20 }).notNull().default("text"),
     content: text("content").notNull(),
+    fileUrl: text("file_url"),
+    fileSize: integer("file_size"),
+    mimeType: varchar("mime_type", { length: 50 }),
+    status: varchar("status", { length: 20 }).notNull().default("complete"),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
   },
   (table) => [
     index("knowledge_sources_agent_id_idx").on(table.agentId),
-    check("knowledge_sources_type_check", sql`${table.type} IN ('text')`),
+    index("knowledge_sources_status_idx").on(table.status),
+    check("knowledge_sources_type_check", sql`${table.type} IN ('text', 'pdf')`),
+    check("knowledge_sources_status_check", sql`${table.status} IN ('pending', 'processing', 'complete', 'failed')`),
   ]
 );
 

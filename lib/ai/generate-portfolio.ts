@@ -78,7 +78,12 @@ function tryParsePortfolioContent(text: string): PortfolioContent {
 }
 
 async function generatePortfolioContent(onboardingData: unknown): Promise<PortfolioContent> {
-  const prompt = `Create portfolio content from the onboarding_data below. Return valid JSON only.\n\nonboarding_data:\n${JSON.stringify(onboardingData)}`;
+  const data = onboardingData as { setupPath?: string; siteUrl?: string } | undefined;
+  const isExistingSite = data?.setupPath === "existing-site";
+  const siteHint = isExistingSite && data?.siteUrl
+    ? `\n\nThis user chose "I already have a website"—create a minimal landing page that highlights their existing site. Use the hero CTA to link to their site (${data.siteUrl}). Keep projects minimal or empty; the focus is their site + AI agent.`
+    : "";
+  const prompt = `Create portfolio content from the onboarding_data below. Return valid JSON only.${siteHint}\n\nonboarding_data:\n${JSON.stringify(onboardingData)}`;
 
   try {
     const response = await generateText({

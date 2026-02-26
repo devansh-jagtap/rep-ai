@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
-import type { Session } from "next-auth";
+import { getSession } from "@/auth";
 import { AppSidebar } from "./app-sidebar";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
@@ -13,9 +12,9 @@ interface DashboardLayoutProps {
 }
 
 export async function DashboardLayout({ children }: DashboardLayoutProps) {
-  let session: Session | null = null;
+  let session = null;
   try {
-    session = await auth();
+    session = await getSession();
   } catch {
     redirect("/auth/signin");
   }

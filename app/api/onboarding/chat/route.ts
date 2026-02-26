@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getSession } from "@/auth";
 import { streamOnboardingChat } from "@/lib/ai/onboarding-agent";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
@@ -10,7 +10,7 @@ import type { UIMessage } from "ai";
 export const maxDuration = 60;
 
 export async function POST(request: Request) {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

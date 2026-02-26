@@ -31,11 +31,16 @@ import {
   BarChart3,
   Coins,
   User,
+  Moon,
+  Sun,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
+import { signOut } from "@/auth-client";
 import { PortfolioSwitcher } from "./portfolio-switcher";
+import { useTheme } from "next-themes";
+import { Button } from "../ui/button";
+import { useState } from "react";
 
 interface AppSidebarProps {
   credits: number;
@@ -55,6 +60,32 @@ const navigation = [
 
 export function AppSidebar({ credits, userName, userEmail, userImage }: AppSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { setTheme } = useTheme();
+  const [index, setIndex] = useState(0);
+
+
+  const themes = [
+    { name: "light", icon: Sun },
+    { name: "dark", icon: Moon }
+  ] as const;
+
+  const { name, icon: Icon } = themes[index];
+
+  function handleClick() {
+    const nextIndex = (index + 1) % themes.length;
+    setIndex(nextIndex);
+    setTheme(themes[nextIndex].name);
+  }
+
+  
+
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push("/auth/signin");
+    router.refresh();
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -117,6 +148,12 @@ export function AppSidebar({ credits, userName, userEmail, userImage }: AppSideb
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
+              <Button variant="ghost" className="w-full justify-start py-1" onClick={handleClick}>
+                <Icon className="mr-2 size-4" />
+                <span className="capitalize">{name}</span>
+              </Button>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
               <Link href="/dashboard/settings" className="cursor-pointer">
                 <Settings className="mr-2 size-4" />
                 Settings
@@ -124,7 +161,7 @@ export function AppSidebar({ credits, userName, userEmail, userImage }: AppSideb
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => signOut()}
+              onClick={handleSignOut}
               className="cursor-pointer text-destructive focus:text-destructive"
             >
               <LogOut className="mr-2 size-4" />

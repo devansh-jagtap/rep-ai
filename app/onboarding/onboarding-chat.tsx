@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MessageSquare, ArrowUpIcon } from "lucide-react";
 import { OnboardingMessageResponse, OnboardingPreviewCard } from "@/app/onboarding/_components/onboarding-chat-parts";
-import { lastMessageAsksConfirmation, type MessagePartLike } from "@/app/onboarding/_lib/onboarding-chat-utils";
+import { lastMessageAsksConfirmation, userJustConfirmed, type MessagePartLike } from "@/app/onboarding/_lib/onboarding-chat-utils";
 import { useOnboardingChatState } from "@/app/onboarding/_hooks/use-onboarding-chat-state";
 
 export function OnboardingChat() {
@@ -33,9 +33,11 @@ export function OnboardingChat() {
     previewData,
     isConfirming,
     handleConfirm,
+    refreshDraftFromServer,
   } = useOnboardingChatState();
 
   const asksConfirm = useMemo(() => lastMessageAsksConfirmation(messages), [messages]);
+  const stuckAfterConfirm = useMemo(() => userJustConfirmed(messages), [messages]);
 
   return (
     <div className="fixed inset-0 flex flex-col bg-background">
@@ -88,7 +90,14 @@ export function OnboardingChat() {
           </div>
         ) : (
           <div className="shrink-0 p-4 space-y-2 border-t">
-            {asksConfirm && status !== "streaming" && (
+            {stuckAfterConfirm && status !== "streaming" && (
+              <div className="mx-auto flex max-w-3xl justify-center">
+                <Button type="button" variant="secondary" size="sm" className="rounded-full" onClick={refreshDraftFromServer}>
+                  Show preview
+                </Button>
+              </div>
+            )}
+            {asksConfirm && status !== "streaming" && !stuckAfterConfirm && (
               <div className="mx-auto flex max-w-3xl justify-center gap-2">
                 <Button type="button" variant="secondary" size="sm" className="rounded-full" onClick={() => sendMessage({ text: "Yes, looks good!" })}>Yes, looks good</Button>
                 <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={() => sendMessage({ text: "No, let me change that" })}>No, let me change</Button>

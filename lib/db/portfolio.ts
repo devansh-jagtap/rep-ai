@@ -10,11 +10,16 @@ export interface PortfolioProjectInput {
 }
 
 export interface PortfolioOnboardingData {
+  setupPath?: "existing-site" | "build-new";
   name: string;
   title: string;
   bio: string;
   services: string[];
-  projects: PortfolioProjectInput[];
+  projects?: PortfolioProjectInput[];
+  siteUrl?: string;
+  targetAudience?: string;
+  contactPreferences?: string;
+  faqs?: string[];
   tone: PortfolioTone;
   handle: string;
 }
@@ -88,6 +93,26 @@ export async function getPortfolioByHandle(handle: string) {
   } catch (error) {
     console.error("Failed to fetch portfolio by handle", error);
     return null;
+  }
+}
+
+/** Returns all published portfolios, newest first. Used for explore/discovery. */
+export async function getAllPublishedPortfolios() {
+  try {
+    return await db
+      .select({
+        handle: portfolios.handle,
+        template: portfolios.template,
+        content: portfolios.content,
+        name: portfolios.name,
+        createdAt: portfolios.createdAt,
+      })
+      .from(portfolios)
+      .where(eq(portfolios.isPublished, true))
+      .orderBy(desc(portfolios.createdAt));
+  } catch (error) {
+    console.error("Failed to fetch published portfolios", error);
+    return [];
   }
 }
 

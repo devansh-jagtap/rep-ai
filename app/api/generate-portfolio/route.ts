@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getSession } from "@/auth";
 import { getActivePortfolio } from "@/lib/active-portfolio";
 import {
   generatePortfolio,
@@ -7,7 +7,7 @@ import {
 } from "@/lib/ai/generate-portfolio";
 
 export async function POST() {
-  const session = await auth();
+  const session = await getSession();
 
   if (!session?.user?.id) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });

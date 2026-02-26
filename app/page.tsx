@@ -3,7 +3,7 @@ import Features from "@/components/features-3";
 import Integrations from "@/components/integrations-1";
 import Content from "@/components/content-3";
 import Pricing from "@/components/pricing-3";
-import CallToAction from "@/components/call-to-action-4";
+// import CallToAction from "@/components/call-to-action-4";
 import Footer from "@/components/footer-5";
 
 export default function Home() {

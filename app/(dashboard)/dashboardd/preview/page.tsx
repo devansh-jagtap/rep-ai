@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { getSession } from "@/auth";
 import { GeneratePortfolioButton } from "@/components/generate-portfolio-button";
 import { PublishPortfolioButton } from "@/components/publish-portfolio-button";
 import { ResetOnboardingButton } from "@/components/reset-onboarding-button";
@@ -9,6 +9,9 @@ import { VeilTemplate } from "@/components/templates/veil-template";
 import { BoldTemplate } from "@/components/templates/bold-template";
 import { EditorialTemplate } from "@/components/templates/editorial-template";
 import { LandingTemplate } from "@/components/templates/landing-template";
+import { GalleryTemplate } from "@/components/templates/gallery-template";
+import { MinimalTemplate } from "@/components/templates/minimal-template";
+import { InteractiveTemplate } from "@/components/templates/interactive-template";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type PortfolioOnboardingData } from "@/lib/db/portfolio";
 import { getActivePortfolio } from "@/lib/active-portfolio";
@@ -17,7 +20,7 @@ import type { PortfolioContent } from "@/lib/validation/portfolio-schema";
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
 export default async function DashboardPreviewPage(props: { searchParams?: SearchParams }) {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) {
     redirect("/auth/signin?callbackUrl=/dashboard/preview");
   }
@@ -65,6 +68,12 @@ export default async function DashboardPreviewPage(props: { searchParams?: Searc
             <BoldTemplate content={content} />
           ) : theme === "editorial" ? (
             <EditorialTemplate content={content} />
+          ) : theme === "gallery" ? (
+            <GalleryTemplate content={content} />
+          ) : theme === "minimal" ? (
+            <MinimalTemplate content={content} />
+          ) : theme === "interactive" ? (
+            <InteractiveTemplate content={content} />
           ) : (
             <ModernTemplate content={content} />
           )}
@@ -88,7 +97,7 @@ export default async function DashboardPreviewPage(props: { searchParams?: Searc
             <div>
               <p className="text-sm text-muted-foreground">Services</p>
               <ul className="list-disc ml-5">
-                {onboardingData.services.map((service) => (
+                {(onboardingData.services ?? []).map((service) => (
                   <li key={service}>{service}</li>
                 ))}
               </ul>
@@ -97,7 +106,7 @@ export default async function DashboardPreviewPage(props: { searchParams?: Searc
             <div>
               <p className="text-sm text-muted-foreground">Projects</p>
               <div className="space-y-2 mt-1">
-                {onboardingData.projects.map((project, index) => (
+                {(onboardingData.projects ?? []).map((project, index) => (
                   <div key={`${project.title}-${index}`} className="rounded-md border p-3">
                     <p className="font-medium">{project.title}</p>
                     <p className="text-sm text-muted-foreground">{project.description}</p>

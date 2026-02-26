@@ -1,5 +1,6 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { toast } from "sonner";
+import { chatWithAgent } from "../../actions";
 
 export function useAgentActions(params: {
   chatInput: string;
@@ -11,6 +12,8 @@ export function useAgentActions(params: {
   setChatInput: (input: string) => void;
   setIsChatLoading: (loading: boolean) => void;
 }) {
+  const sessionIdRef = useRef<string | null>(null);
+
   const sendTestMessage = useCallback(async () => {
     const msg = params.chatInput.trim();
     if (!msg || params.isChatLoading) return;
@@ -25,23 +28,22 @@ export function useAgentActions(params: {
     params.setIsChatLoading(true);
 
     try {
-      const res = await fetch("/api/public-chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          handle: params.portfolioHandle,
-          message: msg,
-          history: params.chatMessages.slice(-10),
-        }),
+      const result = await chatWithAgent({
+        handle: params.portfolioHandle,
+        message: msg,
+        history: params.chatMessages.slice(-10),
+        sessionId: sessionIdRef.current,
       });
 
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error || `Request failed (${res.status})`);
+      if (result.ok && result.sessionId) {
+        sessionIdRef.current = result.sessionId;
       }
 
-      const data = await res.json();
-      params.addChatMessage({ role: "assistant", content: data.reply });
+      if (!result.ok) {
+        throw new Error(result.error);
+      }
+
+      params.addChatMessage({ role: "assistant", content: result.reply });
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Agent unavailable";
       params.addChatMessage({ role: "assistant", content: `Error: ${errorMsg}` });

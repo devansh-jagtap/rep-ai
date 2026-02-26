@@ -3,6 +3,7 @@ import { validateHandle } from "@/lib/validation/handle";
 import type {
   OnboardingData,
   OnboardingProjectInput,
+  OnboardingSetupPath,
   OnboardingStep,
 } from "@/lib/onboarding/types";
 
@@ -19,6 +20,13 @@ function normalizeWhitespace(value: string) {
 export function parseServices(input: string) {
   return input
     .split(/[\n,]/)
+    .map((item) => normalizeWhitespace(item))
+    .filter(Boolean);
+}
+
+export function parseFaqs(input: string) {
+  return input
+    .split(/\n+/)
     .map((item) => normalizeWhitespace(item))
     .filter(Boolean);
 }
@@ -40,6 +48,28 @@ export function parseProjects(input: string): OnboardingProjectInput[] {
 
 export function validateStepInput(step: OnboardingStep, answer: string): ValidationResult<unknown> {
   const cleaned = normalizeWhitespace(answer);
+
+  if (step === "setupPath") {
+    const normalized = cleaned.toLowerCase();
+    if (
+      normalized.includes("already") ||
+      normalized.includes("website") ||
+      normalized.includes("agent only")
+    ) {
+      return { ok: true, value: "existing-site" as OnboardingSetupPath };
+    }
+    if (
+      normalized.includes("build") ||
+      normalized.includes("scratch") ||
+      normalized.includes("portfolio + agent")
+    ) {
+      return { ok: true, value: "build-new" as OnboardingSetupPath };
+    }
+    return {
+      ok: false,
+      message: "Please choose either 'I already have a website' or 'Build me a portfolio + agent'.",
+    };
+  }
 
   if (step === "name") {
     if (cleaned.length < 2 || cleaned.length > 80) {
@@ -89,6 +119,23 @@ export function validateStepInput(step: OnboardingStep, answer: string): Validat
     return { ok: true, value: projects };
   }
 
+  if (step === "siteUrl") {
+    const isValid = /^https?:\/\/.+/i.test(cleaned);
+    if (!isValid) return { ok: false, message: "Please provide a valid URL starting with http:// or https://." };
+    return { ok: true, value: cleaned };
+  }
+
+  if (step === "targetAudience" || step === "contactPreferences") {
+    if (cleaned.length < 5) return { ok: false, message: "Please share a little more detail." };
+    return { ok: true, value: cleaned };
+  }
+
+  if (step === "faqs") {
+    const faqs = parseFaqs(answer);
+    if (faqs.length < 1) return { ok: false, message: "Please provide at least one FAQ." };
+    return { ok: true, value: faqs.slice(0, 10) };
+  }
+
   if (step === "tone") {
     if (!ALLOWED_TONES.includes(cleaned as PortfolioTone)) {
       return { ok: false, message: "Please choose one of: Professional, Friendly, Bold, Minimal." };
@@ -108,19 +155,32 @@ export function validateFinalOnboardingState(state: Partial<OnboardingData> | un
   if (state == null || typeof state !== "object") {
     return { ok: false, message: "Invalid onboarding state." };
   }
-  const requiredKeys: Array<keyof OnboardingData> = [
+
+  const commonRequired: Array<keyof OnboardingData> = [
+    "setupPath",
     "name",
     "title",
     "bio",
     "services",
-    "projects",
     "tone",
     "handle",
   ];
 
-  for (const key of requiredKeys) {
+  for (const key of commonRequired) {
     if (state[key] === undefined || state[key] === null) {
       return { ok: false, message: `Missing onboarding field: ${key}` };
+    }
+  }
+
+  if (state.setupPath === "build-new") {
+    if (!Array.isArray(state.projects) || state.projects.length < 1) {
+      return { ok: false, message: "Missing onboarding field: projects" };
+    }
+  }
+
+  if (state.setupPath === "existing-site") {
+    if (!state.siteUrl) {
+      return { ok: false, message: "Missing onboarding field: siteUrl" };
     }
   }
 

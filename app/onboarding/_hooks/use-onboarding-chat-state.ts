@@ -36,7 +36,8 @@ export function useOnboardingChatState() {
   useEffect(() => {
     if (previewDataFromMessages || status === "streaming") return;
 
-    fetch("/api/onboarding/draft", { credentials: "include" })
+    const controller = new AbortController();
+    fetch("/api/onboarding/draft", { credentials: "include", signal: controller.signal })
       .then((res) => res.json())
       .then((json: { ok?: boolean; state?: Partial<OnboardingData> } | undefined) => {
         const state = json?.state;
@@ -45,9 +46,11 @@ export function useOnboardingChatState() {
         setPreviewDataFromDraft(parsed.ok ? parsed.value : null);
       })
       .catch((e) => {
-        console.error("Failed to fetch draft:", e);
+        if (e?.name !== "AbortError") console.error("Failed to fetch draft:", e);
       });
-  }, [previewDataFromMessages, status]);
+
+    return () => controller.abort();
+  }, [previewDataFromMessages, status, messages.length]);
 
   const handleConfirm = useCallback(async () => {
     if (!previewData || hasRedirected.current) return;
@@ -81,6 +84,19 @@ export function useOnboardingChatState() {
     setInput("");
   }, [input, sendMessage, status]);
 
+  const refreshDraftFromServer = useCallback(() => {
+    if (previewDataFromMessages) return;
+    fetch("/api/onboarding/draft", { credentials: "include" })
+      .then((res) => res.json())
+      .then((json: { ok?: boolean; state?: Partial<OnboardingData> } | undefined) => {
+        const state = json?.state;
+        if (!json?.ok || !state || typeof state !== "object") return;
+        const parsed = validateFinalOnboardingState(state);
+        if (parsed.ok) setPreviewDataFromDraft(parsed.value);
+      })
+      .catch((e) => console.error("Failed to fetch draft:", e));
+  }, [previewDataFromMessages]);
+
   return {
     messages,
     status,
@@ -92,5 +108,6 @@ export function useOnboardingChatState() {
     previewData,
     isConfirming,
     handleConfirm,
+    refreshDraftFromServer,
   };
 }

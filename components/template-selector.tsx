@@ -35,6 +35,9 @@ export function TemplateSelector() {
           <SelectItem value="veil">Veil (Minimal)</SelectItem>
           <SelectItem value="bold">Bold (Dark)</SelectItem>
           <SelectItem value="editorial">Editorial</SelectItem>
+          <SelectItem value="gallery">Gallery</SelectItem>
+          <SelectItem value="minimal">Minimal</SelectItem>
+          <SelectItem value="interactive">Interactive</SelectItem>
         </SelectContent>
       </Select>
     </div>

@@ -4,7 +4,9 @@ import {
   regeneratePortfolio,
   togglePublish,
   updateTemplate,
-} from "@/app/(dashboard)/dashboard/actions";
+  updatePortfolioContent,
+  type PortfolioContent,
+  } from "../../actions";
 
 export function usePortfolioActions(hasContent: boolean, initialPublished: boolean) {
   const [isPending, startTransition] = useTransition();
@@ -54,4 +56,27 @@ export function usePortfolioActions(hasContent: boolean, initialPublished: boole
   }, []);
 
   return { isPending, isPublished, isRegenerating, handlePublishChange, handleTemplateChange, handleRegenerate };
+}
+
+export function usePortfolioContent(initialContent: PortfolioContent | null) {
+  const [isPending, startTransition] = useTransition();
+  const [content, setContent] = useState(initialContent);
+
+  const updateContent = useCallback((newContent: PortfolioContent) => {
+    setContent(newContent);
+  }, []);
+
+  const saveContent = useCallback(async (newContent: PortfolioContent) => {
+    startTransition(async () => {
+      try {
+        await updatePortfolioContent(newContent);
+        setContent(newContent);
+        toast.success("Content saved successfully!");
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Failed to save content");
+      }
+    });
+  }, []);
+
+  return { content, updateContent, saveContent, isPending };
 }

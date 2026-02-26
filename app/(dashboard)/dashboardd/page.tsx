@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { auth, signOut } from "@/auth";
+import { getSession, signOut } from "@/auth";
 import { DashboardUserMenu } from "@/components/dashboard-user-menu";
 import { ResetOnboardingButton } from "@/components/reset-onboarding-button";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,7 @@ import Link from "next/link";
 import { ExternalLink, Palette } from "lucide-react";
 
 export default async function DashboardPage() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) {
     redirect("/auth/signin");
   }
@@ -41,7 +41,8 @@ export default async function DashboardPage() {
             email={session.user.email}
             signOutAction={async () => {
               "use server";
-              await signOut({ redirectTo: "/auth/signin" });
+              await signOut();
+              redirect("/auth/signin");
             }}
           />
         </div>

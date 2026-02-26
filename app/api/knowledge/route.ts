@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
 import { parseJsonBody, requireUserId } from "@/lib/api/route-helpers";
-import {
-  createKnowledgeSource,
-  getUserAgent,
-  listKnowledgeSourcesByAgentId,
-} from "@/lib/db/knowledge";
-import { parseKnowledgeInput } from "@/lib/validation/knowledge";
+import { getUserAgent, listKnowledgeSourcesByAgentId } from "@/lib/db/knowledge";
+import { createKnowledgeSource, createKnowledgeSourceFromFile } from "@/lib/knowledge/service";
+import { parseKnowledgeInput, KnowledgeInput } from "@/lib/validation/knowledge";
 import { getActivePortfolio } from "@/lib/active-portfolio";
 
 export async function GET() {
@@ -48,11 +45,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Agent not found" }, { status: 404 });
   }
 
-  const created = await createKnowledgeSource({
-    agentId: agent.id,
-    title: parsed.title,
-    content: parsed.content,
-  });
+  let created;
+
+  if (parsed.type === "pdf") {
+    created = await createKnowledgeSourceFromFile({
+      agentId: agent.id,
+      title: parsed.title,
+      fileUrl: parsed.fileUrl,
+      mimeType: parsed.mimeType,
+      fileSize: parsed.fileSize,
+    });
+  } else {
+    created = await createKnowledgeSource({
+      agentId: agent.id,
+      title: parsed.title,
+      content: parsed.content,
+    });
+  }
 
   if (!created.ok) {
     return NextResponse.json({ error: created.error }, { status: 400 });

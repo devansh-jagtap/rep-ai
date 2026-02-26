@@ -1,6 +1,7 @@
 import { and, desc, eq, gte } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { agentLeads } from "@/lib/schema";
+import { linkMessagesToLead } from "./lead-chats";
 
 interface SaveLeadInput {
   portfolioId: string;
@@ -9,6 +10,7 @@ interface SaveLeadInput {
   budget: string | null;
   projectDetails: string | null;
   confidence: number;
+  sessionId: string;
 }
 
 interface ExistingLead {
@@ -18,6 +20,7 @@ interface ExistingLead {
   budget: string | null;
   projectDetails: string | null;
   confidence: number;
+  sessionId: string | null;
 }
 
 export async function findExistingLead(portfolioId: string, email: string): Promise<ExistingLead | null> {
@@ -31,6 +34,7 @@ export async function findExistingLead(portfolioId: string, email: string): Prom
       budget: agentLeads.budget,
       projectDetails: agentLeads.projectDetails,
       confidence: agentLeads.confidence,
+      sessionId: agentLeads.sessionId,
     })
     .from(agentLeads)
     .where(
@@ -78,26 +82,33 @@ export async function saveLeadWithDedup(input: SaveLeadInput): Promise<"inserted
       merged.projectDetails !== existing.projectDetails ||
       merged.confidence !== existing.confidence;
 
-    if (hasChanges) {
+    if (hasChanges || existing.sessionId !== input.sessionId) {
       await db
         .update(agentLeads)
-        .set(merged)
+        .set({ ...merged, sessionId: input.sessionId })
         .where(eq(agentLeads.id, existing.id));
+      await linkMessagesToLead(existing.id, input.sessionId);
       return "updated";
     }
-    
+
+    await linkMessagesToLead(existing.id, input.sessionId);
+
     return "updated";
   }
 
+  const leadId = crypto.randomUUID();
   await db.insert(agentLeads).values({
-    id: crypto.randomUUID(),
+    id: leadId,
     portfolioId: input.portfolioId,
     name: input.name,
     email: normalizedEmail,
     budget: input.budget,
     projectDetails: input.projectDetails,
     confidence: input.confidence,
+    sessionId: input.sessionId,
   });
+
+  await linkMessagesToLead(leadId, input.sessionId);
 
   return "inserted";
 }

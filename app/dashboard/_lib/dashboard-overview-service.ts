@@ -1,9 +1,11 @@
-import { auth } from "@/auth";
-import { getDashboardData } from "@/app/(dashboard)/dashboard/_lib/get-dashboard-data";
+import { getSession } from "@/auth";
+
 import { getProfileById } from "@/lib/db";
 import { db } from "@/lib/db";
 import { agentLeads } from "@/lib/schema";
+import { getAnalyticsSummary, getDailyAnalytics } from "@/lib/db/analytics";
 import { and, count, eq, gte } from "drizzle-orm";
+import { getDashboardData } from "./get-dashboard-data";
 
 const MODEL_LABELS: Record<string, string> = {
   "moonshotai/Kimi-K2.5": "Kimi K2.5",
@@ -13,7 +15,7 @@ const MODEL_LABELS: Record<string, string> = {
 };
 
 export async function getDashboardOverviewData() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) return { session: null };
 
   const [data, profile] = await Promise.all([getDashboardData(), getProfileById(session.user.id)]);
@@ -30,6 +32,18 @@ export async function getDashboardOverviewData() {
     .from(agentLeads)
     .where(and(eq(agentLeads.portfolioId, portfolio.id), gte(agentLeads.createdAt, sevenDaysAgo)));
 
+  const analytics7d = await getAnalyticsSummary({
+    portfolioId: portfolio.id,
+    startDate: sevenDaysAgo,
+    endDate: new Date(),
+  });
+
+  const dailyAnalytics = await getDailyAnalytics({
+    portfolioId: portfolio.id,
+    startDate: sevenDaysAgo,
+    endDate: new Date(),
+  });
+
   return {
     session,
     profile,
@@ -37,6 +51,8 @@ export async function getDashboardOverviewData() {
     hasContent: Boolean(portfolio.content),
     totalLeads: totalLeadsResult.count,
     newLeads: newLeadsResult.count,
+    analytics7d: analytics7d,
+    dailyAnalytics: dailyAnalytics,
     modelLabel: agent ? MODEL_LABELS[agent.model] || agent.model : "Not configured",
     portfolioLink: `${process.env.NEXT_PUBLIC_BASE_URL || ""}/${portfolio.handle}`,
   };

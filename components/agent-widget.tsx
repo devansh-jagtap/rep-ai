@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MessageSquare, X, ArrowUpIcon, Loader2 } from "lucide-react";
@@ -18,6 +18,8 @@ import {
   InputGroupTextarea,
 } from "@/components/ui/input-group";
 import { MessageResponse } from "@/components/ai-elements/message";
+import { Shimmer } from "@/components/ai-elements/shimmer";
+import { widgetChatWithAgent } from "@/app/[handle]/actions";
 
 type ChatMessage = {
   id: string;
@@ -36,8 +38,7 @@ export function AgentWidget({ handle, agentName = "AI Assistant" }: AgentWidgetP
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
-
-  const history = useMemo(() => messages.slice(-10), [messages]);
+  const sessionIdRef = useRef<string | null>(null);
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,24 +58,20 @@ export function AgentWidget({ handle, agentName = "AI Assistant" }: AgentWidgetP
     setStreamingContent("");
 
     try {
-      const response = await fetch("/api/public-chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ handle, message, history }),
+      const result = await widgetChatWithAgent({
+        handle,
+        message,
+        history: messages.slice(-10),
+        sessionId: sessionIdRef.current,
       });
 
-      const data = (await response.json().catch(() => null)) as { 
-        reply?: string; 
-        error?: string;
-        lead?: {
-          lead_detected: boolean;
-          confidence: number;
-        };
-      } | null;
+      if (result.ok && result.sessionId) {
+        sessionIdRef.current = result.sessionId;
+      }
 
-      const reply = response.ok 
-        ? data?.reply ?? "Sorry, I couldn't generate a reply." 
-        : data?.error ?? "Request failed.";
+      const reply = result.ok
+        ? result.reply
+        : result.error ?? "Request failed.";
 
       let streamed = "";
       for (const char of reply) {
@@ -100,7 +97,7 @@ export function AgentWidget({ handle, agentName = "AI Assistant" }: AgentWidgetP
       setLoading(false);
       setStreamingContent("");
     }
-  }, [input, loading, messages, handle, history]);
+  }, [input, loading, messages, handle]);
 
   const allMessages = useMemo(() => {
     if (!streamingContent) return messages;
@@ -169,11 +166,8 @@ export function AgentWidget({ handle, agentName = "AI Assistant" }: AgentWidgetP
               )}
               {loading && !streamingContent && (
                 <Message from="assistant">
-                  <MessageContent className="text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Loader2 className="size-3 animate-spin" />
-                      <span>Thinking...</span>
-                    </div>
+                  <MessageContent className="text-sm text-muted-foreground">
+                    <Shimmer>•••</Shimmer>
                   </MessageContent>
                 </Message>
               )}
