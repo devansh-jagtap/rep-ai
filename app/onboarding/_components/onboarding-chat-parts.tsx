@@ -47,6 +47,7 @@ export function OnboardingPreviewCard({
   isConfirming: boolean;
 }) {
   const pathLabel = data.setupPath === "existing-site" ? "I already have a website" : "Build me a portfolio + agent";
+  const sectionsList = <>{data.sections.map((section) => <li key={section} className="rounded-full bg-secondary/80 px-2.5 py-0.5 text-sm capitalize">{section}</li>)}</>;
   const servicesList = <>{data.services.map((s) => <li key={s} className="rounded-full bg-primary/10 px-2.5 py-0.5 text-sm">{s}</li>)}</>;
   const projectList = <>{(data.projects ?? []).map((project, i) => <div key={i} className="rounded-lg border bg-background/50 p-3"><p className="font-medium text-sm">{project.title}</p><p className="text-muted-foreground text-xs">{project.description}</p></div>)}</>;
   const projectsSection = (data.projects ?? []).length > 0 ? <div><p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">Projects</p><div className="mt-2 space-y-2">{projectList}</div></div> : <></>;
@@ -62,7 +63,7 @@ export function OnboardingPreviewCard({
     <JSXPreview
       jsx={PREVIEW_JSX}
       components={{ Card, CardHeader, CardTitle, CardContent, EditButton, ConfirmButton } as NonNullable<JSXPreviewProps["components"]>}
-      bindings={{ data, pathLabel, servicesList, projectList, projectsSection, existingSiteSection }}
+      bindings={{ data, pathLabel, sectionsList, servicesList, projectList, projectsSection, existingSiteSection }}
       onError={(err) => console.error("JSX Preview error:", err)}
     >
       <JSXPreviewContent />

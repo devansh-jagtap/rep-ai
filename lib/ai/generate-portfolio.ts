@@ -4,6 +4,10 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { portfolios } from "@/lib/schema";
 import {
+  getDefaultVisibleSections,
+  mergeVisibleSections,
+} from "@/lib/portfolio/section-registry";
+import {
   validatePortfolioContent,
   type PortfolioContent,
 } from "@/lib/validation/portfolio-schema";
@@ -49,7 +53,8 @@ Output must be a single JSON object matching this exact TypeScript shape:
   "cta": {
     "headline": string,
     "subtext": string
-  }
+  },
+  "visibleSections": ("hero" | "about" | "services" | "projects" | "cta")[]
 }`;
 
 export class PortfolioGenerationError extends Error {
@@ -78,12 +83,21 @@ function tryParsePortfolioContent(text: string): PortfolioContent {
 }
 
 async function generatePortfolioContent(onboardingData: unknown): Promise<PortfolioContent> {
-  const data = onboardingData as { setupPath?: string; siteUrl?: string } | undefined;
+  const data = onboardingData as { setupPath?: string; siteUrl?: string; sections?: unknown } | undefined;
   const isExistingSite = data?.setupPath === "existing-site";
+  const selectedSections = mergeVisibleSections(data?.sections, getDefaultVisibleSections());
   const siteHint = isExistingSite && data?.siteUrl
-    ? `\n\nThis user chose "I already have a website"—create a minimal landing page that highlights their existing site. Use the hero CTA to link to their site (${data.siteUrl}). Keep projects minimal or empty; the focus is their site + AI agent.`
+    ? `
+
+This user chose "I already have a website"—create a minimal landing page that highlights their existing site. Use the hero CTA to link to their site (${data.siteUrl}). Keep projects minimal or empty; the focus is their site + AI agent.`
     : "";
-  const prompt = `Create portfolio content from the onboarding_data below. Return valid JSON only.${siteHint}\n\nonboarding_data:\n${JSON.stringify(onboardingData)}`;
+  const sectionHint = `
+
+Use these selected sections as visibility intent: ${selectedSections.join(", ")}. Include "visibleSections" in the response with these values (or a subset if some sections are not applicable).`;
+  const prompt = `Create portfolio content from the onboarding_data below. Return valid JSON only.${siteHint}${sectionHint}
+
+onboarding_data:
+${JSON.stringify(onboardingData)}`;
 
   try {
     const response = await generateText({
@@ -148,10 +162,15 @@ export async function generatePortfolio(userId: string, portfolioId?: string): P
     }
 
     const generatedContent = await generatePortfolioContent(portfolio.onboardingData);
+    const onboardingSections = (portfolio.onboardingData as { sections?: unknown } | null | undefined)?.sections;
+    const visibleSections = mergeVisibleSections(
+      generatedContent.visibleSections?.length ? generatedContent.visibleSections : onboardingSections,
+      getDefaultVisibleSections()
+    );
 
     await db
       .update(portfolios)
-      .set({ content: generatedContent, updatedAt: new Date() })
+      .set({ content: { ...generatedContent, visibleSections }, updatedAt: new Date() })
       .where(eq(portfolios.id, portfolio.id));
 
     console.info("[portfolio-generation] success", { userId, portfolioId: portfolio.id });

@@ -25,7 +25,31 @@ import {
 } from "@/app/onboarding/_components/onboarding-chat-parts";
 import { lastMessageAsksConfirmation, userJustConfirmed, type MessagePartLike } from "@/app/onboarding/_lib/onboarding-chat-utils";
 import { useOnboardingChatState } from "@/app/onboarding/_hooks/use-onboarding-chat-state";
-import type { OnboardingSelectedSections } from "@/lib/onboarding/types";
+import type { OnboardingBlock } from "@/lib/onboarding/types";
+import { renderOnboardingBlocks } from "@/app/onboarding/_components/onboarding-block-renderer";
+import { trackOnboardingBlockEvent } from "@/lib/onboarding/analytics";
+
+function getBlocksFromMessageParts(parts: MessagePartLike[], fallbackId: string): OnboardingBlock[] {
+  const blockParts = parts.filter(
+    (part): part is MessagePartLike & { type: "data"; data: { kind: string; blocks: OnboardingBlock[] } } =>
+      part.type === "data" &&
+      typeof (part as { data?: { kind?: unknown } }).data?.kind === "string" &&
+      (part as { data?: { kind?: string } }).data?.kind === "onboarding_blocks" &&
+      Array.isArray((part as { data?: { blocks?: unknown[] } }).data?.blocks)
+  );
+
+  if (blockParts.length > 0) {
+    return blockParts.flatMap((part) => part.data.blocks);
+  }
+
+  const textParts = parts.filter((part): part is { type: "text"; text: string } => part.type === "text" && typeof part.text === "string");
+  return textParts.map((part, index) => ({
+    id: `${fallbackId}-text-${index}`,
+    analyticsId: `${fallbackId}-text-${index}`,
+    type: "text",
+    prompt: part.text,
+  }));
+}
 
 export function OnboardingChat() {
   const {
@@ -93,7 +117,6 @@ export function OnboardingChat() {
                   <MessageContent className={cn("text-base max-w-2xl break-words", message.role === "assistant" && "text-primary")}>
                     {(() => {
                       const parts = message.parts as MessagePartLike[];
-                      const textParts = parts.filter((part): part is { type: "text"; text: string } => part.type === "text" && typeof part.text === "string");
                       const saveStepResults = parts.filter((p) => p.type === "tool-invocation" && p.toolName === "save_step" && p.result?.success);
                       return (
                         <>
