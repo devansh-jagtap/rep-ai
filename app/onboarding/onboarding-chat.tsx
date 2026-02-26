@@ -16,11 +16,40 @@ import {
 } from "@/components/ui/input-group";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { MessageSquare, ArrowUpIcon, PaperclipIcon, CheckCircleIcon, Upload, Loader2 } from "lucide-react";
-import { OnboardingMessageResponse, OnboardingPreviewCard } from "@/app/onboarding/_components/onboarding-chat-parts";
+import { MessageSquare, ArrowUpIcon } from "lucide-react";
+import {
+  getDefaultSectionSelection,
+  OnboardingMessageResponse,
+  OnboardingPreviewCard,
+  SectionSelectorMessage,
+} from "@/app/onboarding/_components/onboarding-chat-parts";
 import { lastMessageAsksConfirmation, userJustConfirmed, type MessagePartLike } from "@/app/onboarding/_lib/onboarding-chat-utils";
 import { useOnboardingChatState } from "@/app/onboarding/_hooks/use-onboarding-chat-state";
-import { toast } from "sonner";
+import type { OnboardingBlock } from "@/lib/onboarding/types";
+import { renderOnboardingBlocks } from "@/app/onboarding/_components/onboarding-block-renderer";
+import { trackOnboardingBlockEvent } from "@/lib/onboarding/analytics";
+
+function getBlocksFromMessageParts(parts: MessagePartLike[], fallbackId: string): OnboardingBlock[] {
+  const blockParts = parts.filter(
+    (part): part is MessagePartLike & { type: "data"; data: { kind: string; blocks: OnboardingBlock[] } } =>
+      part.type === "data" &&
+      typeof (part as { data?: { kind?: unknown } }).data?.kind === "string" &&
+      (part as { data?: { kind?: string } }).data?.kind === "onboarding_blocks" &&
+      Array.isArray((part as { data?: { blocks?: unknown[] } }).data?.blocks)
+  );
+
+  if (blockParts.length > 0) {
+    return blockParts.flatMap((part) => part.data.blocks);
+  }
+
+  const textParts = parts.filter((part): part is { type: "text"; text: string } => part.type === "text" && typeof part.text === "string");
+  return textParts.map((part, index) => ({
+    id: `${fallbackId}-text-${index}`,
+    analyticsId: `${fallbackId}-text-${index}`,
+    type: "text",
+    prompt: part.text,
+  }));
+}
 
 export function OnboardingChat() {
   const {
@@ -35,6 +64,8 @@ export function OnboardingChat() {
     handleConfirm,
     refreshDraftFromServer,
   } = useOnboardingChatState();
+  const [selectedSections, setSelectedSections] = useState<OnboardingSelectedSections>(getDefaultSectionSelection());
+  const [isSavingSections, setIsSavingSections] = useState(false);
 
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
   const [showUpload, setShowUpload] = useState(false);
@@ -104,6 +135,33 @@ export function OnboardingChat() {
     setInput("");
     setShowUpload(false);
   }, [input, resumeUrl, sendMessage, status]);
+  const shouldShowSectionSelector = useMemo(() => {
+    const last = messages[messages.length - 1];
+    if (!last || last.role !== "assistant") return false;
+    const parts = last.parts as MessagePartLike[];
+    if (parts.some((part) => part.type === "section_selector")) return true;
+    const text = parts
+      .filter((part): part is { type: "text"; text: string } => part.type === "text" && typeof part.text === "string")
+      .map((part) => part.text.toLowerCase())
+      .join(" ");
+    return text.includes("choose which sections") || text.includes("hero is always on");
+  }, [messages]);
+
+  const handleSectionsSubmit = async () => {
+    setIsSavingSections(true);
+    try {
+      await fetch("/api/onboarding/draft", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ selectedSections }),
+      });
+      const asText = `about:${selectedSections.about ? "on" : "off"}, services:${selectedSections.services ? "on" : "off"}, projects:${selectedSections.projects ? "on" : "off"}, cta:${selectedSections.cta ? "on" : "off"}, socials:${selectedSections.socials ? "on" : "off"}`;
+      sendMessage({ text: asText });
+    } finally {
+      setIsSavingSections(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 flex flex-col bg-background">
@@ -148,6 +206,29 @@ export function OnboardingChat() {
                         return <OnboardingMessageResponse key={`${message.id}-saved`}>Saved! What would you like to add next?</OnboardingMessageResponse>;
                       }
                       return null;
+                      const parts = message.parts as MessagePartLike[];
+                      const textParts = parts.filter((p) => p.type === "text");
+                      const saveStepResults = parts.filter((p) => p.type === "tool-invocation" && p.toolName === "save_step" && p.result?.success);
+                      return (
+                        <>
+                          {textParts.map((part, index) => (
+                            <OnboardingMessageResponse key={`${message.id}-${index}`}>{part.text}</OnboardingMessageResponse>
+                          ))}
+                          {saveStepResults.length > 0 ? (
+                            <OnboardingMessageResponse key={`${message.id}-saved`}>Saved! What would you like to add next?</OnboardingMessageResponse>
+                          ) : null}
+                          {message.role === "assistant" && shouldShowSectionSelector && message.id === messages[messages.length - 1]?.id ? (
+                            <div className="mt-3">
+                              <SectionSelectorMessage
+                                value={selectedSections}
+                                onChange={setSelectedSections}
+                                onSubmit={handleSectionsSubmit}
+                                disabled={status === "streaming" || isSavingSections}
+                              />
+                            </div>
+                          ) : null}
+                        </>
+                      );
                     })()}
                   </MessageContent>
                 </Message>
@@ -245,6 +326,8 @@ export function OnboardingChat() {
                 </InputGroupAddon>
                 <InputGroupInput value={input} onChange={(e) => setInput(e.target.value)} placeholder="Type your message or upload a resume..." disabled={status === "streaming"} className="text-base md:text-base pl-1" />
                 <InputGroupAddon align="inline-end"><InputGroupButton type="submit" variant="default" size="icon-sm" disabled={(!input.trim() && !resumeUrl) || status === "streaming"}><ArrowUpIcon className="size-4" /></InputGroupButton></InputGroupAddon>
+                <InputGroupInput value={input} onChange={(e) => setInput(e.target.value)} placeholder="Type your message..." disabled={status === "streaming" || shouldShowSectionSelector} className="text-base md:text-base" />
+                <InputGroupAddon align="inline-end"><InputGroupButton type="submit" variant="default" size="icon-sm" disabled={!input.trim() || status === "streaming" || shouldShowSectionSelector}><ArrowUpIcon className="size-4" /></InputGroupButton></InputGroupAddon>
               </InputGroup>
             </form>
           </div>

@@ -4,7 +4,7 @@ import { streamOnboardingChat } from "@/lib/ai/onboarding-agent";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { onboardingDrafts } from "@/lib/schema";
-import type { OnboardingData } from "@/lib/onboarding/types";
+import { withDefaultSelectedSections, type OnboardingData } from "@/lib/onboarding/types";
 import type { UIMessage } from "ai";
 import { getFileBuffer, getKeyFromUrl } from "@/lib/storage/s3";
 import { extractTextFromPdf } from "@/lib/knowledge/extract-pdf";
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       .where(eq(onboardingDrafts.userId, session.user.id))
       .limit(1);
 
-    collected = (draft?.state as Partial<OnboardingData>) ?? {};
+    collected = withDefaultSelectedSections((draft?.state as Partial<OnboardingData>) ?? {}) ?? {};
   } catch (dbError) {
     console.error("Onboarding draft fetch error (table may not exist):", dbError);
   }

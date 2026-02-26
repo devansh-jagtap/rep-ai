@@ -18,6 +18,12 @@ import { useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import type { PortfolioContent } from "../actions";
 import type { SocialLink, SocialPlatform } from "@/lib/validation/portfolio-schema";
+import {
+  isSectionVisible,
+  mergeVisibleSections,
+  PORTFOLIO_SECTION_REGISTRY,
+  type PortfolioSectionKey,
+} from "@/lib/portfolio/section-registry";
 
 interface PortfolioClientProps {
   portfolio: {
@@ -28,6 +34,11 @@ interface PortfolioClientProps {
   };
   content: PortfolioContent | null;
 }
+
+const getVisibleSections = (content: PortfolioContent | null | undefined) => ({
+  ...defaultVisibleSections,
+  ...content?.visibleSections,
+});
 
 export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
   const {
@@ -63,7 +74,7 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
   };
 
   const handleCancel = () => {
-    setEditedContent(content);
+    setEditedContent(content ? { ...content, visibleSections: mergeVisibleSections(content.visibleSections) } : content);
     setEditMode(false);
   };
 
@@ -88,6 +99,18 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
     setEditedContent({
       ...editedContent,
       cta: { ...editedContent.cta, [field]: value }
+    });
+  };
+
+  const updateSectionVisibility = (section: keyof typeof defaultVisibleSections, value: boolean) => {
+    if (!editedContent) return;
+    setEditedContent({
+      ...editedContent,
+      visibleSections: {
+        ...defaultVisibleSections,
+        ...editedContent.visibleSections,
+        [section]: value,
+      },
     });
   };
 
@@ -133,6 +156,16 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
     setEditedContent({ ...editedContent, projects: newProjects });
   };
 
+  const updateVisibleSection = (section: PortfolioSectionKey, visible: boolean) => {
+    if (!editedContent) return;
+    const current = mergeVisibleSections(editedContent.visibleSections);
+    const next = visible ? [...new Set([...current, section])] : current.filter((key) => key !== section);
+    setEditedContent({
+      ...editedContent,
+      visibleSections: mergeVisibleSections(next),
+    });
+  };
+
   const updateSocialLink = (platform: SocialPlatform, field: "enabled" | "url", value: boolean | string) => {
     if (!editedContent) return;
     
@@ -176,12 +209,16 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
   const portfolioLink = `/${portfolio.handle}`;
 
   const displayContent = editMode ? editedContent : content;
+  const visibleSections = mergeVisibleSections(displayContent?.visibleSections);
+
+  const isContentSectionVisible = (section: PortfolioSectionKey) =>
+    isSectionVisible(visibleSections, section);
 
   return (
     <div className="flex flex-col gap-6 max-w-4xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Portfolio Management</h1>
+          <h1 className="text-3xl tracking-tight">Portfolio Management</h1>
           <p className="text-muted-foreground">
             Control your public profile, content, and visibility.
           </p>
@@ -295,6 +332,38 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
         </Card>
       </div>
 
+      {displayContent && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Section Visibility</CardTitle>
+            <CardDescription>Choose which sections appear on your public portfolio.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {PORTFOLIO_SECTION_REGISTRY.map((section) => {
+              const checked = isContentSectionVisible(section.key);
+              return (
+                <div key={section.key} className="flex items-center justify-between rounded-lg border p-3">
+                  <div>
+                    <p className="text-sm font-medium">{section.label}</p>
+                    <p className="text-xs text-muted-foreground">Key: {section.key}</p>
+                  </div>
+                  <Switch
+                    checked={checked}
+                    disabled={!editMode}
+                    onCheckedChange={(nextChecked) => {
+                      if (editMode) {
+                        updateVisibleSection(section.key, nextChecked);
+                      }
+                    }}
+                  />
+                </div>
+              );
+            })}
+            {!editMode && <p className="text-xs text-muted-foreground">Enable edit mode to change section visibility.</p>}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Content Editor */}
       {displayContent && (
         <Card>
@@ -307,6 +376,7 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
           <CardContent>
             <Accordion type="multiple" defaultValue={["hero", "socials"]} className="w-full">
               {/* Hero */}
+              {isContentSectionVisible("hero") && (
               <AccordionItem value="hero">
                 <AccordionTrigger className="hover:no-underline">
                   <div className="flex items-center gap-2">
@@ -343,8 +413,45 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
                   )}
                 </AccordionContent>
               </AccordionItem>
+              )}
+
+              {/* Section Visibility */}
+              <AccordionItem value="section-visibility">
+                <AccordionTrigger className="hover:no-underline">
+                  <div className="flex items-center gap-2">
+                    <Globe className="size-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">Section Visibility</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="pt-2 space-y-3">
+                    {[
+                      { key: "about", label: "About" },
+                      { key: "services", label: "Services" },
+                      { key: "projects", label: "Projects" },
+                      { key: "cta", label: "CTA" },
+                      { key: "socials", label: "Social Links" },
+                    ].map((item) => (
+                      <div key={item.key} className="flex items-center justify-between rounded-lg bg-muted p-3">
+                        <Label className="text-sm font-medium">{item.label}</Label>
+                        <Switch
+                          checked={visibleSections[item.key as keyof typeof defaultVisibleSections]}
+                          onCheckedChange={(checked) => {
+                            if (editMode) {
+                              updateSectionVisibility(item.key as keyof typeof defaultVisibleSections, checked);
+                            }
+                          }}
+                          disabled={!editMode}
+                        />
+                      </div>
+                    ))}
+                    {!editMode && <p className="text-xs text-muted-foreground">Switch to edit mode to change section visibility.</p>}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
 
               {/* About */}
+              {isContentSectionVisible("about") && (
               <AccordionItem value="about">
                 <AccordionTrigger className="hover:no-underline">
                   <div className="flex items-center gap-2">
@@ -368,8 +475,10 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
                   )}
                 </AccordionContent>
               </AccordionItem>
+              )}
 
               {/* Services */}
+              {isContentSectionVisible("services") && (
               <AccordionItem value="services">
                 <AccordionTrigger className="hover:no-underline">
                   <div className="flex items-center gap-2">
@@ -421,8 +530,10 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
                   </div>
                 </AccordionContent>
               </AccordionItem>
+              )}
 
               {/* Projects */}
+              {isContentSectionVisible("projects") && (
               <AccordionItem value="projects">
                 <AccordionTrigger className="hover:no-underline">
                   <div className="flex items-center gap-2">
@@ -484,8 +595,10 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
                   </div>
                 </AccordionContent>
               </AccordionItem>
+              )}
 
               {/* CTA */}
+              {isContentSectionVisible("cta") && (
               <AccordionItem value="cta">
                 <AccordionTrigger className="hover:no-underline">
                   <div className="flex items-center gap-2">
@@ -522,6 +635,7 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
                   )}
                 </AccordionContent>
               </AccordionItem>
+              )}
 
               {/* Social Links */}
               <AccordionItem value="socials">

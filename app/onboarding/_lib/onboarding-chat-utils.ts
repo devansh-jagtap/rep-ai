@@ -20,7 +20,13 @@ const CONFIRM_PHRASES = [
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyPart = Record<string, any>;
 
-export type MessagePartLike = AnyPart;
+export type MessagePartLike = {
+  type?: string;
+  text?: string;
+  toolName?: string;
+  result?: ToolResultLike;
+  data?: unknown;
+};
 
 export type ChatMessageLike = {
   role?: string;

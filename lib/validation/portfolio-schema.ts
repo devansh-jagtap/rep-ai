@@ -1,4 +1,10 @@
 import { z } from "zod";
+import {
+  getDefaultVisibleSections,
+  mergeVisibleSections,
+  PORTFOLIO_SECTION_REGISTRY,
+  type PortfolioSectionKey,
+} from "@/lib/portfolio/section-registry";
 
 export type SocialPlatform = "twitter" | "linkedin" | "github" | "instagram" | "youtube" | "facebook" | "website";
 
@@ -9,6 +15,14 @@ export type SocialLink = {
 };
 
 export type PortfolioContent = {
+  visibleSections?: {
+    hero: boolean;
+    about: boolean;
+    services: boolean;
+    projects: boolean;
+    cta: boolean;
+    socials: boolean;
+  };
   hero: {
     headline: string;
     subheadline: string;
@@ -31,6 +45,16 @@ export type PortfolioContent = {
     subtext: string;
   };
   socialLinks: SocialLink[];
+  visibleSections: PortfolioSectionKey[];
+};
+
+export const defaultVisibleSections = {
+  hero: true,
+  about: true,
+  services: true,
+  projects: true,
+  cta: true,
+  socials: true,
 };
 
 const serviceSchema = z
@@ -48,6 +72,14 @@ const projectSchema = z
   })
   .strict();
 
+
+const portfolioSectionKeySchema = z.enum(
+  PORTFOLIO_SECTION_REGISTRY.map((section) => section.key) as [
+    PortfolioSectionKey,
+    ...PortfolioSectionKey[]
+  ]
+);
+
 const socialLinkSchema = z
   .object({
     platform: z.enum(["twitter", "linkedin", "github", "instagram", "youtube", "facebook", "website"]),
@@ -58,6 +90,16 @@ const socialLinkSchema = z
 
 const portfolioContentSchema = z
   .object({
+    visibleSections: z
+      .object({
+        hero: z.boolean().default(defaultVisibleSections.hero),
+        about: z.boolean().default(defaultVisibleSections.about),
+        services: z.boolean().default(defaultVisibleSections.services),
+        projects: z.boolean().default(defaultVisibleSections.projects),
+        cta: z.boolean().default(defaultVisibleSections.cta),
+        socials: z.boolean().default(defaultVisibleSections.socials),
+      })
+      .default(defaultVisibleSections),
     hero: z
       .object({
         headline: z.string().min(1),
@@ -79,6 +121,7 @@ const portfolioContentSchema = z
       })
       .strict(),
     socialLinks: z.array(socialLinkSchema).default([]),
+    visibleSections: z.array(portfolioSectionKeySchema).default(getDefaultVisibleSections()),
   })
   .strict();
 
@@ -89,5 +132,8 @@ export function validatePortfolioContent(data: unknown): PortfolioContent {
     throw new Error(`Invalid portfolio content: ${parsed.error.issues[0]?.message ?? "unknown error"}`);
   }
 
-  return parsed.data;
+  return {
+    ...parsed.data,
+    visibleSections: mergeVisibleSections(parsed.data.visibleSections, getDefaultVisibleSections()),
+  };
 }

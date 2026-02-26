@@ -2,30 +2,12 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
+import { getLeadConfidenceBadgeClass, getLeadConfidenceLabel } from "./lead-confidence"
 import { Copy, Mail, ChevronDown, MessageCircle } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
 import type { LeadDetailData, LeadStatus } from "./types"
 
-function confidenceTier(confidence: number) {
-  if (confidence >= 80) return "hot"
-  if (confidence >= 50) return "warm"
-  return "cold"
-}
-
-function confidenceBadgeClass(confidence: number) {
-  const tier = confidenceTier(confidence)
-  if (tier === "hot") return "bg-red-500/10 text-red-600 border-red-500/20"
-  if (tier === "warm") return "bg-yellow-500/10 text-yellow-700 border-yellow-500/20"
-  return "bg-blue-500/10 text-blue-600 border-blue-500/20"
-}
-
-function confidenceLabel(confidence: number) {
-  const tier = confidenceTier(confidence)
-  if (tier === "hot") return "Hot"
-  if (tier === "warm") return "Warm"
-  return "Cold"
-}
 
 function formatFullDate(iso: string) {
   const date = new Date(iso)
@@ -104,9 +86,9 @@ export function LeadHeader({
 
         <Badge
           variant="outline"
-          className={cn("rounded-full", confidenceBadgeClass(lead.confidence))}
+          className={cn("rounded-full", getLeadConfidenceBadgeClass(lead.confidence))}
         >
-          {confidenceLabel(lead.confidence)} ({Math.round(lead.confidence)}%)
+          {getLeadConfidenceLabel(lead.confidence)} ({Math.round(lead.confidence)}%)
         </Badge>
 
         <DropdownMenu>

@@ -1,8 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Sparkline } from "@/components/ui/sparkline";
-import { ArrowRight, AlertCircle, Sparkles } from "lucide-react";
+import { ArrowRight, AlertCircle, Sparkles, Globe, Activity, Users, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { CopyButton } from "@/components/dashboard/copy-button";
 import { redirect } from "next/navigation";
@@ -36,7 +34,7 @@ export default async function OverviewPage() {
     <div className="flex flex-col gap-8 pb-8">
       {/* Welcome Section */}
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+        <h1 className="text-3xl tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
           Overview
         </h1>
         <p className="text-muted-foreground text-lg">
@@ -61,83 +59,74 @@ export default async function OverviewPage() {
       )}
 
       {/* Stats Cards */}
-      <div className="grid gap-6 grid-cols-2 lg:grid-cols-4">
-        <Card className="relative overflow-hidden group border-muted/60 bg-linear-to-br from-background">
-          <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Portfolio</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold tracking-tight mt-1">
-              {portfolio.isPublished ? (
-                <Badge className="bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25 hover:text-emerald-700 border-emerald-500/20 shadow-none">Published</Badge>
-              ) : (
-                <Badge variant="secondary" className="shadow-none">Draft</Badge>
-              )}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Portfolio */}
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-transparent px-4 py-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-muted-foreground">
+            <Globe className="size-4" />
+          </div>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-foreground">Portfolio</span>
+              <span className="text-xs text-muted-foreground">
+                {portfolio.isPublished ? "Published" : "Draft"}
+              </span>
             </div>
-            <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1.5">
-              <span>Template:</span>
-              <span className="capitalize font-medium text-foreground">{portfolio.template}</span>
-            </p>
-          </CardContent>
-        </Card>
+            <span className="text-xs text-muted-foreground capitalize mt-0.5">
+              Template: {portfolio.template}
+            </span>
+          </div>
+        </div>
 
-        <Card className="relative overflow-hidden group border-muted/60 bg-linear-to-br from-background">
-          <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">AI Agent</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2 mt-1">
-              {agent?.isEnabled ? (
-                <Badge className="bg-blue-500/15 text-blue-600 hover:bg-blue-500/25 hover:text-blue-700 border-blue-500/20 shadow-none">Enabled</Badge>
-              ) : (
-                <Badge variant="outline" className="shadow-none">Disabled</Badge>
-              )}
+        {/* AI Agent */}
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-transparent px-4 py-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-muted-foreground">
+            <Activity className="size-4" />
+          </div>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-foreground">AI Agent</span>
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className={`h-1.5 w-1.5 rounded-full ${agent?.isEnabled ? "bg-emerald-500" : "bg-muted-foreground/40"}`} />
+                {agent?.isEnabled ? "Enabled" : "Disabled"}
+              </span>
             </div>
-            <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1.5">
-              <span>Model:</span>
-              <span className="font-medium text-foreground">{modelLabel}</span>
-            </p>
-          </CardContent>
-        </Card>
+            <span className="text-xs text-muted-foreground truncate max-w-[120px] mt-0.5">
+              {modelLabel}
+            </span>
+          </div>
+        </div>
 
-        <Card className="relative overflow-hidden group border-muted/60 bg-linear-to-br from-background 0">
-          <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Leads</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {totalLeads === 0 ? (
-              <p className="text-sm text-muted-foreground mt-1">No leads yet</p>
-            ) : (
-              <div className="text-3xl font-bold tracking-tight mt-1">{totalLeads}</div>
-            )}
-            <p className="text-xs text-muted-foreground mt-2">
-              Captured by your AI agent
-            </p>
-          </CardContent>
-        </Card>
+        {/* Total Leads */}
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-transparent px-4 py-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-muted-foreground">
+            <Users className="size-4" />
+          </div>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-foreground">Total Leads</span>
+            </div>
+            <span className="text-sm font-semibold text-foreground mt-0.5">
+              {totalLeads}
+            </span>
+          </div>
+        </div>
 
-        <Card className="relative overflow-hidden group border-muted/60 bg-linear-to-br from-background 0">
-          <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">New Leads</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {newLeads === 0 ? (
-              <p className="text-sm text-muted-foreground mt-1">Waiting for visitors</p>
-            ) : (
-              <div className="flex items-baseline gap-2 mt-1">
-                <div className="text-3xl font-bold tracking-tight">{newLeads}</div>
-                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-muted/50">7d</Badge>
-              </div>
-            )}
-            <p className="text-xs text-muted-foreground mt-2">
-              In the past week
-            </p>
-          </CardContent>
-        </Card>
+        {/* New Leads */}
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-transparent px-4 py-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-muted-foreground">
+            <TrendingUp className="size-4" />
+          </div>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-foreground">New Leads</span>
+              <span className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 rounded">7d</span>
+            </div>
+            <span className="text-sm font-semibold text-foreground mt-0.5">
+              {newLeads}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Minimal analytics (7d) */}
@@ -219,7 +208,7 @@ export default async function OverviewPage() {
           <CardContent className="flex-1 flex flex-col justify-end">
             <div className="flex flex-col gap-3">
               <div className="relative aspect-video rounded-lg border bg-linear-to-br from-muted/50 to-muted/30 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-blue-500/5" />
+                <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-transparent to-blue-500/5" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center">
                     <p className="text-sm font-medium text-muted-foreground">Portfolio Preview</p>

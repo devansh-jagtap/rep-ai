@@ -20,7 +20,7 @@ export function AnalyticsHeader({
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
+        <h1 className="text-3xl tracking-tight">Analytics</h1>
         <p className="text-muted-foreground">
           Track how visitors interact with your portfolio and AI agent.
         </p>

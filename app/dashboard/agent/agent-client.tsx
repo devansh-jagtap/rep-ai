@@ -1,6 +1,5 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -8,10 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { CodeBlock } from "@/components/ui/code-block";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import { useTransition, useEffect, useMemo, useState } from "react";
-import { Save, AlertCircle, ExternalLink, ArrowUpIcon, Loader2, MessageSquare } from "lucide-react";
+import { Save, AlertCircle, ExternalLink, ArrowUpIcon, Loader2, Activity, Globe, Cpu, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { saveAgentConfig } from "../actions";
 import {
@@ -35,6 +35,7 @@ import {
 } from "@/lib/agent/strategy-modes";
 import { useAgentStore } from "@/lib/stores/agent-store";
 import { useAgentActions } from "./_hooks/use-agent-actions";
+import { AnimatedTabs } from "@/components/ui/animated-tabs";
 
 const MODELS = [
   { value: "moonshotai/Kimi-K2.5", label: "Kimi K2.5", description: "Fast & accurate" },
@@ -57,6 +58,12 @@ const STRATEGY_MODES = [
   { value: "consultative", label: "Consultative", helper: CONVERSATION_STRATEGY_MODES.consultative.description },
   { value: "sales", label: "Sales", helper: CONVERSATION_STRATEGY_MODES.sales.description },
 ] as const satisfies ReadonlyArray<{ value: ConversationStrategyMode; label: string; helper: string }>;
+
+const AGENT_TABS = [
+  { label: "Settings", value: "settings" },
+  { label: "Widget", value: "widget" },
+  { label: "Test Chat", value: "test" },
+];
 
 interface AgentClientProps {
   agent: {
@@ -112,6 +119,8 @@ export function AgentClient({
   const [widgetPosition, setWidgetPosition] = useState<"bottom-right" | "bottom-left">("bottom-right");
   const [widgetWidth, setWidgetWidth] = useState(360);
   const [widgetHeight, setWidgetHeight] = useState(520);
+
+  const activeModel = MODELS.find((m) => m.value === config.model);
 
   const appOrigin = useMemo(() => {
     const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim();
@@ -180,107 +189,110 @@ export function AgentClient({
       : "";
 
   return (
-    <div className="max-w-6xl mx-auto flex flex-col gap-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">AI Agent</h1>
-          <p className="text-muted-foreground text-sm sm:text-base">
-            Configure your assistant, test responses, and install the widget.
-          </p>
+    <div className="max-w-5xl mx-auto flex flex-col font-sans">
+      <div className="flex flex-col gap-1.5 mb-6">
+        <h1 className="text-3xl tracking-tight">AI Agent</h1>
+        <p className="text-sm text-muted-foreground font-medium">
+          Configure your assistant, test responses, and install the widget.
+        </p>
+      </div>
+
+      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Status */}
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-transparent px-4 py-3">          
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-foreground">Status</span>
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className={`h-1.5 w-1.5 rounded-full ${config.isEnabled ? "bg-emerald-500" : "bg-muted-foreground/40"}`} />
+                {config.isEnabled ? "Enabled" : "Disabled"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Portfolio */}
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-transparent px-4 py-3">
+          
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-foreground">Portfolio</span>
+              <span className="text-xs text-muted-foreground">
+                {isPortfolioPublished ? "Published" : "Draft"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Model */}
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-transparent px-4 py-3">
+          
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-foreground">Model</span>
+              <span className="text-xs text-muted-foreground truncate max-w-[120px]">
+                {activeModel?.label ?? "Unknown"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Mode */}
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-transparent px-4 py-3">
+          
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-foreground">Mode</span>
+              <span className="text-xs text-muted-foreground capitalize">
+                {config.strategyMode}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="sm:col-span-1">
-          <CardHeader className="pb-2">
-            <CardDescription>Status</CardDescription>
-            <CardTitle className="text-base">
-              {config.isEnabled ? (
-                <Badge className="bg-blue-500 text-white hover:bg-blue-500">Enabled</Badge>
-              ) : (
-                <Badge variant="outline">Disabled</Badge>
-              )}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card className="sm:col-span-1">
-          <CardHeader className="pb-2">
-            <CardDescription>Portfolio</CardDescription>
-            <CardTitle className="text-base">
-              {isPortfolioPublished ? (
-                <Badge className="bg-green-600 text-white hover:bg-green-600">Published</Badge>
-              ) : (
-                <Badge variant="secondary">Draft</Badge>
-              )}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card className="sm:col-span-1">
-          <CardHeader className="pb-2">
-            <CardDescription>Model</CardDescription>
-            <CardTitle className="text-base">
-              {MODELS.find((model) => model.value === config.model)?.label ?? "Unknown"}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card className="sm:col-span-1">
-          <CardHeader className="pb-2">
-            <CardDescription>Mode</CardDescription>
-            <CardTitle className="text-base capitalize">{config.strategyMode}</CardTitle>
-          </CardHeader>
-        </Card>
-      </div>
-
-      <Tabs defaultValue="settings" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
-          <TabsTrigger value="settings" className="gap-2">
-            <Save className="size-4" />
-            <span className="hidden sm:inline">Settings</span>
-          </TabsTrigger>
-          <TabsTrigger value="widget" className="gap-2">
-            <ExternalLink className="size-4" />
-            <span className="hidden sm:inline">Widget</span>
-          </TabsTrigger>
-          <TabsTrigger value="test" className="gap-2">
-            <MessageSquare className="size-4" />
-            <span className="hidden sm:inline">Test Chat</span>
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="settings" className="mt-0">
-          <Card>
-            <CardHeader>
-              <CardTitle>Agent Settings</CardTitle>
-              <CardDescription>Choose how your agent behaves and responds to visitors.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between rounded-lg border p-4">
-                <Label className="flex flex-col items-start space-y-1">
-                  <span>Enable AI Assistant</span>
-                  <span className="font-normal text-sm text-muted-foreground">
-                    Responds to visitor questions and captures leads.
-                  </span>
-                </Label>
-                <Switch
-                  checked={config.isEnabled}
-                  onCheckedChange={(checked) => setConfig({ isEnabled: checked })}
-                  disabled={isPending}
-                />
+      <AnimatedTabs
+        tabs={AGENT_TABS}
+        renderContent={(tab) => {
+          if (tab.value === "settings") {
+            return (
+              <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-lg">Enable AI Assistant</CardTitle>
+                <CardDescription>Responds to visitor questions and captures leads.</CardDescription>
               </div>
+              <Switch
+                checked={config.isEnabled}
+                onCheckedChange={(checked) => setConfig({ isEnabled: checked })}
+                disabled={isPending}
+              />
+                  </CardHeader>
 
-              <div className={config.isEnabled ? "space-y-6" : "space-y-6 opacity-60"}>
-                <div className="space-y-3">
-                  <Label>AI Model</Label>
-                  <Select value={config.model} onValueChange={(value) => setConfig({ model: value })} disabled={isPending}>
-                    <SelectTrigger>
+                  <CardContent
+              className={`${config.isEnabled ? "" : "opacity-60 pointer-events-none"} transition-opacity duration-200`}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-x-8 gap-y-8">
+                      {/* Setting Row 1 */}
+                      <div className="space-y-1">
+                  <Label className="text-sm font-semibold">AI Model</Label>
+                  <p className="text-xs text-muted-foreground">Select the underlying model power.</p>
+                </div>
+                <div>
+                  <Select
+                    value={config.model}
+                    onValueChange={(value) => setConfig({ model: value })}
+                    disabled={isPending}
+                  >
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select a model" />
                     </SelectTrigger>
                     <SelectContent>
                       {MODELS.map((model) => (
                         <SelectItem key={model.value} value={model.value}>
-                          <div className="flex items-center gap-2">
-                            <span>{model.label}</span>
-                            <span className="text-xs text-muted-foreground">— {model.description}</span>
+                          <div className="flex items-center justify-between w-full pr-4 gap-4">
+                            <span className="font-medium">{model.label}</span>
+                            <span className="text-xs text-muted-foreground">{model.description}</span>
                           </div>
                         </SelectItem>
                       ))}
@@ -288,63 +300,91 @@ export function AgentClient({
                   </Select>
                 </div>
 
-                <div className="space-y-3">
-                  <Label>Behavior Preset</Label>
-                  <Select value={config.behaviorType} onValueChange={(value) => setConfig({ behaviorType: value })} disabled={isPending}>
-                    <SelectTrigger>
+                      {/* Setting Row 2 */}
+                      <div className="space-y-1">
+                  <Label className="text-sm font-semibold">Behavior Preset</Label>
+                  <p className="text-xs text-muted-foreground">How the assistant communicates.</p>
+                </div>
+                <div>
+                  <Select
+                    value={config.behaviorType}
+                    onValueChange={(value) => setConfig({ behaviorType: value })}
+                    disabled={isPending}
+                  >
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select a preset" />
                     </SelectTrigger>
                     <SelectContent>
                       {BEHAVIOR_PRESETS.map((preset) => (
-                        <SelectItem key={preset.value} value={preset.value}>
+                        <SelectItem key={preset.value} value={preset.value} className="font-medium">
                           {preset.label}
                         </SelectItem>
                       ))}
-                      <SelectItem value="custom">Custom Instructions</SelectItem>
+                      <SelectItem value="custom" className="font-medium">
+                        Custom Instructions
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                <div className="space-y-3">
-                  <Label>Conversation Strategy</Label>
+                      {/* Setting Row 3 */}
+                      <div className="space-y-1">
+                  <Label className="text-sm font-semibold">Conversation Strategy</Label>
+                  <p className="text-xs text-muted-foreground">The goal of the interactions.</p>
+                </div>
+                <div className="space-y-2">
                   <Select
                     value={config.strategyMode}
                     onValueChange={(value) => setConfig({ strategyMode: value as ConversationStrategyMode })}
                     disabled={isPending}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select a strategy" />
                     </SelectTrigger>
                     <SelectContent>
                       {STRATEGY_MODES.map((mode) => (
-                        <SelectItem key={mode.value} value={mode.value}>
+                        <SelectItem key={mode.value} value={mode.value} className="font-medium">
                           {mode.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground font-medium">
                     {CONVERSATION_STRATEGY_MODES[config.strategyMode].description}
                   </p>
                 </div>
 
-                {config.behaviorType === "custom" && (
-                  <div className="space-y-3">
-                    <Label>Custom System Prompt</Label>
-                    <Textarea
-                      placeholder="Define tone, boundaries, and response style for your agent."
-                      className="min-h-[120px]"
-                      value={config.customPrompt}
-                      onChange={(e) => setConfig({ customPrompt: e.target.value })}
-                      disabled={isPending}
-                    />
-                  </div>
+                      {/* Optional Custom Prompt */}
+                      {config.behaviorType === "custom" && (
+                  <>
+                    <div className="space-y-1">
+                      <Label className="text-sm font-semibold">Custom System Prompt</Label>
+                      <p className="text-xs text-muted-foreground">Define specific boundaries.</p>
+                    </div>
+                    <div>
+                      <Textarea
+                        placeholder="Define tone, boundaries, and response style for your agent."
+                        className="min-h-[120px] resize-y"
+                        value={config.customPrompt}
+                        onChange={(e) => setConfig({ customPrompt: e.target.value })}
+                        disabled={isPending}
+                      />
+                    </div>
+                  </>
                 )}
 
+                      {/* Setting Row 4 */}
+                      <div className="space-y-1">
+                  <Label className="text-sm font-semibold">Creativity</Label>
+                  <p className="text-xs text-muted-foreground">Adjust the model's randomness.</p>
+                </div>
                 <div className="space-y-4 pt-2">
-                  <div className="flex justify-between">
-                    <Label>Creativity (Temperature)</Label>
-                    <span className="text-sm font-mono text-muted-foreground">{config.temperature.toFixed(1)}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-medium text-muted-foreground">Focused</span>
+                    <span className="text-sm font-mono text-primary font-medium bg-primary/10 px-2 py-0.5 rounded">
+                      {config.temperature.toFixed(1)}
+                    </span>
+                    <span className="text-xs font-medium text-muted-foreground">Creative</span>
                   </div>
                   <Slider
                     value={[config.temperature]}
@@ -356,243 +396,249 @@ export function AgentClient({
                   />
                 </div>
               </div>
-            </CardContent>
-            <CardFooter className="bg-muted/50 py-4 justify-end border-t">
-              <Button onClick={handleSave} disabled={isPending}>
-                <Save className="size-4 mr-2" />
-                {isPending ? "Saving..." : "Save Configuration"}
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
+                  </CardContent>
 
-        <TabsContent value="widget" className="mt-0">
-          <Card>
-            <CardHeader>
-              <CardTitle>Get Agent Widget</CardTitle>
-              <CardDescription>Copy-paste this widget into any website and start chatting.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              {!canGenerateWidget && (
-                <div className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
-                  Save your configuration first so your account gets an `agentId` for the widget.
+                  <CardFooter className="bg-muted/50 border-t border-border justify-end">
+                    <Button onClick={handleSave} disabled={isPending}>
+                      {isPending ? <Loader2 className="size-4 animate-spin mr-2" /> : <Save className="size-4 mr-2" />}
+                      {isPending ? "Saving..." : "Save Configuration"}
+                    </Button>
+                  </CardFooter>
+                </Card>
+            );
+          }
+
+          if (tab.value === "widget") {
+            return (
+              <Card className="p-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold">Get Agent Widget</h3>
+                  <p className="text-sm text-muted-foreground mt-1">Copy-paste this widget into any website and start chatting.</p>
                 </div>
-              )}
 
-              {canGenerateWidget && (
-                <>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="widget-label">Button Label</Label>
-                      <input
-                        id="widget-label"
-                        value={widgetLabel}
-                        maxLength={24}
-                        onChange={(event) => setWidgetLabel(event.target.value)}
-                        className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Position</Label>
-                      <Select value={widgetPosition} onValueChange={(value) => setWidgetPosition(value as "bottom-right" | "bottom-left")}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="bottom-right">Bottom right</SelectItem>
-                          <SelectItem value="bottom-left">Bottom left</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="widget-width">Widget Width</Label>
-                      <input
-                        id="widget-width"
-                        type="number"
-                        min={280}
-                        max={480}
-                        value={widgetWidth}
-                        onChange={(event) => setWidgetWidth(Math.max(280, Math.min(480, Number(event.target.value) || 360)))}
-                        className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="widget-height">Widget Height</Label>
-                      <input
-                        id="widget-height"
-                        type="number"
-                        min={420}
-                        max={720}
-                        value={widgetHeight}
-                        onChange={(event) => setWidgetHeight(Math.max(420, Math.min(720, Number(event.target.value) || 520)))}
-                        className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-                      />
-                    </div>
+                {!canGenerateWidget && (
+                  <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground bg-muted/50">
+                    Save your configuration first so your account gets an `agentId` for the widget.
                   </div>
+                )}
 
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Label>Script Install Snippet</Label>
-                        <Badge variant="secondary" className="text-xs">Recommended</Badge>
+                {canGenerateWidget && (
+                  <>
+                    <div className="grid gap-6 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="widget-label" className="font-semibold">
+                          Button Label
+                        </Label>
+                        <Input
+                          id="widget-label"
+                          value={widgetLabel}
+                          maxLength={24}
+                          onChange={(event) => setWidgetLabel(event.target.value)}
+                          className="shadow-sm"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="font-semibold">Position</Label>
+                        <Select value={widgetPosition} onValueChange={(value) => setWidgetPosition(value as "bottom-right" | "bottom-left")}>
+                          <SelectTrigger className="w-full shadow-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="bottom-right" className="font-medium">Bottom right</SelectItem>
+                            <SelectItem value="bottom-left" className="font-medium">Bottom left</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="widget-width" className="font-semibold">
+                          Widget Width
+                        </Label>
+                        <Input
+                          id="widget-width"
+                          type="number"
+                          min={280}
+                          max={480}
+                          value={widgetWidth}
+                          onChange={(event) =>
+                            setWidgetWidth(Math.max(280, Math.min(480, Number(event.target.value) || 360)))
+                          }
+                          className="shadow-sm"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="widget-height" className="font-semibold">
+                          Widget Height
+                        </Label>
+                        <Input
+                          id="widget-height"
+                          type="number"
+                          min={420}
+                          max={720}
+                          value={widgetHeight}
+                          onChange={(event) =>
+                            setWidgetHeight(Math.max(420, Math.min(720, Number(event.target.value) || 520)))
+                          }
+                          className="shadow-sm"
+                        />
                       </div>
                     </div>
-                    <CodeBlock
-                      code={scriptSnippet}
-                      language="html"
-                    />
-                  </div>
 
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label>Iframe Fallback</Label>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Label className="font-semibold">Script Install Snippet</Label>
+                        <Badge variant="secondary" className="text-xs font-medium">Recommended</Badge>
+                      </div>
+                      <CodeBlock code={scriptSnippet} language="html" />
                     </div>
-                    <CodeBlock
-                      code={iframeSnippet}
-                      language="html"
-                    />
-                  </div>
 
-                  <div className="rounded-lg border bg-muted/30 p-4 text-sm space-y-2">
-                    <p className="font-medium">Install checklist</p>
-                    <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                      <li>Keep your portfolio published and agent enabled.</li>
-                      <li>Paste the script snippet before the closing {"</body>"} tag.</li>
-                      <li>Open your website and click the widget button to test.</li>
-                    </ul>
-                  </div>
+                    <div className="space-y-3">
+                      <Label className="font-semibold">Iframe Fallback</Label>
+                      <CodeBlock code={iframeSnippet} language="html" />
+                    </div>
 
-                  <div className="flex flex-wrap gap-2">
-                    <Button variant="outline" size="sm" asChild>
-                      <a href={scriptUrl} target="_blank" rel="noreferrer">
-                        View Generated Script
-                        <ExternalLink className="size-4 ml-2" />
-                      </a>
-                    </Button>
-                    {agentId && (
-                      <Button variant="outline" size="sm" asChild>
-                        <a href={`${appOrigin}/embed/${agentId}`} target="_blank" rel="noreferrer">
-                          Open Embed Preview
+                    <div className="rounded-lg border bg-muted/50 p-4 text-sm space-y-2">
+                      <p className="font-semibold">Install checklist</p>
+                      <ul className="list-disc pl-5 space-y-1 text-muted-foreground font-medium">
+                        <li>Keep your portfolio published and agent enabled.</li>
+                        <li>Paste the script snippet before the closing <code className="bg-muted px-1 py-0.5 rounded text-foreground">{"</body>"}</code> tag.</li>
+                        <li>Open your website and click the widget button to test.</li>
+                      </ul>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3 pt-2">
+                      <Button variant="outline" size="sm" asChild className="shadow-sm font-medium">
+                        <a href={scriptUrl} target="_blank" rel="noreferrer">
+                          View Generated Script
                           <ExternalLink className="size-4 ml-2" />
                         </a>
                       </Button>
-                    )}
-                    <Badge variant={isWidgetReady ? "default" : "secondary"}>
-                      {isWidgetReady ? "Widget ready to install" : "Publish + enable agent to go live"}
-                    </Badge>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+                      {agentId && (
+                        <Button variant="outline" size="sm" asChild className="shadow-sm font-medium">
+                          <a href={`${appOrigin}/embed/${agentId}`} target="_blank" rel="noreferrer">
+                            Open Embed Preview
+                            <ExternalLink className="size-4 ml-2" />
+                          </a>
+                        </Button>
+                      )}
+                      <div className="flex items-center">
+                        <Badge variant={isWidgetReady ? "default" : "secondary"} className="font-medium">
+                          {isWidgetReady ? "Widget ready to install" : "Publish + enable agent to go live"}
+                        </Badge>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </Card>
+            );
+          }
 
-        <TabsContent value="test" className="mt-0">
-          <Card className="flex flex-col h-[600px]">
-            <CardHeader className="border-b px-4 py-3 pb-4 space-y-1 bg-muted/50 shrink-0">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CardTitle className="text-base">Test Agent</CardTitle>
+          if (tab.value === "test") {
+            return (
+              <Card className="overflow-hidden flex flex-col h=[600px]">
+                <div className="border-b border-border px-6 py-4 flex items-center justify-between bg-muted/50 shrink-0">
+                  <div>
+                    <h3 className="text-base font-semibold">Test Agent</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">Live preview that sends real requests to your configured agent.</p>
+                  </div>
+                  {chatMessages.length > 0 && (
+                    <Button size="sm" variant="ghost" onClick={clearChatMessages} className="font-medium">
+                      Reset
+                    </Button>
+                  )}
                 </div>
-                {chatMessages.length > 0 && (
-                  <Button size="sm" variant="ghost" onClick={clearChatMessages}>
-                    Reset
-                  </Button>
-                )}
-              </div>
-              <CardDescription className="text-xs">
-                Live preview that sends real requests to your configured agent.
-              </CardDescription>
-            </CardHeader>
 
-            <Conversation className="flex-1 min-h-0 border-t-0 bg-background/50">
-              <ConversationContent
-                className="gap-4 p-4"
-                scrollClassName="[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb]:rounded-full"
-              >
-                {!canTest ? (
-                  <ConversationEmptyState
-                    icon={<AlertCircle className="size-12 text-muted-foreground" />}
-                    title="Agent Unavailable"
-                    description={
-                      !config.isEnabled
-                        ? "Enable the agent to test it."
-                        : "Generate your portfolio content first to test it."
-                    }
-                  />
-                ) : chatMessages.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center">
-                    <p className="text-sm text-muted-foreground">
-                      Start chatting to test your agent
-                    </p>
-                  </div>
-                ) : (
-                  chatMessages.map((message, index) => (
-                    <Message key={index} from={message.role}>
-                      <MessageContent className="text-sm max-w-[85%] break-words">
-                        {message.role === "assistant" ? (
-                          <MessageResponse>{message.content}</MessageResponse>
-                        ) : (
-                          <span>{message.content}</span>
-                        )}
-                      </MessageContent>
-                    </Message>
-                  ))
-                )}
-                {isChatLoading && (
-                  <Message from="assistant">
-                    <MessageContent className="text-sm text-muted-foreground">
-                      <Shimmer>•••</Shimmer>
-                    </MessageContent>
-                  </Message>
-                )}
-              </ConversationContent>
-              <ConversationScrollButton />
-            </Conversation>
-
-            <form
-              onSubmit={(event) => {
-                event.preventDefault();
-                sendTestMessage();
-              }}
-              className="shrink-0 border-t p-4 bg-background"
-            >
-              <InputGroup>
-                <InputGroupTextarea
-                  placeholder={canTest ? "Ask something as a visitor..." : "Agent unavailable"}
-                  className="min-h-[48px] max-h-32 text-sm"
-                  rows={1}
-                  value={chatInput}
-                  onChange={(event) => setChatInput(event.target.value)}
-                  disabled={!canTest || isChatLoading}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" && !event.shiftKey) {
-                      event.preventDefault();
-                      if (canTest && chatInput.trim() && !isChatLoading) {
-                        sendTestMessage();
-                      }
-                    }
-                  }}
-                />
-                <InputGroupAddon align="inline-end">
-                  <InputGroupButton
-                    type="submit"
-                    variant="default"
-                    size="icon-sm"
-                    disabled={!canTest || !chatInput.trim() || isChatLoading}
+                <Conversation className="flex-1 min-h-0 border-t-0 bg-background">
+                  <ConversationContent
+                    className="gap-4 p-6"
+                    scrollClassName="[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40 [&::-webkit-scrollbar-thumb]:rounded-full"
                   >
-                    {isChatLoading ? (
-                      <Loader2 className="size-4 animate-spin" />
+                    {!canTest ? (
+                      <ConversationEmptyState
+                        icon={<AlertCircle className="size-12 text-muted-foreground/50" />}
+                        title="Agent Unavailable"
+                        description={
+                          !config.isEnabled
+                            ? "Enable the agent to test it."
+                            : "Generate your portfolio content first to test it."
+                        }
+                      />
+                    ) : chatMessages.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center">
+                        <p className="text-sm font-medium text-muted-foreground">
+                          Start chatting to test your agent
+                        </p>
+                      </div>
                     ) : (
-                      <ArrowUpIcon className="size-4" />
+                      chatMessages.map((message, index) => (
+                        <Message key={index} from={message.role}>
+                          <MessageContent className="text-sm max-w-[85%] break-words shadow-sm">
+                            {message.role === "assistant" ? (
+                              <MessageResponse>{message.content}</MessageResponse>
+                            ) : (
+                              <span>{message.content}</span>
+                            )}
+                          </MessageContent>
+                        </Message>
+                      ))
                     )}
-                  </InputGroupButton>
-                </InputGroupAddon>
-              </InputGroup>
-            </form>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                    {isChatLoading && (
+                      <Message from="assistant">
+                        <MessageContent className="text-sm text-muted-foreground shadow-sm">
+                          <Shimmer>•••</Shimmer>
+                        </MessageContent>
+                      </Message>
+                    )}
+                  </ConversationContent>
+                  <ConversationScrollButton />
+                </Conversation>
+
+                <form
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    sendTestMessage();
+                  }}
+                  className="shrink-0 border-t border-border p-4 bg-background"
+                >
+                  <InputGroup className="shadow-sm">
+                    <InputGroupTextarea
+                      placeholder={canTest ? "Ask something as a visitor..." : "Agent unavailable"}
+                      className="min-h-[48px] max-h-32 text-sm border-0 focus-visible:ring-0"
+                      rows={1}
+                      value={chatInput}
+                      onChange={(event) => setChatInput(event.target.value)}
+                      disabled={!canTest || isChatLoading}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" && !event.shiftKey) {
+                          event.preventDefault();
+                          if (canTest && chatInput.trim() && !isChatLoading) {
+                            sendTestMessage();
+                          }
+                        }
+                      }}
+                    />
+                    <InputGroupAddon align="inline-end">
+                      <InputGroupButton
+                        type="submit"
+                        variant="default"
+                        size="icon-sm"
+                        disabled={!canTest || !chatInput.trim() || isChatLoading}
+                      >
+                        {isChatLoading ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <ArrowUpIcon className="size-4" />
+                        )}
+                      </InputGroupButton>
+                    </InputGroupAddon>
+                  </InputGroup>
+                </form>
+              </Card>
+            );
+          }
+
+          return null;
+        }}
+      />
     </div>
   );
 }
