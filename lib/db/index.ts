@@ -1,6 +1,7 @@
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { desc, eq } from "drizzle-orm";
+import * as schema from "@/lib/schema";
 import { leads, users } from "@/lib/schema";
 
 export interface Profile {
@@ -33,7 +34,7 @@ if (process.env.NODE_ENV !== "production") {
   globalForDb.sql = sql;
 }
 
-export const db = drizzle(sql);
+export const db = drizzle(sql, { schema });
 
 export async function getProfileById(id: string): Promise<Profile | null> {
   const [user] = await db

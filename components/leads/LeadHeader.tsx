@@ -2,8 +2,9 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import { Copy, Mail, ChevronDown } from "lucide-react"
+import { Copy, Mail, ChevronDown, MessageCircle } from "lucide-react"
 import { toast } from "sonner"
+import Link from "next/link"
 import type { LeadDetailData, LeadStatus } from "./types"
 
 function confidenceTier(confidence: number) {
@@ -127,6 +128,13 @@ export function LeadHeader({
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <Button variant="outline" className="rounded-full h-8 px-3" asChild>
+          <Link href={`/dashboard/leads/${lead.id}/chats`}>
+            <MessageCircle className="mr-2 size-4" />
+            View Chats
+          </Link>
+        </Button>
       </div>
     </div>
   )

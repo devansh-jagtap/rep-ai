@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Conversation,
   ConversationContent,
@@ -34,6 +34,7 @@ export function EmbedChatClient({ agentId, agentName = "AI Assistant" }: EmbedCh
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
+  const sessionIdRef = useRef<string | null>(null);
 
   const handleSubmit = useCallback(async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -57,7 +58,12 @@ export function EmbedChatClient({ agentId, agentName = "AI Assistant" }: EmbedCh
         agentId,
         message: content,
         history: nextMessages.slice(-8),
+        sessionId: sessionIdRef.current,
       });
+
+      if (result.ok && result.sessionId) {
+        sessionIdRef.current = result.sessionId;
+      }
 
       if (!result.ok) {
         throw new Error(result.error);

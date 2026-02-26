@@ -176,12 +176,25 @@ export const agentLeads = pgTable("agent_leads", {
   status: varchar("status", { length: 20 }).$type<"new" | "contacted" | "closed">().notNull().default("new"),
   isRead: boolean("is_read").notNull().default(false),
   confidence: real("confidence").notNull(),
+  sessionId: uuid("session_id"),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 }, (table) => [
   check(
     "agent_leads_status_check",
     sql`${table.status} IN ('new', 'contacted', 'closed')`
   ),
+]);
+
+export const leadChatMessages = pgTable("lead_chat_messages", {
+  id: uuid("id").primaryKey(),
+  leadId: uuid("lead_id").references(() => agentLeads.id, { onDelete: "cascade" }),
+  sessionId: uuid("session_id").notNull(),
+  role: varchar("role", { length: 20 }).$type<"user" | "assistant">().notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+}, (table) => [
+  index("lead_chat_messages_session_id_idx").on(table.sessionId),
+  index("lead_chat_messages_lead_id_idx").on(table.leadId),
 ]);
 
 export const knowledgeSources = pgTable(

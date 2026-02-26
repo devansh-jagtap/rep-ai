@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MessageSquare, X, ArrowUpIcon, Loader2 } from "lucide-react";
@@ -37,6 +37,7 @@ export function AgentWidget({ handle, agentName = "AI Assistant" }: AgentWidgetP
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
+  const sessionIdRef = useRef<string | null>(null);
 
   const history = useMemo(() => messages.slice(-10), [messages]);
 
@@ -62,7 +63,12 @@ export function AgentWidget({ handle, agentName = "AI Assistant" }: AgentWidgetP
         handle,
         message,
         history,
+        sessionId: sessionIdRef.current,
       });
+
+      if (result.ok && result.sessionId) {
+        sessionIdRef.current = result.sessionId;
+      }
 
       const reply = result.ok
         ? result.reply

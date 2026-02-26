@@ -6,6 +6,7 @@ import {
 } from "@/lib/ai/failure-guard";
 import { classifyAiError, logPublicAgentEvent } from "@/lib/ai/safe-logging";
 import { saveLeadWithDedup } from "@/lib/db/agent-leads";
+import { saveChatMessage } from "@/lib/db/lead-chats";
 import {
   getPortfolioWithAgentByAgentId,
   getPortfolioWithAgentByHandle,
@@ -130,6 +131,20 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
     const leadDetected =
       strategyMode !== "passive" && result.lead.lead_detected && result.lead.confidence >= threshold;
 
+    const sessionId = input.sessionId || crypto.randomUUID();
+
+    await saveChatMessage({
+      sessionId,
+      role: "user",
+      content: input.message,
+    });
+
+    await saveChatMessage({
+      sessionId,
+      role: "assistant",
+      content: result.reply,
+    });
+
     if (leadDetected) {
       const dedupeResult = await saveLeadWithDedup({
         portfolioId: portfolio.id,
@@ -138,6 +153,7 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
         budget: result.lead.lead_data?.budget?.trim() || null,
         projectDetails: result.lead.lead_data?.project_details?.trim() || null,
         confidence: result.lead.confidence,
+        sessionId,
       });
 
       if (dedupeResult === "updated") {
@@ -169,7 +185,6 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
       errorType: result.errorType,
     });
 
-    const sessionId = input.sessionId || crypto.randomUUID();
     const isFirstMessage = !input.history || input.history.length === 0;
 
     if (isFirstMessage) {
@@ -189,10 +204,14 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
     return { ok: true, reply: result.reply, leadDetected, sessionId };
   } catch (error) {
     const errorType = classifyAiError(error);
+    const message = error instanceof Error ? error.message : String(error);
+    const stack = error instanceof Error ? error.stack : undefined;
     console.error(
       JSON.stringify({
         event: "public_chat_handler_error",
         error_type: errorType,
+        message,
+        ...(stack && { stack }),
         timestamp: new Date().toISOString(),
       })
     );

@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { chatWithAgent } from "../../actions";
 
@@ -12,6 +12,8 @@ export function useAgentActions(params: {
   setChatInput: (input: string) => void;
   setIsChatLoading: (loading: boolean) => void;
 }) {
+  const sessionIdRef = useRef<string | null>(null);
+
   const sendTestMessage = useCallback(async () => {
     const msg = params.chatInput.trim();
     if (!msg || params.isChatLoading) return;
@@ -30,7 +32,12 @@ export function useAgentActions(params: {
         handle: params.portfolioHandle,
         message: msg,
         history: params.chatMessages.slice(-10),
+        sessionId: sessionIdRef.current,
       });
+
+      if (result.ok && result.sessionId) {
+        sessionIdRef.current = result.sessionId;
+      }
 
       if (!result.ok) {
         throw new Error(result.error);
