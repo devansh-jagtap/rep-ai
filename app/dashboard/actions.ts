@@ -11,6 +11,8 @@ import { generatePortfolio } from "@/lib/ai/generate-portfolio";
 import { validateHandle } from "@/lib/validation/handle";
 import { handlePublicChat, type PublicChatResult } from "@/lib/ai/public-chat-handler";
 import { sanitizeHistory } from "@/lib/validation/public-chat";
+import { validatePortfolioContent } from "@/lib/validation/portfolio-schema";
+import type { PortfolioSectionKey } from "@/lib/portfolio/section-registry";
 
 export type PortfolioContent = {
   hero?: { headline?: string; subheadline?: string };
@@ -19,6 +21,7 @@ export type PortfolioContent = {
   projects?: { title: string; description: string; result: string }[];
   cta?: { headline?: string; subtext?: string };
   socialLinks?: { platform: "twitter" | "linkedin" | "github" | "instagram" | "youtube" | "facebook" | "website"; enabled: boolean; url: string }[];
+  visibleSections?: PortfolioSectionKey[];
 };
 
 async function requireAuth() {
@@ -178,8 +181,10 @@ export async function updatePortfolioContent(content: PortfolioContent) {
   const portfolio = await getActivePortfolio(userId);
   if (!portfolio) throw new Error("Portfolio not found");
 
+  const normalizedContent = validatePortfolioContent(content);
+
   await db.update(portfolios).set({
-    content,
+    content: normalizedContent,
     updatedAt: new Date(),
   }).where(eq(portfolios.id, portfolio.id));
 

@@ -1,4 +1,5 @@
 import type { PortfolioTone } from "@/lib/db/portfolio";
+import type { PortfolioSectionKey } from "@/lib/portfolio/section-registry";
 
 export type OnboardingSetupPath = "existing-site" | "build-new";
 
@@ -7,6 +8,7 @@ export const ONBOARDING_STEPS = [
   "name",
   "title",
   "bio",
+  "sections",
   "services",
   "projects",
   "siteUrl",
@@ -29,6 +31,7 @@ export interface OnboardingData {
   name: string;
   title: string;
   bio: string;
+  sections: PortfolioSectionKey[];
   services: string[];
   projects?: OnboardingProjectInput[];
   siteUrl?: string;
@@ -60,6 +63,8 @@ export const ONBOARDING_QUESTIONS: Record<OnboardingStep, string> = {
   name: "Great to meet you. What full name should appear on your portfolio?",
   title: "Nice. What professional title best describes your work?",
   bio: "Share your elevator pitch or short bio (at least 20 characters).",
+  sections:
+    "Pick the sections you want visible: hero, about, services, projects, cta. You can list multiple separated by commas.",
   services:
     "What services/work do you offer? Share them in plain language, one per line or comma-separated.",
   projects: "Tell me about 1-3 projects. Format each as `Title: Description` on a new line.",

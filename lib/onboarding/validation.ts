@@ -1,4 +1,9 @@
 import type { PortfolioTone } from "@/lib/db/portfolio";
+import {
+  getDefaultVisibleSections,
+  mergeVisibleSections,
+  PORTFOLIO_SECTION_REGISTRY,
+} from "@/lib/portfolio/section-registry";
 import { validateHandle } from "@/lib/validation/handle";
 import type {
   OnboardingData,
@@ -15,6 +20,15 @@ type ValidationResult<T> =
 
 function normalizeWhitespace(value: string) {
   return value.replace(/\s+/g, " ").trim();
+}
+
+export function parseSections(input: string) {
+  const rawValues = input
+    .split(/[\n,]/)
+    .map((item) => normalizeWhitespace(item))
+    .filter(Boolean);
+
+  return mergeVisibleSections(rawValues, []);
 }
 
 export function parseServices(input: string) {
@@ -95,6 +109,18 @@ export function validateStepInput(step: OnboardingStep, answer: string): Validat
     return { ok: true, value: cleaned };
   }
 
+  if (step === "sections") {
+    const sections = parseSections(answer);
+    if (sections.length < 1) {
+      const available = PORTFOLIO_SECTION_REGISTRY.map((section) => section.key).join(", ");
+      return {
+        ok: false,
+        message: `Please pick at least one section from: ${available}.`,
+      };
+    }
+    return { ok: true, value: sections };
+  }
+
   if (step === "services") {
     const services = parseServices(answer);
     if (services.length < 1) {
@@ -161,6 +187,7 @@ export function validateFinalOnboardingState(state: Partial<OnboardingData> | un
     "name",
     "title",
     "bio",
+    "sections",
     "services",
     "tone",
     "handle",
@@ -184,5 +211,11 @@ export function validateFinalOnboardingState(state: Partial<OnboardingData> | un
     }
   }
 
-  return { ok: true, value: state as OnboardingData };
+  return {
+    ok: true,
+    value: {
+      ...(state as OnboardingData),
+      sections: mergeVisibleSections(state.sections, getDefaultVisibleSections()),
+    },
+  };
 }
