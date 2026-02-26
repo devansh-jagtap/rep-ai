@@ -29,6 +29,7 @@ export type MessagePartLike = {
   text?: string;
   toolName?: string;
   result?: ToolResultLike;
+  data?: unknown;
 };
 
 export type ChatMessageLike = {

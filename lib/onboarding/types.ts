@@ -19,6 +19,60 @@ export const ONBOARDING_STEPS = [
 
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 
+export type OnboardingBlockType = "text" | "selector" | "text_input" | "multi_input" | "confirm";
+
+interface OnboardingBlockBase {
+  id: string;
+  type: OnboardingBlockType;
+  analyticsId?: string;
+  prompt: string;
+}
+
+export interface OnboardingTextBlock extends OnboardingBlockBase {
+  type: "text";
+}
+
+export interface OnboardingSelectorBlock extends OnboardingBlockBase {
+  type: "selector";
+  options: Array<{
+    id: string;
+    label: string;
+    value: string;
+  }>;
+}
+
+export interface OnboardingTextInputBlock extends OnboardingBlockBase {
+  type: "text_input";
+  placeholder?: string;
+}
+
+export interface OnboardingMultiInputBlock extends OnboardingBlockBase {
+  type: "multi_input";
+  placeholder?: string;
+  helperText?: string;
+}
+
+export interface OnboardingConfirmBlock extends OnboardingBlockBase {
+  type: "confirm";
+  confirmLabel?: string;
+  rejectLabel?: string;
+}
+
+export type OnboardingBlock =
+  | OnboardingTextBlock
+  | OnboardingSelectorBlock
+  | OnboardingTextInputBlock
+  | OnboardingMultiInputBlock
+  | OnboardingConfirmBlock;
+
+export type OnboardingSection = "setup" | "profile" | "work" | "existingSite" | "preferences";
+
+export interface OnboardingStepQuestionConfig {
+  step: OnboardingStep;
+  section: OnboardingSection;
+  blocks: OnboardingBlock[];
+}
+
 export interface OnboardingProjectInput {
   title: string;
   description: string;
@@ -51,23 +105,7 @@ export interface OnboardingChatResponse {
   step: OnboardingStep;
   nextStep: OnboardingStep | null;
   assistantMessage: string;
+  assistantBlocks?: OnboardingBlock[];
   state: Partial<OnboardingData>;
   completed: boolean;
 }
-
-export const ONBOARDING_QUESTIONS: Record<OnboardingStep, string> = {
-  setupPath: "Choose a setup path: I already have a website, or Build me a portfolio + agent.",
-  name: "Great to meet you. What full name should appear on your portfolio?",
-  title: "Nice. What professional title best describes your work?",
-  bio: "Share your elevator pitch or short bio (at least 20 characters).",
-  services:
-    "What services/work do you offer? Share them in plain language, one per line or comma-separated.",
-  projects: "Tell me about 1-3 projects. Format each as `Title: Description` on a new line.",
-  siteUrl: "What is your website URL?",
-  targetAudience: "Who is your target audience?",
-  contactPreferences: "How should your agent handle contact preferences?",
-  faqs: "Share a few FAQs you want your agent to answer (one per line).",
-  tone: "Choose your preferred tone: Professional, Friendly, Bold, or Minimal.",
-  handle:
-    "Last step: choose your public handle (3–30 chars, lowercase letters/numbers/hyphens).",
-};
