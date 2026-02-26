@@ -1,4 +1,5 @@
-import { ONBOARDING_QUESTIONS, ONBOARDING_STEPS, type OnboardingStep } from "@/lib/onboarding/types";
+import { ONBOARDING_STEPS, type OnboardingStep } from "@/lib/onboarding/types";
+import { getQuestionConfigForStep } from "@/lib/onboarding/question-config";
 
 export function getNextStep(step: OnboardingStep): OnboardingStep | null {
   const idx = ONBOARDING_STEPS.indexOf(step);
@@ -19,5 +20,5 @@ export function getPreviousStep(step: OnboardingStep): OnboardingStep | null {
 }
 
 export function getQuestionForStep(step: OnboardingStep) {
-  return ONBOARDING_QUESTIONS[step];
+  return getQuestionConfigForStep(step);
 }
