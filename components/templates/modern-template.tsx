@@ -1,9 +1,8 @@
 "use client";
 
-import type { PortfolioContent } from "@/lib/validation/portfolio-schema";
+import { defaultVisibleSections, type PortfolioContent } from "@/lib/validation/portfolio-schema";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { LogoIcon } from "@/components/logo";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { ArrowRightIcon } from "lucide-react";
 import { AnimateIn, StaggerChildren, StaggerItem } from "@/components/animate-in";
@@ -47,6 +46,18 @@ function SocialLinks({ socialLinks }: { socialLinks: PortfolioContent["socialLin
 }
 
 export function ModernTemplate({ content }: { content: PortfolioContent }) {
+  const visibleSections = {
+    ...defaultVisibleSections,
+    ...content.visibleSections,
+  };
+  const hasServices = content.services.length > 0;
+  const hasProjects = content.projects.length > 0;
+  const showAbout = visibleSections.about && Boolean(content.about?.paragraph);
+  const showServices = visibleSections.services && hasServices;
+  const showProjects = visibleSections.projects && hasProjects;
+  const showCta = visibleSections.cta && Boolean(content.cta?.headline || content.cta?.subtext);
+  const showSocials = visibleSections.socials;
+
   return (
     <div className="bg-background text-foreground min-h-screen font-sans">
       <header className="sticky top-0 z-20 border-b bg-background/90 backdrop-blur-md">
@@ -55,10 +66,10 @@ export function ModernTemplate({ content }: { content: PortfolioContent }) {
             <span className="text-sm font-medium tracking-wide">Portfolio</span>
           </a>
           <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-            <a href="#about" className="hover:text-foreground transition-colors">About</a>
-            <a href="#services" className="hover:text-foreground transition-colors">Services</a>
-            <a href="#work" className="hover:text-foreground transition-colors">Work</a>
-            <a href="#contact" className="hover:text-foreground transition-colors">Contact</a>
+            {showAbout && <a href="#about" className="hover:text-foreground transition-colors">About</a>}
+            {showServices && <a href="#services" className="hover:text-foreground transition-colors">Services</a>}
+            {showProjects && <a href="#work" className="hover:text-foreground transition-colors">Work</a>}
+            {showCta && <a href="#contact" className="hover:text-foreground transition-colors">Contact</a>}
           </nav>
           <ThemeSwitcher />
         </div>
@@ -80,7 +91,7 @@ export function ModernTemplate({ content }: { content: PortfolioContent }) {
           <AnimateIn delay={0.3}>
             <div className="pt-4">
               <Button asChild size="lg" className="h-12 px-8 text-base">
-                <a href="#contact">
+                <a href={showCta ? "#contact" : "#"}>
                   {content.hero.ctaText}
                 </a>
               </Button>
@@ -89,19 +100,22 @@ export function ModernTemplate({ content }: { content: PortfolioContent }) {
         </section>
 
         {/* About */}
-        <section id="about" className="grid sm:grid-cols-[1fr_2fr] gap-8 items-start">
-          <AnimateIn>
-            <h2 className="text-3xl font-medium text-foreground">About</h2>
-          </AnimateIn>
-          <AnimateIn delay={0.1}>
-            <p className="text-muted-foreground text-lg sm:text-xl leading-relaxed">
-              {content.about.paragraph}
-            </p>
-          </AnimateIn>
-        </section>
+        {showAbout && (
+          <section id="about" className="grid sm:grid-cols-[1fr_2fr] gap-8 items-start">
+            <AnimateIn>
+              <h2 className="text-3xl font-medium text-foreground">About</h2>
+            </AnimateIn>
+            <AnimateIn delay={0.1}>
+              <p className="text-muted-foreground text-lg sm:text-xl leading-relaxed">
+                {content.about.paragraph}
+              </p>
+            </AnimateIn>
+          </section>
+        )}
 
         {/* Services */}
-        <section id="services" className="space-y-12">
+        {showServices && (
+          <section id="services" className="space-y-12">
           <AnimateIn>
             <h2 className="text-3xl font-medium text-foreground">Services</h2>
           </AnimateIn>
@@ -117,10 +131,12 @@ export function ModernTemplate({ content }: { content: PortfolioContent }) {
               </StaggerItem>
             ))}
           </StaggerChildren>
-        </section>
+          </section>
+        )}
 
         {/* Projects */}
-        <section id="work" className="space-y-12">
+        {showProjects && (
+          <section id="work" className="space-y-12">
           <AnimateIn>
             <h2 className="text-3xl font-medium text-foreground">Selected Work</h2>
           </AnimateIn>
@@ -144,10 +160,12 @@ export function ModernTemplate({ content }: { content: PortfolioContent }) {
               </StaggerItem>
             ))}
           </StaggerChildren>
-        </section>
+          </section>
+        )}
 
         {/* CTA */}
-        <section id="contact" className="py-12 border-t border-border/50">
+        {showCta && (
+          <section id="contact" className="py-12 border-t border-border/50">
           <AnimateIn>
             <div className="max-w-2xl space-y-6">
               <h2 className="text-3xl sm:text-4xl font-medium tracking-tight text-foreground">
@@ -158,7 +176,7 @@ export function ModernTemplate({ content }: { content: PortfolioContent }) {
               </p>
               <div className="pt-4">
                 <Button asChild size="lg" className="h-12 px-8 text-base group">
-                  <a href="#contact">
+                  <a href={showCta ? "#contact" : "#"}>
                     {content.hero.ctaText}
                     <ArrowRightIcon className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
                   </a>
@@ -166,14 +184,15 @@ export function ModernTemplate({ content }: { content: PortfolioContent }) {
               </div>
             </div>
           </AnimateIn>
-        </section>
+          </section>
+        )}
       </main>
       
       <footer className="border-t py-8 mt-12">
         <div className="mx-auto max-w-5xl px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} {content.hero.headline}</p>
           <div className="flex items-center gap-4">
-            <SocialLinks socialLinks={content.socialLinks} />
+            {showSocials && <SocialLinks socialLinks={content.socialLinks} />}
             <a href="#" className="hover:text-foreground transition-colors">Back to top</a>
           </div>
         </div>

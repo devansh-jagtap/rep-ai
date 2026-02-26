@@ -17,7 +17,7 @@ import { usePortfolioEditorStore } from "./_hooks/use-portfolio-editor-store";
 import { useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import type { PortfolioContent } from "../actions";
-import type { SocialLink, SocialPlatform } from "@/lib/validation/portfolio-schema";
+import { defaultVisibleSections, type SocialLink, type SocialPlatform } from "@/lib/validation/portfolio-schema";
 
 interface PortfolioClientProps {
   portfolio: {
@@ -28,6 +28,11 @@ interface PortfolioClientProps {
   };
   content: PortfolioContent | null;
 }
+
+const getVisibleSections = (content: PortfolioContent | null | undefined) => ({
+  ...defaultVisibleSections,
+  ...content?.visibleSections,
+});
 
 export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
   const {
@@ -88,6 +93,18 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
     setEditedContent({
       ...editedContent,
       cta: { ...editedContent.cta, [field]: value }
+    });
+  };
+
+  const updateSectionVisibility = (section: keyof typeof defaultVisibleSections, value: boolean) => {
+    if (!editedContent) return;
+    setEditedContent({
+      ...editedContent,
+      visibleSections: {
+        ...defaultVisibleSections,
+        ...editedContent.visibleSections,
+        [section]: value,
+      },
     });
   };
 
@@ -176,6 +193,7 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
   const portfolioLink = `/${portfolio.handle}`;
 
   const displayContent = editMode ? editedContent : content;
+  const visibleSections = getVisibleSections(displayContent);
 
   return (
     <div className="flex flex-col gap-6 max-w-4xl mx-auto">
@@ -341,6 +359,41 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
                       <p className="text-sm text-muted-foreground">{displayContent.hero?.subheadline}</p>
                     </div>
                   )}
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Section Visibility */}
+              <AccordionItem value="section-visibility">
+                <AccordionTrigger className="hover:no-underline">
+                  <div className="flex items-center gap-2">
+                    <Globe className="size-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">Section Visibility</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="pt-2 space-y-3">
+                    {[
+                      { key: "about", label: "About" },
+                      { key: "services", label: "Services" },
+                      { key: "projects", label: "Projects" },
+                      { key: "cta", label: "CTA" },
+                      { key: "socials", label: "Social Links" },
+                    ].map((item) => (
+                      <div key={item.key} className="flex items-center justify-between rounded-lg bg-muted p-3">
+                        <Label className="text-sm font-medium">{item.label}</Label>
+                        <Switch
+                          checked={visibleSections[item.key as keyof typeof defaultVisibleSections]}
+                          onCheckedChange={(checked) => {
+                            if (editMode) {
+                              updateSectionVisibility(item.key as keyof typeof defaultVisibleSections, checked);
+                            }
+                          }}
+                          disabled={!editMode}
+                        />
+                      </div>
+                    ))}
+                    {!editMode && <p className="text-xs text-muted-foreground">Switch to edit mode to change section visibility.</p>}
+                  </div>
                 </AccordionContent>
               </AccordionItem>
 
