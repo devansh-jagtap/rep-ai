@@ -117,6 +117,7 @@ export function OnboardingChat() {
                   <MessageContent className={cn("text-base max-w-2xl break-words", message.role === "assistant" && "text-primary")}>
                     {(() => {
                       const parts = message.parts as MessagePartLike[];
+                      const textParts = parts.filter((p) => p.type === "text");
                       const saveStepResults = parts.filter((p) => p.type === "tool-invocation" && p.toolName === "save_step" && p.result?.success);
                       return (
                         <>

@@ -11,7 +11,6 @@ import type {
   OnboardingSetupPath,
   OnboardingStep,
 } from "@/lib/onboarding/types";
-import { validateHandle } from "@/lib/validation/handle";
 
 const ALLOWED_TONES: PortfolioTone[] = ["Professional", "Friendly", "Bold", "Minimal"];
 
