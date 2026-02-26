@@ -1,4 +1,3 @@
-import { createOpenAI } from "@ai-sdk/openai";
 import { convertToModelMessages, stepCountIs, streamText, tool } from "ai";
 import type { UIMessage } from "ai";
 import { z } from "zod";
@@ -11,15 +10,14 @@ import {
   validateStepInput,
 } from "@/lib/onboarding/validation";
 import { ONBOARDING_STEPS } from "@/lib/onboarding/types";
+import { resolveChatModel } from "./model-provider";
 
-const nebius = createOpenAI({
-  apiKey: process.env.NEBIUS_API_KEY,
-  baseURL: process.env.NEBIUS_BASE_URL ?? "https://api.studio.nebius.com/v1",
-});
+const MODEL = "google/gemini-3-flash";
 
-const MODEL = process.env.NEBIUS_MODEL ?? "moonshotai/Kimi-K2.5";
-
-function buildSystemPrompt(collected: Partial<OnboardingData>): string {
+function buildSystemPrompt(
+  collected: Partial<OnboardingData>,
+  resumeText?: string
+): string {
   const steps = ONBOARDING_STEPS;
   const collectedWithDefaults = withDefaultSelectedSections(collected) ?? collected;
   const collectedKeys = Object.keys(collectedWithDefaults) as OnboardingStep[];
@@ -30,14 +28,35 @@ function buildSystemPrompt(collected: Partial<OnboardingData>): string {
       ? "Nothing collected yet."
       : JSON.stringify(collectedWithDefaults, null, 2);
 
+  const resumeBlock = resumeText
+    ? `
+
+**RESUME PROVIDED — EXTRACT AND SAVE IMMEDIATELY:**
+The user uploaded a resume. Its full text content is below. You MUST:
+1. Call save_step("setupPath", "build-new") immediately.
+2. Extract the user's full name → call save_step("name", "<name>").
+3. Extract their most recent job title → call save_step("title", "<title>").
+4. Write a compelling 2-3 sentence elevator pitch bio (20-400 chars) → call save_step("bio", "<bio>").
+5. Identify 3-5 key skills/services → call save_step("services", ["skill1", "skill2", ...]).
+6. Extract 1-3 notable projects/roles → call save_step("projects", [{title: "...", description: "..."}]).
+7. DO NOT ask the user for any of the above — you already have it from the resume.
+8. After saving all fields, summarize what you found and ask if it looks right.
+9. Then ask for the remaining fields: tone, handle.
+
+<resume_content>
+${resumeText}
+</resume_content>
+`
+    : "";
+
   return `You are a friendly, chill onboarding assistant for ref, a portfolio platform. Your job is to collect the following information from the user in this exact order.
 
 **Tone & boundaries:**
 - Always be friendly, warm, and chill. Keep it casual and approachable.
 - Stay focused on onboarding only. If the user asks random questions, jokes around, or goes off-topic, gently redirect: "Haha, I'd love to chat about that later! For now let's get your portfolio set up—[current question]." Never answer unrelated questions.
 - Keep responses SHORT. 1–2 sentences max. Never repeat or summarize content the user just gave—they can see it. No fluff.
-
-1. **setupPath** - Ask this first with human-friendly labels:
+${resumeBlock}
+1. **setupPath** - Ask this first with human-friendly labels${resumeText ? ' (auto-set to "build-new" for resume uploads)' : ""}:
    - "I already have a website" (agent only)
    - "Build me a portfolio + agent" (from scratch)
 2. **name** - Full name for their portfolio (2-80 chars)
@@ -59,7 +78,7 @@ ${stateDesc}
 **Current step to collect:** ${nextStep ?? "All done"}
 
 **Your flow for each step:**
-1. Ask for the information (or if you have it from context, skip to step 2)
+1. Ask for the information (or if you have it from context/resume, skip to step 2)
 2. Optionally refine or clean up the user's answer for clarity and professionalism
 3. Show the refined value and ask: "Is that correct?" or "Should I use this?"
 4. When the user confirms (yes, correct, looks good, etc.), call save_step with the step name and the confirmed value
@@ -82,16 +101,18 @@ export async function streamOnboardingChat({
   userId,
   messages,
   collected,
+  resumeText,
 }: {
   userId: string;
   messages: UIMessage[];
   collected: Partial<OnboardingData>;
+  resumeText?: string;
 }) {
-  const systemPrompt = buildSystemPrompt(collected);
+  const systemPrompt = buildSystemPrompt(collected, resumeText);
   const modelMessages = await convertToModelMessages(messages);
 
   const result = streamText({
-    model: nebius.chat(MODEL),
+    model: resolveChatModel(MODEL),
     system: systemPrompt,
     messages: modelMessages,
     stopWhen: stepCountIs(15),
@@ -100,7 +121,8 @@ export async function streamOnboardingChat({
     },
     tools: {
       save_step: tool({
-        description: "Save a confirmed onboarding step. Call when user confirms a value.",
+        description:
+          "Save an onboarding step value. Call immediately for each field extracted from a resume, or when the user confirms a value. You can and should call this multiple times in a single response.",
         inputSchema: z.object({
           step: z.enum([
             "setupPath",
@@ -144,21 +166,27 @@ export async function streamOnboardingChat({
                 ? (value as string[]).join(", ")
                 : step === "projects"
                   ? (value as { title: string; description: string }[])
-                      .map((p) => `${p.title}: ${p.description}`)
-                      .join("\n")
+                    .map((p) => `${p.title}: ${p.description}`)
+                    .join("\n")
                   : step === "faqs"
                     ? (value as string[]).join("\n")
                     : step === "selectedSections"
                       ? JSON.stringify(value)
                       : String(value);
 
-          const validation = validateStepInput(step as OnboardingStep, stringValue);
+          const validation = validateStepInput(
+            step as OnboardingStep,
+            stringValue
+          );
           if (!validation.ok) {
             return { success: false, error: validation.message };
           }
 
           const parsedValue = validation.value;
-          const merged = { ...collected, [step]: parsedValue };
+          // Merge into collected so subsequent save_step calls in the same
+          // turn don't overwrite each other
+          collected[step as keyof OnboardingData] = parsedValue as any;
+          const merged = { ...collected };
 
           try {
             await db
@@ -189,6 +217,15 @@ export async function streamOnboardingChat({
           name: z.string(),
           title: z.string(),
           bio: z.string(),
+          services: z.array(z.string()),
+          projects: z
+            .array(
+              z.object({
+                title: z.string(),
+                description: z.string(),
+              })
+            )
+            .optional(),
           selectedSections: z.object({
             hero: z.literal(true),
             about: z.boolean(),
@@ -216,7 +253,10 @@ export async function streamOnboardingChat({
           console.log("[request_preview] execute called with:", data);
           const parsed = validateFinalOnboardingState(data);
           if (!parsed.ok) {
-            console.error("[request_preview] validation failed:", parsed.message);
+            console.error(
+              "[request_preview] validation failed:",
+              parsed.message
+            );
             return { preview: false, error: parsed.message };
           }
           const finalState = parsed.value;
@@ -225,7 +265,8 @@ export async function streamOnboardingChat({
             console.warn("[request_preview] handle taken:", finalState.handle);
             return {
               preview: false,
-              error: "This handle is already taken. Please choose another one.",
+              error:
+                "This handle is already taken. Please choose another one.",
             };
           }
           console.log("[request_preview] success!");
