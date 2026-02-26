@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useRef, useCallback } from "react";
 import {
   Conversation,
   ConversationContent,
@@ -16,10 +16,11 @@ import {
 } from "@/components/ui/input-group";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { MessageSquare, ArrowUpIcon } from "lucide-react";
+import { MessageSquare, ArrowUpIcon, PaperclipIcon, CheckCircleIcon, Upload, Loader2 } from "lucide-react";
 import { OnboardingMessageResponse, OnboardingPreviewCard } from "@/app/onboarding/_components/onboarding-chat-parts";
 import { lastMessageAsksConfirmation, userJustConfirmed, type MessagePartLike } from "@/app/onboarding/_lib/onboarding-chat-utils";
 import { useOnboardingChatState } from "@/app/onboarding/_hooks/use-onboarding-chat-state";
+import { toast } from "sonner";
 
 export function OnboardingChat() {
   const {
@@ -29,15 +30,80 @@ export function OnboardingChat() {
     input,
     setInput,
     sendMessage,
-    handleSubmit,
     previewData,
     isConfirming,
     handleConfirm,
     refreshDraftFromServer,
   } = useOnboardingChatState();
 
+  const [resumeUrl, setResumeUrl] = useState<string | null>(null);
+  const [showUpload, setShowUpload] = useState(false);
+  const [isUploadingResume, setIsUploadingResume] = useState(false);
+  const resumeSentRef = useRef(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleResumeUpload = async (file: File) => {
+    if (file.type !== "application/pdf") {
+      toast.error("Only PDF files are allowed");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File size must be less than 10MB");
+      return;
+    }
+
+    setIsUploadingResume(true);
+    try {
+      const uploadUrlResponse = await fetch(
+        `/api/onboarding/resume-upload?fileName=${encodeURIComponent(file.name)}&mimeType=${encodeURIComponent(file.type)}`,
+        { method: "POST" }
+      );
+
+      if (!uploadUrlResponse.ok) {
+        const errorData = await uploadUrlResponse.json();
+        throw new Error(errorData.error || "Failed to get upload URL");
+      }
+
+      const { uploadUrl, publicUrl } = await uploadUrlResponse.json();
+
+      await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+
+      setResumeUrl(publicUrl);
+      setShowUpload(false);
+      toast.success("Resume uploaded! Send a message to attach it.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setIsUploadingResume(false);
+    }
+  };
+
   const asksConfirm = useMemo(() => lastMessageAsksConfirmation(messages), [messages]);
   const stuckAfterConfirm = useMemo(() => userJustConfirmed(messages), [messages]);
+
+  const handleLocalSubmit = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    const text = input.trim();
+    if (status === "streaming") return;
+
+    // If no text AND no resume, do nothing
+    if (!text && !resumeUrl) return;
+
+    if (resumeUrl && !resumeSentRef.current) {
+      const userText = text || "Here is my resume, please extract my details from it.";
+      sendMessage({ text: `[Attached Resume: pdf-url](${resumeUrl})\n\n${userText}` });
+      resumeSentRef.current = true;
+    } else {
+      if (!text) return;
+      sendMessage({ text });
+    }
+    setInput("");
+    setShowUpload(false);
+  }, [input, resumeUrl, sendMessage, status]);
 
   return (
     <div className="fixed inset-0 flex flex-col bg-background">
@@ -56,11 +122,27 @@ export function OnboardingChat() {
                 <Message key={message.id} from={message.role}>
                   <MessageContent className={cn("text-base max-w-2xl break-words", message.role === "assistant" && "text-primary")}>
                     {(() => {
-                      const parts = message.parts as MessagePartLike[];
+                      const parts = (message.parts || []) as MessagePartLike[];
+                      if (parts.length === 0 && (message as any).content) {
+                        const cleaned = (message as any).content.replace(/\[Attached Resume:[^\]]*\]\([^\)]+\)/g, '').trim();
+                        return cleaned ? <OnboardingMessageResponse key={`${message.id}-content`}>{cleaned}</OnboardingMessageResponse> : null;
+                      }
+
                       const textParts = parts.filter((part): part is { type: "text"; text: string } => part.type === "text" && typeof part.text === "string");
-                      const saveStepResults = parts.filter((p) => p.type === "tool-invocation" && p.toolName === "save_step" && p.result?.success);
+                      // v6: tool parts are "tool-save_step" with output, legacy: "tool-invocation" with result
+                      const saveStepResults = parts.filter((p: any) => {
+                        const isToolPart = p.type === "tool-save_step" || p.type === "tool-invocation" || (p.type === "dynamic-tool" && p.toolName === "save_step");
+                        if (!isToolPart) return false;
+                        const output = p.output ?? p.result;
+                        return output?.success;
+                      });
+
                       if (textParts.length > 0) {
-                        return textParts.map((part, index) => <OnboardingMessageResponse key={`${message.id}-${index}`}>{part.text}</OnboardingMessageResponse>);
+                        return textParts.map((part, index) => {
+                          const displayTxt = part.text.replace(/\[Attached Resume:[^\]]*\]\([^\)]+\)/g, '').trim();
+                          if (!displayTxt) return null;
+                          return <OnboardingMessageResponse key={`${message.id}-${index}`}>{displayTxt}</OnboardingMessageResponse>;
+                        });
                       }
                       if (saveStepResults.length > 0) {
                         return <OnboardingMessageResponse key={`${message.id}-saved`}>Saved! What would you like to add next?</OnboardingMessageResponse>;
@@ -80,7 +162,7 @@ export function OnboardingChat() {
             <div className="mx-auto max-w-3xl space-y-4">
               <p className="text-muted-foreground text-center text-sm">Review your portfolio below. Click Edit to change something, or Confirm when ready.</p>
               <OnboardingPreviewCard data={previewData} onConfirm={handleConfirm} onEdit={() => document.getElementById("onboarding-edit-input")?.focus()} isConfirming={isConfirming} />
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleLocalSubmit}>
                 <InputGroup className="max-w-3xl">
                   <InputGroupInput id="onboarding-edit-input" value={input} onChange={(e) => setInput(e.target.value)} placeholder="What would you like to change? (e.g. shorten the bio, change title to Senior Developer)" disabled={status === "streaming"} className="text-base" />
                   <InputGroupAddon align="inline-end"><InputGroupButton type="submit" variant="default" size="icon-sm" disabled={!input.trim() || status === "streaming"}><ArrowUpIcon className="size-4" /></InputGroupButton></InputGroupAddon>
@@ -103,10 +185,66 @@ export function OnboardingChat() {
                 <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={() => sendMessage({ text: "No, let me change that" })}>No, let me change</Button>
               </div>
             )}
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleLocalSubmit} className="space-y-3">
+              {/* Upload drop zone */}
+              {showUpload && !resumeUrl && (
+                <div className="mx-auto max-w-3xl">
+                  {isUploadingResume ? (
+                    <div className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg">
+                      <Loader2 className="size-5 animate-spin" />
+                      <span className="text-sm text-muted-foreground">Uploading resume...</span>
+                    </div>
+                  ) : (
+                    <div
+                      className="flex flex-col items-center gap-2 p-6 border-2 border-dashed rounded-lg cursor-pointer hover:border-muted-foreground/50 transition-colors"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Upload className="size-8 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">Click to upload PDF resume</p>
+                      <p className="text-xs text-muted-foreground">Maximum file size: 10MB</p>
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleResumeUpload(file);
+                    }}
+                    disabled={status === "streaming" || isUploadingResume}
+                  />
+                </div>
+              )}
+
+              {/* Resume uploaded badge */}
+              {resumeUrl && !resumeSentRef.current && (
+                <div className="mx-auto max-w-3xl flex items-center gap-2 p-3 bg-primary/10 text-primary rounded-md text-sm font-medium">
+                  <CheckCircleIcon className="size-4" />
+                  Resume uploaded! Send a message (or just hit enter) to attach it.
+                  <Button type="button" variant="ghost" size="sm" className="ml-auto p-0 h-auto" onClick={() => { setResumeUrl(null); setShowUpload(false); }}>
+                    Remove
+                  </Button>
+                </div>
+              )}
+
+              {/* Input bar */}
               <InputGroup className="mx-auto max-w-3xl">
-                <InputGroupInput value={input} onChange={(e) => setInput(e.target.value)} placeholder="Type your message..." disabled={status === "streaming"} className="text-base md:text-base" />
-                <InputGroupAddon align="inline-end"><InputGroupButton type="submit" variant="default" size="icon-sm" disabled={!input.trim() || status === "streaming"}><ArrowUpIcon className="size-4" /></InputGroupButton></InputGroupAddon>
+                <InputGroupAddon align="inline-start">
+                  <InputGroupButton
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    className="text-muted-foreground"
+                    onClick={() => setShowUpload(prev => !prev)}
+                    title="Upload Resume PDF for autofill"
+                  >
+                    <PaperclipIcon className="size-4" />
+                  </InputGroupButton>
+                </InputGroupAddon>
+                <InputGroupInput value={input} onChange={(e) => setInput(e.target.value)} placeholder="Type your message or upload a resume..." disabled={status === "streaming"} className="text-base md:text-base pl-1" />
+                <InputGroupAddon align="inline-end"><InputGroupButton type="submit" variant="default" size="icon-sm" disabled={(!input.trim() && !resumeUrl) || status === "streaming"}><ArrowUpIcon className="size-4" /></InputGroupButton></InputGroupAddon>
               </InputGroup>
             </form>
           </div>

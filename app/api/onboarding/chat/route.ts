@@ -6,6 +6,8 @@ import { db } from "@/lib/db";
 import { onboardingDrafts } from "@/lib/schema";
 import type { OnboardingData } from "@/lib/onboarding/types";
 import type { UIMessage } from "ai";
+import { getFileBuffer, getKeyFromUrl } from "@/lib/storage/s3";
+import { extractTextFromPdf } from "@/lib/knowledge/extract-pdf";
 
 export const maxDuration = 60;
 
@@ -32,7 +34,7 @@ export async function POST(request: Request) {
 
   let collected: Partial<OnboardingData> = {};
   try {
-      const [draft] = await db
+    const [draft] = await db
       .select()
       .from(onboardingDrafts)
       .where(eq(onboardingDrafts.userId, session.user.id))
@@ -43,11 +45,86 @@ export async function POST(request: Request) {
     console.error("Onboarding draft fetch error (table may not exist):", dbError);
   }
 
+  // ── Resume extraction via knowledge pipeline ──────────────────────────
+  let resumeText: string | undefined;
+
+  if (messages.length > 0) {
+    const lastIndex = messages.length - 1;
+    const lastMessage = messages[lastIndex];
+
+    if (lastMessage.role === "user" && Array.isArray(lastMessage.parts)) {
+      const textPartIndex = lastMessage.parts.findIndex(
+        (p) =>
+          p.type === "text" &&
+          typeof p.text === "string" &&
+          p.text.includes("[Attached Resume: pdf-url]")
+      );
+
+      if (textPartIndex !== -1) {
+        const textPart = lastMessage.parts[textPartIndex];
+        if (textPart && textPart.type === "text") {
+          const resumeMatch = textPart.text.match(
+            /\[Attached Resume: pdf-url\]\((https?:\/\/[^\)]+)\)/
+          );
+
+          if (resumeMatch) {
+            const pdfUrl = resumeMatch[1];
+            try {
+              // 1. Download PDF buffer (try S3 key first, then public URL)
+              let buffer: Buffer | null = null;
+              const s3Key = getKeyFromUrl(pdfUrl);
+
+              if (s3Key) {
+                try {
+                  buffer = await getFileBuffer(s3Key);
+                } catch (s3Err) {
+                  console.warn("S3 download failed, trying public URL:", s3Err);
+                }
+              }
+
+              if (!buffer) {
+                const resp = await fetch(pdfUrl);
+                if (resp.ok) {
+                  buffer = Buffer.from(await resp.arrayBuffer());
+                }
+              }
+
+              // 2. Extract text from PDF using the existing knowledge pipeline
+              if (buffer) {
+                const extraction = await extractTextFromPdf(buffer);
+                resumeText = extraction.text;
+                console.log(
+                  `[onboarding] Extracted ${resumeText.length} chars from resume (${extraction.pageCount} pages)`
+                );
+              }
+
+              // 3. Strip the resume marker from the user message
+              const newParts = [...lastMessage.parts];
+              newParts[textPartIndex] = {
+                ...textPart,
+                text:
+                  textPart.text.replace(resumeMatch[0], "").trim() ||
+                  "I uploaded my resume.",
+              };
+              messages[lastIndex] = {
+                ...lastMessage,
+                parts: newParts,
+              } as UIMessage;
+            } catch (e) {
+              console.error("Failed to process resume:", e);
+            }
+          }
+        }
+      }
+    }
+  }
+
   try {
     const result = await streamOnboardingChat({
       userId: session.user.id,
       messages,
       collected,
+      resumeText,
     });
 
     return result.toUIMessageStreamResponse({
