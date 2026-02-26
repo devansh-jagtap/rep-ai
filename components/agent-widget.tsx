@@ -39,8 +39,6 @@ export function AgentWidget({ handle, agentName = "AI Assistant" }: AgentWidgetP
   const [streamingContent, setStreamingContent] = useState("");
   const sessionIdRef = useRef<string | null>(null);
 
-  const history = useMemo(() => messages.slice(-10), [messages]);
-
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     const message = input.trim();
@@ -62,7 +60,7 @@ export function AgentWidget({ handle, agentName = "AI Assistant" }: AgentWidgetP
       const result = await widgetChatWithAgent({
         handle,
         message,
-        history,
+        history: nextMessages.slice(-10),
         sessionId: sessionIdRef.current,
       });
 
@@ -98,7 +96,7 @@ export function AgentWidget({ handle, agentName = "AI Assistant" }: AgentWidgetP
       setLoading(false);
       setStreamingContent("");
     }
-  }, [input, loading, messages, handle, history]);
+  }, [input, loading, messages, handle]);
 
   const allMessages = useMemo(() => {
     if (!streamingContent) return messages;

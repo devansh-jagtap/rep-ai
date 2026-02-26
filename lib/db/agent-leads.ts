@@ -80,7 +80,7 @@ export async function saveLeadWithDedup(input: SaveLeadInput): Promise<"inserted
       merged.projectDetails !== existing.projectDetails ||
       merged.confidence !== existing.confidence;
 
-    if (hasChanges) {
+    if (hasChanges || existing.sessionId !== input.sessionId) {
       await db
         .update(agentLeads)
         .set({ ...merged, sessionId: input.sessionId })
@@ -88,7 +88,9 @@ export async function saveLeadWithDedup(input: SaveLeadInput): Promise<"inserted
       await linkMessagesToLead(existing.id, input.sessionId);
       return "updated";
     }
-    
+
+    await linkMessagesToLead(existing.id, input.sessionId);
+
     return "updated";
   }
 
