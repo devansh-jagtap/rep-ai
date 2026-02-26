@@ -59,7 +59,7 @@ export async function POST(request: Request) {
   const nextAssistantMessage = nextQuestionConfig?.blocks[0]?.prompt
     ?? "Perfect. You are done with onboarding. Saving your portfolio now.";
 
-  const shouldRefine = ["name", "title", "bio", "services", "projects"].includes(currentStep);
+  const shouldRefine = ["name", "title", "bio", "sections", "services", "projects"].includes(currentStep);
 
   let finalValue: unknown = validation.value;
   let refinedAnswer = String(validation.value);
