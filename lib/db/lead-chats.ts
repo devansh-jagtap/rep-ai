@@ -1,7 +1,6 @@
-import { eq, desc } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { leadChatMessages, agentLeads } from "@/lib/schema";
-import type { PgTable } from "drizzle-orm/pg-core";
 
 interface SaveChatMessageInput {
   sessionId: string;
@@ -43,7 +42,7 @@ export async function getChatsByLeadId(leadId: string) {
     })
     .from(leadChatMessages)
     .where(eq(leadChatMessages.sessionId, lead.sessionId))
-    .orderBy(desc(leadChatMessages.createdAt));
+    .orderBy(asc(leadChatMessages.createdAt));
 
   return messages;
 }

@@ -2,7 +2,6 @@ import type { AgentLeadPayload } from "./types";
 
 function extractJsonWithLeadDetected(text: string): { json: string; startIdx: number } | null {
   // Strip markdown code blocks - model may wrap JSON in ```json ... ``` or ``` ... ```
-  let search = text;
   const codeBlock = text.match(/```(?:json)?\s*([\s\S]*?)```/g);
   if (codeBlock) {
     for (const block of codeBlock) {
