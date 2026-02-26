@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useMediaQuery } from "@/lib/hooks/use-media-query";
 import { LeadList } from "@/components/leads/LeadList";
 import { LeadViewer } from "@/components/leads/LeadViewer";
+import { NotificationSheet } from "@/components/leads/NotificationSheet";
 import type { LeadDetailData, LeadStatus } from "@/components/leads/types";
 
 async function patchRead(id: string) {
@@ -81,11 +82,15 @@ export function LeadsClient({ leads: initialLeads }: { leads: LeadDetailData[] }
 
   return (
     <div className="flex flex-col gap-4 w-full max-w-6xl mx-auto">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Leads</h1>
-        <p className="text-muted-foreground">
-          {leads.length} lead{leads.length === 1 ? "" : "s"} captured by your AI agent.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Leads</h1>
+          <p className="text-muted-foreground">
+            {leads.length} lead{leads.length === 1 ? "" : "s"} captured by your AI agent.
+          </p>
+        </div>
+
+        <NotificationSheet leads={leads} onSelectLead={handleSelectLead} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-[320px_1fr] md:min-h-0 md:h-[calc(100vh-11rem)]">

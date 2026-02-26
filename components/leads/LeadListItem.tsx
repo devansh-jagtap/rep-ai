@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { getLeadConfidenceBadgeClass, getLeadConfidenceLabel } from "./lead-confidence"
 import type { LeadListItemData } from "./types"
 
 function formatShortDate(iso: string) {
@@ -8,25 +9,6 @@ function formatShortDate(iso: string) {
   return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(date)
 }
 
-function confidenceTier(confidence: number) {
-  if (confidence >= 80) return "hot"
-  if (confidence >= 50) return "warm"
-  return "cold"
-}
-
-function confidenceBadgeClass(confidence: number) {
-  const tier = confidenceTier(confidence)
-  if (tier === "hot") return "bg-red-500/10 text-red-600 border-red-500/20"
-  if (tier === "warm") return "bg-yellow-500/10 text-yellow-700 border-yellow-500/20"
-  return "bg-blue-500/10 text-blue-600 border-blue-500/20"
-}
-
-function confidenceLabel(confidence: number) {
-  const tier = confidenceTier(confidence)
-  if (tier === "hot") return "Hot"
-  if (tier === "warm") return "Warm"
-  return "Cold"
-}
 
 export function LeadListItem({
   lead,
@@ -85,9 +67,9 @@ export function LeadListItem({
 
           <Badge
             variant="outline"
-            className={cn("rounded-full", confidenceBadgeClass(lead.confidence))}
+            className={cn("rounded-full", getLeadConfidenceBadgeClass(lead.confidence))}
           >
-            {confidenceLabel(lead.confidence)} ({Math.round(lead.confidence)}%)
+            {getLeadConfidenceLabel(lead.confidence)} ({Math.round(lead.confidence)}%)
           </Badge>
         </div>
       </div>
