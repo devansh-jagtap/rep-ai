@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { configureAgentForPortfolio, configureAgentForUser } from "@/lib/agent/configure";
+import { configureAgentForPortfolio, configureStandaloneAgent } from "@/lib/agent/configure";
 import { parseJsonBody, requireUserId } from "@/lib/api/route-helpers";
 import { getActivePortfolio } from "@/lib/active-portfolio";
 
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
   const result = portfolio
     ? await configureAgentForPortfolio(authResult.userId, portfolio.id, input)
-    : await configureAgentForUser(authResult.userId, input);
+    : await configureStandaloneAgent(authResult.userId, input);
 
 
   if (!result.ok) {

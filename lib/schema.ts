@@ -139,9 +139,11 @@ export const agents = pgTable(
   "agents",
   {
     id: uuid("id").primaryKey(),
+    // Primary ownership key for agent records.
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
+    // Optional portfolio association for backwards-compatible portfolio-scoped agents.
     portfolioId: uuid("portfolio_id").references(() => portfolios.id, { onDelete: "cascade" }),
     isEnabled: boolean("is_enabled").notNull().default(false),
     model: varchar("model", { length: 80 }).notNull(),
@@ -156,6 +158,7 @@ export const agents = pgTable(
     unique("agents_portfolio_id_unique_constraint").on(table.portfolioId),
     uniqueIndex("agents_portfolio_id_unique").on(table.portfolioId),
     index("agents_user_id_idx").on(table.userId),
+    index("agents_user_portfolio_lookup_idx").on(table.userId, table.portfolioId),
     index("agents_portfolio_id_idx").on(table.portfolioId),
     check("agents_temperature_range_check", sql`${table.temperature} BETWEEN 0.2 AND 0.8`),
     check(

@@ -10,7 +10,7 @@ import {
   getAgentByPortfolioId,
   getAgentByUserId,
   configureAgentForPortfolio,
-  configureAgentForUser,
+  configureStandaloneAgent,
   type ConfigureAgentInput,
 } from "@/lib/agent/configure";
 import { generatePortfolio } from "@/lib/ai/generate-portfolio";
@@ -47,7 +47,8 @@ export async function getDashboardData() {
     return { portfolio: null, agent };
   }
 
-  const agent = await getAgentByPortfolioId(portfolio.id);
+  const portfolioAgent = await getAgentByPortfolioId(portfolio.id);
+  const agent = portfolioAgent ?? (await getAgentByUserId(userId));
 
   return { portfolio, agent };
 }
@@ -103,7 +104,7 @@ export async function saveAgentConfig(input: ConfigureAgentInput) {
 
   const result = portfolio
     ? await configureAgentForPortfolio(userId, portfolio.id, input)
-    : await configureAgentForUser(userId, input);
+    : await configureStandaloneAgent(userId, input);
 
   if (!result.ok) {
     throw new Error(result.error);
