@@ -7,7 +7,6 @@ import {
   real,
   jsonb,
   pgTable,
-  primaryKey,
   text,
   timestamp,
   unique,
@@ -267,5 +266,35 @@ export const portfolioAnalytics = pgTable(
     index("portfolio_analytics_portfolio_id_idx").on(table.portfolioId),
     index("portfolio_analytics_created_at_idx").on(table.createdAt),
     check("portfolio_analytics_type_check", sql`${table.type} IN ('page_view', 'chat_session_start', 'chat_message')`),
+  ]
+);
+
+export const aiTelemetryEvents = pgTable(
+  "ai_telemetry_events",
+  {
+    id: uuid("id").primaryKey(),
+    handle: varchar("handle", { length: 255 }),
+    agentId: uuid("agent_id"),
+    portfolioId: uuid("portfolio_id").references(() => portfolios.id, { onDelete: "set null" }),
+    sessionId: uuid("session_id"),
+    eventType: varchar("event_type", { length: 64 }).notNull(),
+    model: varchar("model", { length: 120 }),
+    mode: varchar("mode", { length: 32 }),
+    tokensUsed: integer("tokens_used").notNull().default(0),
+    leadDetected: boolean("lead_detected").notNull().default(false),
+    success: boolean("success").notNull().default(true),
+    fallbackReason: varchar("fallback_reason", { length: 255 }),
+    latencyMs: integer("latency_ms"),
+    latencyBucket: varchar("latency_bucket", { length: 32 }),
+    creditCost: integer("credit_cost").notNull().default(0),
+    metadata: jsonb("metadata").$type<Record<string, unknown> | null>(),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("ai_telemetry_events_event_type_idx").on(table.eventType),
+    index("ai_telemetry_events_created_at_idx").on(table.createdAt),
+    index("ai_telemetry_events_handle_idx").on(table.handle),
+    index("ai_telemetry_events_session_id_idx").on(table.sessionId),
+    index("ai_telemetry_events_model_mode_idx").on(table.model, table.mode),
   ]
 );

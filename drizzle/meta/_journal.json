@@ -113,6 +113,13 @@
       "when": 1772173846186,
       "tag": "0016_agents_standalone_ownership",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1772175467387,
+      "tag": "0017_ai_telemetry_events",
+      "breakpoints": true
     }
   ]
 }
