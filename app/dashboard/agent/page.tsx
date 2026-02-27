@@ -8,15 +8,18 @@ export default async function AgentPage() {
   if (!session?.user) redirect("/auth/signin");
 
   const data = await getDashboardData();
-  if (!data) redirect("/onboarding");
+
+  const portfolioHandle = data?.portfolio?.handle ?? "";
+  const hasContent = !!data?.portfolio?.content;
+  const isPortfolioPublished = !!data?.portfolio?.isPublished;
 
   return (
     <AgentClient
-      agent={data.agent}
-      agentId={data.agent?.id ?? null}
-      portfolioHandle={data.portfolio.handle}
-      hasContent={!!data.portfolio.content}
-      isPortfolioPublished={data.portfolio.isPublished}
+      agent={data?.agent ?? null}
+      agentId={data?.agent?.id ?? null}
+      portfolioHandle={portfolioHandle}
+      hasContent={hasContent}
+      isPortfolioPublished={isPortfolioPublished}
     />
   );
 }

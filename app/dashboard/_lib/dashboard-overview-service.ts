@@ -21,7 +21,7 @@ export async function getDashboardOverviewData() {
   if (!session?.user?.id) return { session: null };
 
   const [data, profile] = await Promise.all([getDashboardData(), getProfileById(session.user.id)]);
-  if (!data) return { session, data: null, profile };
+  if (!data?.portfolio) return { session, data: null, profile };
 
   const { portfolio, agent } = data;
   const [totalLeadsResult] = await db.select({ count: count() }).from(agentLeads).where(eq(agentLeads.portfolioId, portfolio.id));
