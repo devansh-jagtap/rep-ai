@@ -6,6 +6,7 @@ import {
 } from "@/lib/ai/failure-guard";
 import { classifyAiError, logPublicAgentEvent } from "@/lib/ai/safe-logging";
 import { saveLeadWithDedup } from "@/lib/db/agent-leads";
+import { trackAnalytics } from "@/lib/db/analytics";
 import { saveChatMessage } from "@/lib/db/lead-chats";
 import { getAgentCoreConfigById } from "@/lib/db/knowledge";
 import {
@@ -19,15 +20,14 @@ import {
   leadConfidenceThresholdForMode,
   type ConversationStrategyMode,
 } from "@/lib/agent/strategy-modes";
+import { consumeCredits, getCredits } from "@/lib/credits";
 import {
   checkPublicChatAgentRateLimit,
   checkPublicChatHandleRateLimit,
   checkPublicChatIpRateLimit,
 } from "@/lib/rate-limit";
-import { validatePortfolioContent } from "@/lib/validation/portfolio-schema";
-import { trackAnalytics } from "@/lib/db/analytics";
-import { consumeCredits, getCredits } from "@/lib/credits";
 import type { PublicHistoryMessage } from "@/lib/validation/public-chat";
+import { validatePortfolioContent } from "@/lib/validation/portfolio-schema";
 
 const CREDIT_COST = 1;
 
@@ -49,6 +49,9 @@ export type PublicChatResult =
   | { ok: false; error: string; status: number };
 
 export async function handlePublicChat(input: PublicChatInput): Promise<PublicChatResult> {
+  const startedAt = Date.now();
+  const sessionId = input.sessionId || crypto.randomUUID();
+
   try {
     if (!checkPublicChatIpRateLimit(input.ip)) {
       return { ok: false, error: "Rate limit exceeded", status: 429 };
@@ -67,7 +70,7 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
         ok: true,
         reply: "Agent temporarily unavailable. Please try again later.",
         leadDetected: false,
-        sessionId: input.sessionId || crypto.randomUUID(),
+        sessionId,
       };
     }
 
@@ -101,11 +104,45 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
       return { ok: false, error: "Agent unavailable", status: 404 };
     }
 
+    const handle = portfolio?.handle ?? input.handle ?? `agent:${agentId}`;
+
     if (!isSupportedAgentModel(agentModel)) {
+      await logPublicAgentEvent({
+        handle,
+        agentId,
+        portfolioId: portfolio?.id ?? null,
+        sessionId,
+        model: agentModel,
+        mode: "unknown",
+        tokensUsed: 0,
+        leadDetected: false,
+        confidence: 0,
+        success: false,
+        fallbackReason: "AgentModelMisconfigured",
+        latencyMs: Date.now() - startedAt,
+        creditCost: 0,
+      });
+
       return { ok: false, error: "Agent model misconfigured", status: 500 };
     }
 
     if (typeof agentTemperature !== "number" || agentTemperature < 0.2 || agentTemperature > 0.8) {
+      await logPublicAgentEvent({
+        handle,
+        agentId,
+        portfolioId: portfolio?.id ?? null,
+        sessionId,
+        model: agentModel,
+        mode: "unknown",
+        tokensUsed: 0,
+        leadDetected: false,
+        confidence: 0,
+        success: false,
+        fallbackReason: "AgentTemperatureMisconfigured",
+        latencyMs: Date.now() - startedAt,
+        creditCost: 0,
+      });
+
       return { ok: false, error: "Agent temperature misconfigured", status: 500 };
     }
 
@@ -140,8 +177,6 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
     const threshold = leadConfidenceThresholdForMode(strategyMode);
     const leadDetected =
       strategyMode !== "passive" && result.lead.lead_detected && result.lead.confidence >= threshold;
-
-    const sessionId = input.sessionId || crypto.randomUUID();
 
     await saveChatMessage({
       sessionId,
@@ -188,13 +223,24 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
       }
     }
 
-    logPublicAgentEvent({
-      handle: portfolio?.handle ?? input.handle ?? `agent:${agentId}`,
+    await logPublicAgentEvent({
+      handle,
+      agentId,
+      portfolioId: portfolio?.id ?? null,
+      sessionId,
       model: agentModel,
+      mode: strategyMode,
       tokensUsed: result.usage.totalTokens,
       leadDetected,
       confidence: result.lead.confidence,
-      errorType: result.errorType,
+      success: !result.errorType,
+      fallbackReason: result.errorType ?? null,
+      latencyMs: Date.now() - startedAt,
+      creditCost: input.userId ? CREDIT_COST : 0,
+      metadata: {
+        historyCount: input.history.length,
+        threshold,
+      },
     });
 
     if (portfolio) {
@@ -220,6 +266,7 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
     const errorType = classifyAiError(error);
     const message = error instanceof Error ? error.message : String(error);
     const stack = error instanceof Error ? error.stack : undefined;
+
     console.error(
       JSON.stringify({
         event: "public_chat_handler_error",
@@ -230,6 +277,25 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
       })
     );
 
-    return { ok: true, reply: FALLBACK_REPLY, leadDetected: false, sessionId: input.sessionId || crypto.randomUUID() };
+    await logPublicAgentEvent({
+      handle: input.handle ?? "unknown",
+      agentId: input.agentId ?? null,
+      portfolioId: null,
+      sessionId,
+      model: "unknown",
+      mode: "unknown",
+      tokensUsed: 0,
+      leadDetected: false,
+      confidence: 0,
+      success: false,
+      fallbackReason: `HandlerError:${errorType}`,
+      latencyMs: Date.now() - startedAt,
+      creditCost: 0,
+      metadata: {
+        message,
+      },
+    });
+
+    return { ok: true, reply: FALLBACK_REPLY, leadDetected: false, sessionId };
   }
 }
