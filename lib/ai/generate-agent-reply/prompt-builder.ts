@@ -1,7 +1,8 @@
 import { BEHAVIOR_PRESETS } from "@/lib/agent/behavior-presets";
+import type { PreparedContext } from "@/lib/ai/generate-agent-reply/context-preparation";
 import type { GenerateAgentReplyInput } from "./types";
 
-export function buildPrompt(input: GenerateAgentReplyInput, knowledgeBlocks: string[]): string {
+export function buildPrompt(input: GenerateAgentReplyInput, context: PreparedContext): string {
   const behaviorBlock = input.customPrompt?.trim()
     ? input.customPrompt.trim()
     : input.behaviorType
@@ -37,39 +38,52 @@ export function buildPrompt(input: GenerateAgentReplyInput, knowledgeBlocks: str
   - 0-64 otherwise.
 - Never invent details. If unknown, use empty strings.`;
 
-  const knowledgeBlock = knowledgeBlocks.length
-    ? `
+  const contextTierBlock = `CONTEXT TIERS (highest priority first):
+1) Recent conversation
+2) Knowledge chunks
+3) Profile metadata
+4) Optional portfolio sections`;
 
-KNOWLEDGE BASE:
-${knowledgeBlocks.map((chunk) => `- ${chunk}`).join("\n")}`
+  const historyBlock = context.history.length
+    ? `RECENT CONVERSATION:
+${context.history.map((entry, index) => `${index + 1}. [${entry.role}] ${entry.content}`).join("\n")}`
+    : "RECENT CONVERSATION:\n(none)";
+
+  const knowledgeBlock = context.knowledgeChunks.length
+    ? `KNOWLEDGE CHUNKS:
+${context.knowledgeChunks
+  .map((chunk, index) => `${index + 1}. [chunk_id=${chunk.chunkId} source_id=${chunk.sourceId}] ${chunk.content}`)
+  .join("\n")}`
+    : "KNOWLEDGE CHUNKS:\n(none)";
+
+  const profileBlock = `PROFILE METADATA:
+${JSON.stringify(context.profileMetadata, null, 2)}`;
+
+  const portfolioBlock = context.portfolioSections
+    ? `OPTIONAL PORTFOLIO SECTIONS:
+${JSON.stringify(context.portfolioSections, null, 2)}`
+    : "OPTIONAL PORTFOLIO SECTIONS:\n(none)";
+
+  const sparseGuardrail = context.isContextSparse
+    ? `SPARSE CONTEXT GUARDRAIL:
+- Available context is sparse.
+- Ask one concise clarifying question before making assumptions.
+- Keep the answer useful and avoid invented specifics.`
     : "";
-
-  const portfolioContextBlock = input.portfolio
-    ? `PORTFOLIO CONTEXT (structured):
-${JSON.stringify(
-        {
-          hero: input.portfolio.hero,
-          about: input.portfolio.about,
-          services: input.portfolio.services,
-          projects: input.portfolio.projects,
-        },
-        null,
-        2
-      )}`
-    : `AGENT CONTEXT:
-${JSON.stringify(
-        {
-          strategyMode: input.strategyMode,
-          behaviorType: input.behaviorType,
-          hasCustomPrompt: Boolean(input.customPrompt?.trim()),
-        },
-        null,
-        2
-      )}`;
 
   return `You are an AI representative for this professional.
 
-${portfolioContextBlock}${knowledgeBlock}
+${contextTierBlock}
+
+${historyBlock}
+
+${knowledgeBlock}
+
+${profileBlock}
+
+${portfolioBlock}
+
+${sparseGuardrail}
 
 BEHAVIOR INSTRUCTIONS:
 ${behaviorBlock}

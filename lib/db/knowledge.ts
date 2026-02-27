@@ -244,10 +244,25 @@ export async function getRecentKnowledgeChunksByAgentId(agentId: string, limit =
   return rows.map((row) => row.chunkText);
 }
 
+export async function getRecentKnowledgeChunkRecordsByAgentId(agentId: string, limit = 3) {
+  return db
+    .select({
+      id: knowledgeChunks.id,
+      sourceId: knowledgeChunks.sourceId,
+      chunkText: knowledgeChunks.chunkText,
+      createdAt: knowledgeChunks.createdAt,
+    })
+    .from(knowledgeChunks)
+    .where(eq(knowledgeChunks.agentId, agentId))
+    .orderBy(desc(knowledgeChunks.createdAt))
+    .limit(limit);
+}
+
 export async function getKnowledgeChunksForSearch(agentId: string, limit = 30) {
   return db
     .select({
       id: knowledgeChunks.id,
+      sourceId: knowledgeChunks.sourceId,
       chunkText: knowledgeChunks.chunkText,
       embedding: knowledgeChunks.embedding,
       createdAt: knowledgeChunks.createdAt,

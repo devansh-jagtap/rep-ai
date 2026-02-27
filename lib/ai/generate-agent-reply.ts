@@ -1,8 +1,7 @@
 import { generateText } from "ai";
 import { buildPrompt } from "@/lib/ai/generate-agent-reply/prompt-builder";
 import {
-  prepareKnowledgeBlocks,
-  trimHistory,
+  prepareContext,
 } from "@/lib/ai/generate-agent-reply/context-preparation";
 import { parseLeadPayload } from "@/lib/ai/generate-agent-reply/response-parser";
 import {
@@ -27,13 +26,12 @@ function isSafeTemperature(temperature: number): boolean {
 }
 
 async function requestReply(input: GenerateAgentReplyInput): Promise<{ text: string; tokens: number }> {
-  const sanitizedHistory = trimHistory(input.history);
-  const knowledgeBlocks = await prepareKnowledgeBlocks(input);
+  const preparedContext = await prepareContext(input);
 
   const result = await generateText({
     model: resolveChatModel(input.model),
-    system: buildPrompt(input, knowledgeBlocks),
-    messages: [...sanitizedHistory, { role: "user" as const, content: input.message }],
+    system: buildPrompt(input, preparedContext),
+    messages: [...preparedContext.history, { role: "user" as const, content: input.message }],
     temperature: input.temperature,
     maxOutputTokens: 1500,
   });
