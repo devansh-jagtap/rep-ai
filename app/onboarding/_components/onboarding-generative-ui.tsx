@@ -6,11 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { OnboardingMessageResponse } from "@/app/onboarding/_components/onboarding-chat-parts";
 import type { OnboardingSelectorOption, OnboardingSelectedSections, OnboardingProjectInput } from "@/lib/onboarding/types";
 import { DEFAULT_ONBOARDING_SECTIONS } from "@/lib/onboarding/types";
 import { 
@@ -57,6 +55,15 @@ const colorMap: Record<string, string> = {
   cyan: "border-cyan-500 bg-cyan-50 dark:bg-cyan-950/30",
 };
 
+const iconContainerColorMap: Record<string, string> = {
+  blue: "bg-blue-100 dark:bg-blue-900/50",
+  green: "bg-green-100 dark:bg-green-900/50",
+  purple: "bg-purple-100 dark:bg-purple-900/50",
+  orange: "bg-orange-100 dark:bg-orange-900/50",
+  red: "bg-red-100 dark:bg-red-900/50",
+  cyan: "bg-cyan-100 dark:bg-cyan-900/50",
+};
+
 interface SetupPathSelectorProps {
   options: OnboardingSelectorOption[];
   onSelect: (value: string, optionId: string) => void;
@@ -87,7 +94,7 @@ export function SetupPathSelector({ options, onSelect, disabled }: SetupPathSele
           >
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <div className={`p-2 rounded-lg ${option.color ? `bg-${option.color}-100 dark:bg-${option.color}-900/50` : 'bg-muted'}`}>
+                <div className={`p-2 rounded-lg ${option.color ? iconContainerColorMap[option.color] || "bg-muted" : "bg-muted"}`}>
                   <IconComponent name={option.icon} className="w-6 h-6" />
                 </div>
                 {isSelected && <Check className="w-5 h-5 text-primary" />}
@@ -230,7 +237,7 @@ export function ToneSelectorCards({ options, onSelect, disabled }: ToneSelectorC
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground italic">
-                  "{option.description}"
+                  &ldquo;{option.description}&rdquo;
                 </p>
               </CardContent>
             </Card>
@@ -538,12 +545,10 @@ export function HandleInputWithValidation({ onChange, onSubmit, disabled, baseUr
 
   useEffect(() => {
     if (!value || value.length < 3) {
-      setStatus("idle");
-      setError(null);
       return;
     }
 
-    const checkHandle = async () => {
+    const timeout = setTimeout(async () => {
       setStatus("checking");
       setError(null);
 
@@ -556,25 +561,31 @@ export function HandleInputWithValidation({ onChange, onSubmit, disabled, baseUr
       try {
         const res = await fetch(`/api/check-handle?handle=${encodeURIComponent(value)}`);
         const data = await res.json();
-        
+
         if (data.available) {
           setStatus("available");
-        } else {
-          setStatus("unavailable");
-          setError("This handle is already taken");
+          return;
         }
+
+        setStatus("unavailable");
+        setError("This handle is already taken");
       } catch {
         setStatus("idle");
       }
-    };
+    }, 500);
 
-    const timeout = setTimeout(checkHandle, 500);
     return () => clearTimeout(timeout);
   }, [value]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
     setValue(val);
+
+    if (!val || val.length < 3) {
+      setStatus("idle");
+      setError(null);
+    }
+
     onChange(val);
   };
 
