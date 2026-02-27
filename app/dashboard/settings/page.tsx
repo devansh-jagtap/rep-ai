@@ -13,7 +13,7 @@ export default async function SettingsPage() {
     getProfileById(session.user.id),
   ]);
 
-  if (!data) redirect("/onboarding");
+  if (!data?.portfolio) redirect("/onboarding");
 
   return (
     <SettingsClient

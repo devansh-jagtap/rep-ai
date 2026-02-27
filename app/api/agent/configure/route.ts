@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { configureAgentForPortfolio } from "@/lib/agent/configure";
+import { configureAgentForPortfolio, configureAgentForUser } from "@/lib/agent/configure";
 import { parseJsonBody, requireUserId } from "@/lib/api/route-helpers";
 import { getActivePortfolio } from "@/lib/active-portfolio";
 
@@ -24,18 +24,20 @@ export async function POST(request: Request) {
   }
 
   const portfolio = await getActivePortfolio(authResult.userId);
-  if (!portfolio) {
-    return NextResponse.json({ error: "Portfolio not found" }, { status: 404 });
-  }
 
-  const result = await configureAgentForPortfolio(authResult.userId, portfolio.id, {
+  const input = {
     isEnabled: Boolean(jsonResult.body.isEnabled),
     model: String(jsonResult.body.model ?? ""),
     behaviorType: jsonResult.body.behaviorType ? String(jsonResult.body.behaviorType) : null,
     strategyMode: String(jsonResult.body.strategyMode ?? "consultative"),
     customPrompt: jsonResult.body.customPrompt ? String(jsonResult.body.customPrompt) : null,
     temperature: Number(jsonResult.body.temperature ?? 0.5),
-  });
+  };
+
+  const result = portfolio
+    ? await configureAgentForPortfolio(authResult.userId, portfolio.id, input)
+    : await configureAgentForUser(authResult.userId, input);
+
 
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: result.status });

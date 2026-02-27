@@ -2,19 +2,24 @@
 
 import { getSession } from "@/auth";
 import { db } from "@/lib/db";
-import { portfolios, agents } from "@/lib/schema";
+import { portfolios } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getActivePortfolio } from "@/lib/active-portfolio";
-import { getAgentByPortfolioId, configureAgentForPortfolio, type ConfigureAgentInput } from "@/lib/agent/configure";
+import {
+  getAgentByPortfolioId,
+  getAgentByUserId,
+  configureAgentForPortfolio,
+  configureAgentForUser,
+  type ConfigureAgentInput,
+} from "@/lib/agent/configure";
 import { generatePortfolio } from "@/lib/ai/generate-portfolio";
 import { validateHandle } from "@/lib/validation/handle";
 import { handlePublicChat, type PublicChatResult } from "@/lib/ai/public-chat-handler";
 import { sanitizeHistory } from "@/lib/validation/public-chat";
-import { defaultVisibleSections, type PortfolioContent as ValidatedPortfolioContent } from "@/lib/validation/portfolio-schema";
+import { type PortfolioContent as ValidatedPortfolioContent } from "@/lib/validation/portfolio-schema";
 
-import { validatePortfolioContent } from "@/lib/validation/portfolio-schema";
-import { mergeVisibleSections, type PortfolioSectionKey } from "@/lib/portfolio/section-registry";
+import { mergeVisibleSections } from "@/lib/portfolio/section-registry";
 
 export type PortfolioContent = {
   visibleSections?: ValidatedPortfolioContent["visibleSections"];
@@ -36,7 +41,11 @@ export async function getDashboardData() {
   const userId = await requireAuth();
 
   const portfolio = await getActivePortfolio(userId);
-  if (!portfolio) return null;
+
+  if (!portfolio) {
+    const agent = await getAgentByUserId(userId);
+    return { portfolio: null, agent };
+  }
 
   const agent = await getAgentByPortfolioId(portfolio.id);
 
@@ -91,9 +100,10 @@ export async function regeneratePortfolio() {
 export async function saveAgentConfig(input: ConfigureAgentInput) {
   const userId = await requireAuth();
   const portfolio = await getActivePortfolio(userId);
-  if (!portfolio) throw new Error("Portfolio not found");
 
-  const result = await configureAgentForPortfolio(userId, portfolio.id, input);
+  const result = portfolio
+    ? await configureAgentForPortfolio(userId, portfolio.id, input)
+    : await configureAgentForUser(userId, input);
 
   if (!result.ok) {
     throw new Error(result.error);

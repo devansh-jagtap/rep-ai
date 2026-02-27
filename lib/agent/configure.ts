@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { agents } from "@/lib/schema";
 import { isBehaviorPresetType } from "@/lib/agent/behavior-presets";
@@ -64,6 +64,16 @@ export async function getAgentByPortfolioId(portfolioId: string) {
   return agent ?? null;
 }
 
+export async function getAgentByUserId(userId: string) {
+  const [agent] = await db
+    .select()
+    .from(agents)
+    .where(and(eq(agents.userId, userId), isNull(agents.portfolioId)))
+    .limit(1);
+
+  return agent ?? null;
+}
+
 /** Configure (upsert) an agent for a specific portfolio + user ownership. */
 export async function configureAgentForPortfolio(userId: string, portfolioId: string, input: ConfigureAgentInput) {
   const validation = validateConfigureAgentInput(input);
@@ -101,12 +111,43 @@ export async function configureAgentForPortfolio(userId: string, portfolioId: st
   return { ok: true as const };
 }
 
-/** @deprecated Use configureAgentForPortfolio(userId, portfolioId, input) instead. Kept for API route compatibility. */
 export async function configureAgentForUser(userId: string, input: ConfigureAgentInput) {
-  const { getActivePortfolio } = await import("@/lib/active-portfolio");
-  const portfolio = await getActivePortfolio(userId);
-  if (!portfolio) {
-    return { ok: false as const, status: 404, error: "Portfolio not found" };
+  const validation = validateConfigureAgentInput(input);
+  if (!validation.ok) {
+    return { ok: false as const, status: 400, error: validation.error };
   }
-  return configureAgentForPortfolio(userId, portfolio.id, input);
+
+  const existingAgent = await getAgentByUserId(userId);
+
+  if (existingAgent) {
+    await db
+      .update(agents)
+      .set({
+        isEnabled: validation.value.isEnabled,
+        model: validation.value.model,
+        behaviorType: validation.value.behaviorType,
+        strategyMode: validation.value.strategyMode,
+        customPrompt: validation.value.customPrompt,
+        temperature: validation.value.temperature,
+        updatedAt: new Date(),
+      })
+      .where(eq(agents.id, existingAgent.id));
+
+    return { ok: true as const };
+  }
+
+  await db.insert(agents).values({
+    id: crypto.randomUUID(),
+    userId,
+    portfolioId: null,
+    isEnabled: validation.value.isEnabled,
+    model: validation.value.model,
+    behaviorType: validation.value.behaviorType,
+    strategyMode: validation.value.strategyMode,
+    customPrompt: validation.value.customPrompt,
+    temperature: validation.value.temperature,
+    updatedAt: new Date(),
+  });
+
+  return { ok: true as const };
 }

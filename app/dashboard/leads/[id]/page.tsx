@@ -34,7 +34,7 @@ export default async function LeadDetailPage({
   if (!session?.user) redirect("/auth/signin")
 
   const data = await getDashboardData()
-  if (!data) redirect("/onboarding")
+  if (!data?.portfolio) redirect("/onboarding")
 
   const { id } = await params
 
