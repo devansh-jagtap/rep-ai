@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ApiError, fetchJson } from "@/lib/http/fetch-json";
@@ -10,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, File, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { FileText, File, Loader2, AlertCircle } from "lucide-react";
 import { FileUpload, UploadedFilePreview } from "@/components/knowledge/file-upload";
 
 interface KnowledgeSource {
@@ -154,7 +155,7 @@ export function KnowledgeClient() {
             </p>
             {status === 401 ? (
               <Button asChild variant="outline" className="w-fit">
-                <a href="/auth/signin">Sign in</a>
+                <Link href="/auth/signin">Sign in</Link>
               </Button>
             ) : null}
           </CardContent>

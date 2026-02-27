@@ -2,7 +2,7 @@
 
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMediaQuery } from "@/lib/hooks/use-media-query";
 import { LeadList } from "@/components/leads/LeadList";
@@ -31,20 +31,12 @@ export function LeadsClient({ leads: initialLeads }: { leads: LeadDetailData[] }
   const isMobile = useMediaQuery("(max-width: 767px)");
 
   const [leads, setLeads] = useState<LeadDetailData[]>(initialLeads);
-  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(
-    searchParams.get("selected") || null
-  );
-
-  useEffect(() => {
-    const selected = searchParams.get("selected");
-    if (selected) {
-      setSelectedLeadId(selected);
-    }
-  }, [searchParams]);
+  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+  const effectiveSelectedLeadId = searchParams.get("selected") ?? selectedLeadId;
 
   const selectedLead = useMemo(
-    () => (selectedLeadId ? leads.find((l) => l.id === selectedLeadId) ?? null : null),
-    [leads, selectedLeadId]
+    () => (effectiveSelectedLeadId ? leads.find((l) => l.id === effectiveSelectedLeadId) ?? null : null),
+    [leads, effectiveSelectedLeadId]
   );
 
   const markReadOptimistic = (id: string) => {
@@ -104,7 +96,7 @@ export function LeadsClient({ leads: initialLeads }: { leads: LeadDetailData[] }
         <Card className="h-[65vh] md:h-full min-h-0 overflow-hidden flex flex-col">
           <LeadList
             leads={leads}
-            selectedLeadId={selectedLeadId}
+            selectedLeadId={effectiveSelectedLeadId}
             onSelectLead={handleSelectLead}
           />
         </Card>
