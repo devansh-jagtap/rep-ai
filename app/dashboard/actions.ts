@@ -93,7 +93,7 @@ export async function saveAgentConfig(input: ConfigureAgentInput) {
   const portfolio = await getActivePortfolio(userId);
   if (!portfolio) throw new Error("Portfolio not found");
 
-  const result = await configureAgentForPortfolio(portfolio.id, input);
+  const result = await configureAgentForPortfolio(userId, portfolio.id, input);
 
   if (!result.ok) {
     throw new Error(result.error);

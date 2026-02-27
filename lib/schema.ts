@@ -139,9 +139,10 @@ export const agents = pgTable(
   "agents",
   {
     id: uuid("id").primaryKey(),
-    portfolioId: uuid("portfolio_id")
+    userId: uuid("user_id")
       .notNull()
-      .references(() => portfolios.id, { onDelete: "cascade" }),
+      .references(() => users.id, { onDelete: "cascade" }),
+    portfolioId: uuid("portfolio_id").references(() => portfolios.id, { onDelete: "cascade" }),
     isEnabled: boolean("is_enabled").notNull().default(false),
     model: varchar("model", { length: 80 }).notNull(),
     behaviorType: varchar("behavior_type", { length: 40 }),
@@ -154,6 +155,7 @@ export const agents = pgTable(
   (table) => [
     unique("agents_portfolio_id_unique_constraint").on(table.portfolioId),
     uniqueIndex("agents_portfolio_id_unique").on(table.portfolioId),
+    index("agents_user_id_idx").on(table.userId),
     index("agents_portfolio_id_idx").on(table.portfolioId),
     check("agents_temperature_range_check", sql`${table.temperature} BETWEEN 0.2 AND 0.8`),
     check(

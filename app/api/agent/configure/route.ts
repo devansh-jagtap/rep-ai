@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Portfolio not found" }, { status: 404 });
   }
 
-  const result = await configureAgentForPortfolio(portfolio.id, {
+  const result = await configureAgentForPortfolio(authResult.userId, portfolio.id, {
     isEnabled: Boolean(jsonResult.body.isEnabled),
     model: String(jsonResult.body.model ?? ""),
     behaviorType: jsonResult.body.behaviorType ? String(jsonResult.body.behaviorType) : null,
