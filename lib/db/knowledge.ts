@@ -1,6 +1,6 @@
 import { and, count, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { agents, knowledgeChunks, knowledgeSources } from "@/lib/schema";
+import { agents, knowledgeChunks, knowledgeSources, portfolios } from "@/lib/schema";
 import { chunkText } from "@/lib/knowledge/chunk-text";
 import { generateEmbeddings } from "@/lib/ai/embeddings";
 
@@ -283,7 +283,27 @@ export async function getPublicAgentById(agentId: string) {
       portfolioIsPublished: portfolios.isPublished,
     })
     .from(agents)
-    .innerJoin(portfolios, eq(portfolios.id, agents.portfolioId))
+    .leftJoin(portfolios, eq(portfolios.id, agents.portfolioId))
+    .where(eq(agents.id, agentId))
+    .limit(1);
+
+  return row ?? null;
+}
+
+export async function getAgentCoreConfigById(agentId: string) {
+  const [row] = await db
+    .select({
+      agentId: agents.id,
+      userId: agents.userId,
+      portfolioId: agents.portfolioId,
+      isEnabled: agents.isEnabled,
+      model: agents.model,
+      behaviorType: agents.behaviorType,
+      strategyMode: agents.strategyMode,
+      customPrompt: agents.customPrompt,
+      temperature: agents.temperature,
+    })
+    .from(agents)
     .where(eq(agents.id, agentId))
     .limit(1);
 

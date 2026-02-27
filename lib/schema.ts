@@ -167,8 +167,10 @@ export const agents = pgTable(
 
 export const agentLeads = pgTable("agent_leads", {
   id: uuid("id").primaryKey(),
-  portfolioId: uuid("portfolio_id")
+  agentId: uuid("agent_id")
     .notNull()
+    .references(() => agents.id, { onDelete: "cascade" }),
+  portfolioId: uuid("portfolio_id")
     .references(() => portfolios.id, { onDelete: "cascade" }),
   name: text("name"),
   email: text("email"),

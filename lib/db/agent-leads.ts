@@ -4,7 +4,8 @@ import { agentLeads } from "@/lib/schema";
 import { linkMessagesToLead } from "./lead-chats";
 
 interface SaveLeadInput {
-  portfolioId: string;
+  agentId: string;
+  portfolioId?: string | null;
   name: string | null;
   email: string | null;
   budget: string | null;
@@ -23,7 +24,7 @@ interface ExistingLead {
   sessionId: string | null;
 }
 
-export async function findExistingLead(portfolioId: string, email: string): Promise<ExistingLead | null> {
+export async function findExistingLead(agentId: string, email: string): Promise<ExistingLead | null> {
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
   const [existing] = await db
@@ -39,7 +40,7 @@ export async function findExistingLead(portfolioId: string, email: string): Prom
     .from(agentLeads)
     .where(
       and(
-        eq(agentLeads.portfolioId, portfolioId),
+        eq(agentLeads.agentId, agentId),
         eq(agentLeads.email, email),
         gte(agentLeads.createdAt, since)
       )
@@ -71,7 +72,7 @@ export async function saveLeadWithDedup(input: SaveLeadInput): Promise<"inserted
     return "skipped";
   }
 
-  const existing = await findExistingLead(input.portfolioId, normalizedEmail);
+  const existing = await findExistingLead(input.agentId, normalizedEmail);
 
   if (existing) {
     const merged = mergeLeadData(existing, input);
@@ -99,7 +100,8 @@ export async function saveLeadWithDedup(input: SaveLeadInput): Promise<"inserted
   const leadId = crypto.randomUUID();
   await db.insert(agentLeads).values({
     id: leadId,
-    portfolioId: input.portfolioId,
+    agentId: input.agentId,
+    portfolioId: input.portfolioId ?? null,
     name: input.name,
     email: normalizedEmail,
     budget: input.budget,
