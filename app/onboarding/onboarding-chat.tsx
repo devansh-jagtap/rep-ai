@@ -21,13 +21,9 @@ import {
   getDefaultSectionSelection,
   OnboardingMessageResponse,
   OnboardingPreviewCard,
-  SectionSelectorMessage,
 } from "@/app/onboarding/_components/onboarding-chat-parts";
 import { lastMessageAsksConfirmation, userJustConfirmed, type MessagePartLike } from "@/app/onboarding/_lib/onboarding-chat-utils";
 import { useOnboardingChatState } from "@/app/onboarding/_hooks/use-onboarding-chat-state";
-import type { OnboardingBlock } from "@/lib/onboarding/types";
-import { renderOnboardingBlocks } from "@/app/onboarding/_components/onboarding-block-renderer";
-import { trackOnboardingBlockEvent } from "@/lib/onboarding/analytics";
 import type { OnboardingSelectedSections } from "@/lib/onboarding/types";
 import { toast } from "sonner";
 import {
@@ -42,28 +38,6 @@ import {
   TitleSuggestions,
   SectionSelectorCards,
 } from "@/app/onboarding/_components/onboarding-generative-ui";
-
-function getBlocksFromMessageParts(parts: MessagePartLike[], fallbackId: string): OnboardingBlock[] {
-  const blockParts = parts.filter(
-    (part): part is MessagePartLike & { type: "data"; data: { kind: string; blocks: OnboardingBlock[] } } =>
-      part.type === "data" &&
-      typeof (part as { data?: { kind?: unknown } }).data?.kind === "string" &&
-      (part as { data?: { kind?: string } }).data?.kind === "onboarding_blocks" &&
-      Array.isArray((part as { data?: { blocks?: unknown[] } }).data?.blocks)
-  );
-
-  if (blockParts.length > 0) {
-    return blockParts.flatMap((part) => part.data.blocks);
-  }
-
-  const textParts = parts.filter((part): part is { type: "text"; text: string } => part.type === "text" && typeof part.text === "string");
-  return textParts.map((part, index) => ({
-    id: `${fallbackId}-text-${index}`,
-    analyticsId: `${fallbackId}-text-${index}`,
-    type: "text",
-    prompt: part.text,
-  }));
-}
 
 export function OnboardingChat() {
   const {
@@ -87,14 +61,10 @@ export function OnboardingChat() {
   const resumeSentRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [selectedTone, setSelectedTone] = useState<string | null>(null);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [selectedProjects, setSelectedProjects] = useState<{ title: string; description: string }[]>([]);
-  const [selectedTargetAudience, setSelectedTargetAudience] = useState<string | null>(null);
-  const [selectedContactPreference, setSelectedContactPreference] = useState<string | null>(null);
   const [handleValue, setHandleValue] = useState("");
   const [selectedFAQs, setSelectedFAQs] = useState<string[]>([]);
-  const [selectedTitle, setSelectedTitle] = useState<string>("");
 
   const getMessageText = useCallback((message: { parts?: MessagePartLike[]; content?: string; role: string }) => {
     if (message.role !== "assistant") return "";
@@ -168,50 +138,57 @@ export function OnboardingChat() {
     }
     setInput("");
     setShowUpload(false);
-  }, [input, resumeUrl, sendMessage, status]);
+  }, [input, resumeUrl, sendMessage, setInput, status]);
 
-  // Detect which step the AI is asking about - only ONE at a time (priority order)
-  const { step: detectedStep } = useMemo(() => {
+  // Detect only from the latest assistant message so enhanced UI appears in an orderly, step-by-step way.
+  const detectedStep = useMemo(() => {
     const last = messages[messages.length - 1];
-    if (!last || last.role !== "assistant") return { step: null };
-    
+    if (!last || last.role !== "assistant") return null;
+
     const text = getMessageText(last);
-    
-    // Priority order - check most specific first
-    if (text.includes("handle") || text.includes("public") || text.includes(".io/")) {
-      return { step: "handle" };
+    if (!text.trim()) return null;
+
+    if (text.includes("how would you like to get started") || text.includes("already have a website") || text.includes("build me a portfolio")) {
+      return "setup" as const;
     }
-    if (text.includes("tone") || text.includes("professional") || text.includes("friendly") || 
-        text.includes("bold") || text.includes("minimal")) {
-      return { step: "tone" };
+
+    if (text.includes("what services") || text.includes("services or work do you offer")) {
+      return "services" as const;
     }
-    if (text.includes("faq") || text.includes("frequently asked")) {
-      return { step: "faqs" };
+
+    if (text.includes("tell me about 1-3 projects") || text.includes("projects you'd like to showcase")) {
+      return "projects" as const;
     }
-    if (text.includes("contact") || text.includes("reach you")) {
-      return { step: "contact" };
+
+    if (text.includes("target audience") || text.includes("who is your target audience")) {
+      return "target" as const;
     }
-    if (text.includes("target audience") || text.includes("who is your") || text.includes("who should")) {
-      return { step: "target" };
+
+    if (text.includes("how should contacts reach you") || text.includes("reach you")) {
+      return "contact" as const;
     }
-    if (text.includes("projects") || text.includes("tell me about") || text.includes("project")) {
-      return { step: "projects" };
+
+    if (text.includes("add faqs") || text.includes("frequently asked")) {
+      return "faqs" as const;
     }
-    if (text.includes("services") || text.includes("work do you offer")) {
-      return { step: "services" };
+
+    if (text.includes("choose your preferred tone") || text.includes("preferred tone")) {
+      return "tone" as const;
     }
-    if (text.includes("sections") || text.includes("about") || text.includes("hero")) {
-      return { step: "sections" };
+
+    if (text.includes("choose your public handle") || text.includes("public handle")) {
+      return "handle" as const;
     }
-    if (text.includes("title") || text.includes("professional title")) {
-      return { step: "title" };
+
+    if (text.includes("which sections") || (text.includes("sections") && text.includes("hero"))) {
+      return "sections" as const;
     }
-    if (text.includes("setup") || text.includes("portfolio") || text.includes("from scratch") || 
-        text.includes("already have a website") || text.includes("get started")) {
-      return { step: "setup" };
+
+    if (text.includes("professional title") || text.includes("title best describes")) {
+      return "title" as const;
     }
-    
-    return { step: null };
+
+    return null;
   }, [messages, getMessageText]);
 
   // Map detected step to individual booleans
@@ -251,7 +228,6 @@ export function OnboardingChat() {
   };
 
   const handleToneSubmit = (value: string) => {
-    setSelectedTone(value);
     sendMessage({ text: value });
   };
 
@@ -270,12 +246,10 @@ export function OnboardingChat() {
   };
 
   const handleTargetAudienceSubmit = (value: string) => {
-    setSelectedTargetAudience(value);
     sendMessage({ text: value });
   };
 
   const handleContactPreferenceSubmit = (value: string) => {
-    setSelectedContactPreference(value);
     sendMessage({ text: value });
   };
 
@@ -284,7 +258,6 @@ export function OnboardingChat() {
   };
 
   const handleTitleSubmit = (value: string) => {
-    setSelectedTitle(value);
     sendMessage({ text: value });
   };
 
@@ -306,20 +279,12 @@ export function OnboardingChat() {
                   <MessageContent className={cn("text-base max-w-2xl", message.role === "assistant" && "text-primary")}>
                     {(() => {
                       const messageParts = (message.parts || []) as MessagePartLike[];
-                      if (messageParts.length === 0 && (message as any).content) {
-                        const cleaned = (message as any).content.replace(/\[Attached Resume:[^\]]*\]\([^\)]+\)/g, '').trim();
+                      if (messageParts.length === 0 && typeof message.content === "string") {
+                        const cleaned = message.content.replace(/\[Attached Resume:[^\]]*\]\([^\)]+\)/g, "").trim();
                         return cleaned ? <OnboardingMessageResponse key={`${message.id}-content`}>{cleaned}</OnboardingMessageResponse> : null;
                       }
 
                       const textParts = messageParts.filter((part): part is { type: "text"; text: string } => part.type === "text" && typeof part.text === "string");
-                      // v6: tool parts are "tool-save_step" with output, legacy: "tool-invocation" with result
-                      const hasSaveStepSuccess = messageParts.some((p: any) => {
-                        const isToolPart = p.type === "tool-save_step" || p.type === "tool-invocation" || (p.type === "dynamic-tool" && p.toolName === "save_step");
-                        if (!isToolPart) return false;
-                        const output = p.output ?? p.result;
-                        return output?.success;
-                      });
-
                       return (
                         <>
                           {textParts.map((part, index) => {
