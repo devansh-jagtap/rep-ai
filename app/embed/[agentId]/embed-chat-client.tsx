@@ -28,9 +28,11 @@ type ChatMessage = {
 interface EmbedChatClientProps {
   agentId: string;
   agentName?: string;
+  roleLabel?: string | null;
+  intro?: string | null;
 }
 
-export function EmbedChatClient({ agentId, agentName = "AI Assistant" }: EmbedChatClientProps) {
+export function EmbedChatClient({ agentId, agentName = "AI Assistant", roleLabel, intro }: EmbedChatClientProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -110,7 +112,10 @@ export function EmbedChatClient({ agentId, agentName = "AI Assistant" }: EmbedCh
     <div className="flex h-screen flex-col bg-background">
       <header className="flex shrink-0 items-center gap-2 border-b px-4 py-3">
         <div className="size-2 rounded-full bg-green-500 animate-pulse" />
-        <span className="font-medium text-sm">{agentName}</span>
+        <div className="flex flex-col">
+          <span className="font-medium text-sm">{agentName}</span>
+          {roleLabel ? <span className="text-xs text-muted-foreground">{roleLabel}</span> : null}
+        </div>
       </header>
 
       <Conversation className="flex-1 min-h-0">
@@ -122,7 +127,7 @@ export function EmbedChatClient({ agentId, agentName = "AI Assistant" }: EmbedCh
             <ConversationEmptyState
               icon={<MessageSquare className="size-12 text-muted-foreground" />}
               title="Start a conversation"
-              description="Ask me anything and I'll help you out"
+              description={intro || "Ask me anything and I'll help you out"}
             />
           ) : (
             allMessages.map((message) => (

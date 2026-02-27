@@ -99,7 +99,14 @@ export default async function PublicPortfolioPage({ params }: PublicPortfolioPag
       ) : (
         <ModernTemplate content={content} />
       )}
-      {portfolio.agentIsEnabled ? <AgentWidget handle={handle} /> : null}
+      {portfolio.agentIsEnabled ? (
+        <AgentWidget
+          handle={handle}
+          agentName={portfolio.agentDisplayName ?? "AI Assistant"}
+          roleLabel={portfolio.agentRoleLabel ?? null}
+          intro={portfolio.agentIntro ?? null}
+        />
+      ) : null}
     </main>
   );
 }

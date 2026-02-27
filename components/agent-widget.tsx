@@ -30,9 +30,11 @@ type ChatMessage = {
 interface AgentWidgetProps {
   handle: string;
   agentName?: string;
+  roleLabel?: string | null;
+  intro?: string | null;
 }
 
-export function AgentWidget({ handle, agentName = "AI Assistant" }: AgentWidgetProps) {
+export function AgentWidget({ handle, agentName = "AI Assistant", roleLabel, intro }: AgentWidgetProps) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -121,9 +123,12 @@ export function AgentWidget({ handle, agentName = "AI Assistant" }: AgentWidgetP
       ) : (
         <div className="bg-background flex h-[520px] w-[380px] max-w-[calc(100vw-48px)] flex-col rounded-2xl border shadow-2xl overflow-hidden">
           <div className="flex items-center justify-between border-b px-4 py-3 bg-muted/30">
-            <div className="flex items-center gap-2">
-              <div className="size-2 rounded-full bg-green-500 animate-pulse" />
-              <p className="font-medium text-sm">{agentName}</p>
+              <div className="flex items-center gap-2">
+                <div className="size-2 rounded-full bg-green-500 animate-pulse" />
+              <div className="flex flex-col">
+                <p className="font-medium text-sm">{agentName}</p>
+                {roleLabel ? <p className="text-[11px] text-muted-foreground">{roleLabel}</p> : null}
+              </div>
             </div>
             <Button
               variant="ghost"
@@ -144,7 +149,7 @@ export function AgentWidget({ handle, agentName = "AI Assistant" }: AgentWidgetP
                 <ConversationEmptyState
                   icon={<MessageSquare className="size-10 text-muted-foreground" />}
                   title="Start a conversation"
-                  description="Ask me anything about this portfolio"
+                  description={intro || "Ask me anything about this portfolio"}
                 />
               ) : (
                 allMessages.map((message) => (

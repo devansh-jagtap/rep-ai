@@ -8,6 +8,10 @@ interface AgentConfig {
   strategyMode: ConversationStrategyMode;
   customPrompt: string;
   temperature: number;
+  displayName: string;
+  avatarUrl: string;
+  intro: string;
+  roleLabel: string;
 }
 
 interface ChatMessage {
@@ -37,6 +41,10 @@ const defaultConfig: AgentConfig = {
   strategyMode: "consultative",
   customPrompt: "",
   temperature: 0.5,
+  displayName: "",
+  avatarUrl: "",
+  intro: "",
+  roleLabel: "",
 };
 
 export const useAgentStore = create<AgentState>((set) => ({

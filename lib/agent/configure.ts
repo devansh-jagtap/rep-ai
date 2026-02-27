@@ -12,6 +12,10 @@ export interface ConfigureAgentInput {
   strategyMode: string;
   customPrompt: string | null;
   temperature: number;
+  displayName: string | null;
+  avatarUrl: string | null;
+  intro: string | null;
+  roleLabel: string | null;
 }
 
 export function validateConfigureAgentInput(input: ConfigureAgentInput) {
@@ -21,6 +25,10 @@ export function validateConfigureAgentInput(input: ConfigureAgentInput) {
 
   const trimmedPrompt = input.customPrompt?.trim() ?? "";
   const normalizedPrompt = trimmedPrompt.length > 0 ? trimmedPrompt : null;
+  const normalizedDisplayName = input.displayName?.trim().slice(0, 80) || null;
+  const normalizedAvatarUrl = input.avatarUrl?.trim() || null;
+  const normalizedIntro = input.intro?.trim().slice(0, 280) || null;
+  const normalizedRoleLabel = input.roleLabel?.trim().slice(0, 60) || null;
 
   if (input.behaviorType && !isBehaviorPresetType(input.behaviorType)) {
     return { ok: false as const, error: "Invalid behavior preset" };
@@ -50,6 +58,10 @@ export function validateConfigureAgentInput(input: ConfigureAgentInput) {
       strategyMode: input.strategyMode,
       customPrompt: normalizedPrompt,
       temperature: Number(input.temperature.toFixed(2)),
+      displayName: normalizedDisplayName,
+      avatarUrl: normalizedAvatarUrl,
+      intro: normalizedIntro,
+      roleLabel: normalizedRoleLabel,
     },
   };
 }
@@ -104,6 +116,10 @@ export async function configureAgentForPortfolio(userId: string, portfolioId: st
       strategyMode: validation.value.strategyMode,
       customPrompt: validation.value.customPrompt,
       temperature: validation.value.temperature,
+      displayName: validation.value.displayName,
+      avatarUrl: validation.value.avatarUrl,
+      intro: validation.value.intro,
+      roleLabel: validation.value.roleLabel,
       updatedAt: new Date(),
     })
     .onConflictDoUpdate({
@@ -116,6 +132,10 @@ export async function configureAgentForPortfolio(userId: string, portfolioId: st
         strategyMode: validation.value.strategyMode,
         customPrompt: validation.value.customPrompt,
         temperature: validation.value.temperature,
+        displayName: validation.value.displayName,
+        avatarUrl: validation.value.avatarUrl,
+        intro: validation.value.intro,
+        roleLabel: validation.value.roleLabel,
         updatedAt: new Date(),
       },
     });
@@ -141,6 +161,10 @@ export async function configureAgentForUser(userId: string, input: ConfigureAgen
         strategyMode: validation.value.strategyMode,
         customPrompt: validation.value.customPrompt,
         temperature: validation.value.temperature,
+        displayName: validation.value.displayName,
+        avatarUrl: validation.value.avatarUrl,
+        intro: validation.value.intro,
+        roleLabel: validation.value.roleLabel,
         updatedAt: new Date(),
       })
       .where(eq(agents.id, existingAgent.id));
@@ -158,6 +182,10 @@ export async function configureAgentForUser(userId: string, input: ConfigureAgen
     strategyMode: validation.value.strategyMode,
     customPrompt: validation.value.customPrompt,
     temperature: validation.value.temperature,
+    displayName: validation.value.displayName,
+    avatarUrl: validation.value.avatarUrl,
+    intro: validation.value.intro,
+    roleLabel: validation.value.roleLabel,
     updatedAt: new Date(),
   });
 

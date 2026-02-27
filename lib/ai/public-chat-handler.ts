@@ -202,6 +202,10 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
         : "consultative";
 
     const content = portfolio?.content ? validatePortfolioContent(portfolio.content) : null;
+    const displayName = portfolio?.agentDisplayName ?? standaloneAgent?.displayName ?? null;
+    const avatarUrl = portfolio?.agentAvatarUrl ?? standaloneAgent?.avatarUrl ?? null;
+    const intro = portfolio?.agentIntro ?? standaloneAgent?.intro ?? null;
+    const roleLabel = portfolio?.agentRoleLabel ?? standaloneAgent?.roleLabel ?? null;
 
     const result = await generateAgentReply({
       agentId,
@@ -210,6 +214,10 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
       behaviorType,
       strategyMode,
       customPrompt: portfolio?.agentCustomPrompt ?? standaloneAgent?.customPrompt ?? null,
+      displayName,
+      avatarUrl,
+      intro,
+      roleLabel,
       message: input.message,
       history: input.history,
       portfolio: content,

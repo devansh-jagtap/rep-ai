@@ -10,6 +10,10 @@ interface ConfigureRequestBody {
   strategyMode?: unknown;
   customPrompt?: unknown;
   temperature?: unknown;
+  displayName?: unknown;
+  avatarUrl?: unknown;
+  intro?: unknown;
+  roleLabel?: unknown;
 }
 
 export async function POST(request: Request) {
@@ -32,6 +36,10 @@ export async function POST(request: Request) {
     strategyMode: String(jsonResult.body.strategyMode ?? "consultative"),
     customPrompt: jsonResult.body.customPrompt ? String(jsonResult.body.customPrompt) : null,
     temperature: Number(jsonResult.body.temperature ?? 0.5),
+    displayName: jsonResult.body.displayName ? String(jsonResult.body.displayName) : null,
+    avatarUrl: jsonResult.body.avatarUrl ? String(jsonResult.body.avatarUrl) : null,
+    intro: jsonResult.body.intro ? String(jsonResult.body.intro) : null,
+    roleLabel: jsonResult.body.roleLabel ? String(jsonResult.body.roleLabel) : null,
   };
 
   const result = portfolio

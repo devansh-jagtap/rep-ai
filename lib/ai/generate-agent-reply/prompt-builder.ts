@@ -3,6 +3,8 @@ import type { PreparedContext } from "@/lib/ai/generate-agent-reply/context-prep
 import type { GenerateAgentReplyInput } from "./types";
 
 export function buildPrompt(input: GenerateAgentReplyInput, context: PreparedContext): string {
+  const identityBlock = `AGENT IDENTITY:\n- Name: ${input.displayName?.trim() || "AI Assistant"}\n- Role: ${input.roleLabel?.trim() || "AI Representative"}\n- Intro: ${input.intro?.trim() || "(none provided)"}`;
+
   const behaviorBlock = input.customPrompt?.trim()
     ? input.customPrompt.trim()
     : input.behaviorType
@@ -84,6 +86,8 @@ ${profileBlock}
 ${portfolioBlock}
 
 ${sparseGuardrail}
+
+${identityBlock}
 
 BEHAVIOR INSTRUCTIONS:
 ${behaviorBlock}

@@ -27,6 +27,10 @@ export interface GenerateAgentReplyInput {
   behaviorType: BehaviorPresetType | null;
   strategyMode: ConversationStrategyMode;
   customPrompt: string | null;
+  displayName: string | null;
+  avatarUrl: string | null;
+  intro: string | null;
+  roleLabel: string | null;
   message: string;
   history: AgentMessage[];
   portfolio?: PortfolioContent | null;

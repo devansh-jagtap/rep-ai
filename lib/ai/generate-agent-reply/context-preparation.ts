@@ -75,6 +75,9 @@ function buildProfileMetadata(input: GenerateAgentReplyInput): Record<string, un
     strategyMode: input.strategyMode,
     behaviorType: input.behaviorType,
     hasCustomPrompt: Boolean(input.customPrompt?.trim()),
+    displayName: input.displayName,
+    roleLabel: input.roleLabel,
+    intro: input.intro,
   };
 }
 
