@@ -16,14 +16,7 @@ const transition = {
   type: 'tween',
   ease: 'easeOut',
   duration: 0.15
-};
-
-const getHoverAnimationProps = (hoveredRect: DOMRect, navRect: DOMRect) => ({
-  x: hoveredRect.left - navRect.left - 10,
-  y: hoveredRect.top - navRect.top - 4,
-  width: hoveredRect.width + 20,
-  height: hoveredRect.height + 10
-});
+} as const;
 
 const TabContent = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -39,6 +32,13 @@ const TabContent = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+type HighlightRect = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
 const Tabs = ({
   tabs,
   selectedTabIndex,
@@ -48,19 +48,61 @@ const Tabs = ({
   selectedTabIndex: number;
   setSelectedTab: (input: [number, number]) => void;
 }) => {
-  const [buttonRefs, setButtonRefs] = React.useState<Array<HTMLButtonElement | null>>([]);
+  const navRef = React.useRef<HTMLDivElement>(null);
+  const buttonRefs = React.useRef<Array<HTMLButtonElement | null>>([]);
+  const [hoveredTabIndex, setHoveredTabIndex] = React.useState<number | null>(null);
+  const [hoverRect, setHoverRect] = React.useState<HighlightRect | null>(null);
+  const [selectedRect, setSelectedRect] = React.useState<HighlightRect | null>(null);
+
+  const updateRects = React.useCallback(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const navBounds = nav.getBoundingClientRect();
+
+    const currentSelected = buttonRefs.current[selectedTabIndex];
+    if (currentSelected) {
+      const rect = currentSelected.getBoundingClientRect();
+      setSelectedRect({
+        x: rect.left - navBounds.left - 9,
+        y: rect.top - navBounds.top - 4,
+        width: rect.width + 18,
+        height: rect.height + 10
+      });
+    } else {
+      setSelectedRect(null);
+    }
+
+    if (hoveredTabIndex === null) {
+      setHoverRect(null);
+      return;
+    }
+
+    const currentHover = buttonRefs.current[hoveredTabIndex];
+    if (currentHover) {
+      const rect = currentHover.getBoundingClientRect();
+      setHoverRect({
+        x: rect.left - navBounds.left - 10,
+        y: rect.top - navBounds.top - 4,
+        width: rect.width + 20,
+        height: rect.height + 10
+      });
+    } else {
+      setHoverRect(null);
+    }
+  }, [hoveredTabIndex, selectedTabIndex]);
 
   React.useEffect(() => {
-    setButtonRefs((prev) => prev.slice(0, tabs.length));
-  }, [tabs.length]);
+    buttonRefs.current = buttonRefs.current.slice(0, tabs.length);
+    updateRects();
+  }, [tabs.length, updateRects]);
 
-  const navRef = React.useRef<HTMLDivElement>(null);
-  const navRect = navRef.current?.getBoundingClientRect();
+  React.useEffect(() => {
+    updateRects();
+    window.addEventListener('resize', updateRects);
+    return () => window.removeEventListener('resize', updateRects);
+  }, [updateRects]);
 
-  const selectedRect = buttonRefs[selectedTabIndex]?.getBoundingClientRect();
-
-  const [hoveredTabIndex, setHoveredTabIndex] = React.useState<number | null>(null);
-  const hoveredRect = buttonRefs[hoveredTabIndex ?? -1]?.getBoundingClientRect();
+  const dangerIndex = tabs.findIndex(({ value }) => value === 'danger-zone');
 
   return (
     <nav
@@ -74,15 +116,15 @@ const Tabs = ({
         return (
           <button
             key={item.value}
+            ref={(el) => {
+              buttonRefs.current[i] = el;
+            }}
             className="text-sm relative rounded-md flex items-center h-8 px-4 z-20 bg-transparent cursor-pointer select-none transition-colors"
             onPointerEnter={() => setHoveredTabIndex(i)}
             onFocus={() => setHoveredTabIndex(i)}
             onClick={() => setSelectedTab([i, i > selectedTabIndex ? 1 : -1])}
           >
             <motion.span
-              ref={(el) => {
-                buttonRefs[i] = el as HTMLButtonElement;
-              }}
               className={cn('block', {
                 'text-zinc-500': !isActive,
                 'text-black dark:text-white font-semibold': isActive
@@ -97,34 +139,32 @@ const Tabs = ({
       })}
 
       <AnimatePresence>
-        {hoveredRect && navRect && (
+        {hoverRect && (
           <motion.div
             key="hover"
             className={`absolute z-10 top-0 left-0 rounded-md ${
-              hoveredTabIndex === tabs.findIndex(({ value }) => value === 'danger-zone')
+              hoveredTabIndex === dangerIndex
                 ? 'bg-red-100 dark:bg-red-500/30'
                 : 'bg-zinc-100 dark:bg-zinc-800'
             }`}
-            initial={{ ...getHoverAnimationProps(hoveredRect, navRect), opacity: 0 }}
-            animate={{ ...getHoverAnimationProps(hoveredRect, navRect), opacity: 1 }}
-            exit={{ ...getHoverAnimationProps(hoveredRect, navRect), opacity: 0 }}
+            initial={{ ...hoverRect, opacity: 0 }}
+            animate={{ ...hoverRect, opacity: 1 }}
+            exit={{ ...hoverRect, opacity: 0 }}
             transition={transition}
           />
         )}
       </AnimatePresence>
 
       <AnimatePresence>
-        {selectedRect && navRect && (
+        {selectedRect && (
           <motion.div
             className={`absolute z-10 bottom-0 left-0 h-[2px] ${
-              selectedTabIndex === tabs.findIndex(({ value }) => value === 'danger-zone')
-                ? 'bg-red-500'
-                : 'bg-black dark:bg-white'
+              selectedTabIndex === dangerIndex ? 'bg-red-500' : 'bg-black dark:bg-white'
             }`}
             initial={false}
             animate={{
-              width: selectedRect.width + 18,
-              x: `calc(${selectedRect.left - navRect.left - 9}px)`,
+              width: selectedRect.width,
+              x: selectedRect.x,
               opacity: 1
             }}
             transition={transition}
@@ -163,4 +203,3 @@ export function AnimatedTabs({ tabs, renderContent }: AnimatedTabsProps) {
     </div>
   );
 }
-

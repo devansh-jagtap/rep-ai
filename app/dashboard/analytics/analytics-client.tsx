@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TrendingUp } from "lucide-react";
@@ -46,7 +47,7 @@ export function AnalyticsClient() {
         action={
           status === 401 ? (
             <Button asChild variant="outline">
-              <a href="/auth/signin">Sign in</a>
+              <Link href="/auth/signin">Sign in</Link>
             </Button>
           ) : undefined
         }

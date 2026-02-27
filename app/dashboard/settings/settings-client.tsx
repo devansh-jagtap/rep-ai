@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTheme } from "next-themes";
-import { useState, useEffect, useTransition, useSyncExternalStore } from "react";
+import { useState, useEffect, useTransition, useSyncExternalStore, useRef } from "react";
 import { updateHandle, deleteActivePortfolio, regeneratePortfolio } from "../actions";
 import { toast } from "sonner";
 import { Zap, AlertTriangle, Trash2 } from "lucide-react";
@@ -35,19 +35,24 @@ export function SettingsClient({ user, portfolio }: SettingsClientProps) {
   const [handle, setHandle] = useState(portfolio.handle);
   const [handleError, setHandleError] = useState("");
   const [isDeletingPortfolio, setIsDeletingPortfolio] = useState(false);
-  const [isRegenerating, setIsRegenerating] = useState(false);
-  const [prevTheme, setPrevTheme] = useState(theme);
+  const [isRegenerating, startRegeneratingTransition] = useTransition();
+  const lastRegeneratedThemeRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (mounted && theme && theme !== prevTheme) {
-      setPrevTheme(theme);
-      setIsRegenerating(true);
+    if (!mounted || !theme) return;
+    if (lastRegeneratedThemeRef.current === null) {
+      lastRegeneratedThemeRef.current = theme;
+      return;
+    }
+    if (theme === lastRegeneratedThemeRef.current) return;
+
+    lastRegeneratedThemeRef.current = theme;
+    startRegeneratingTransition(() => {
       regeneratePortfolio()
         .then(() => toast.success("Theme updated and portfolio content regenerated!"))
-        .catch((error) => toast.error(error instanceof Error ? error.message : "Failed to regenerate content"))
-        .finally(() => setIsRegenerating(false));
-    }
-  }, [theme, mounted, prevTheme]);
+        .catch((error) => toast.error(error instanceof Error ? error.message : "Failed to regenerate content"));
+    });
+  }, [theme, mounted]);
 
 
   const validateHandleFormat = (value: string) => {
