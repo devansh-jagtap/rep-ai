@@ -165,6 +165,10 @@ export async function getPublishedPortfolioWithAgentByHandle(handle: string) {
         agentStrategyMode: agents.strategyMode,
         agentCustomPrompt: agents.customPrompt,
         agentTemperature: agents.temperature,
+        agentDisplayName: agents.displayName,
+        agentAvatarUrl: agents.avatarUrl,
+        agentIntro: agents.intro,
+        agentRoleLabel: agents.roleLabel,
       })
       .from(portfolios)
       .leftJoin(agents, eq(agents.portfolioId, portfolios.id))
@@ -194,6 +198,10 @@ export async function getPortfolioWithAgentByHandle(handle: string) {
         agentStrategyMode: agents.strategyMode,
         agentCustomPrompt: agents.customPrompt,
         agentTemperature: agents.temperature,
+        agentDisplayName: agents.displayName,
+        agentAvatarUrl: agents.avatarUrl,
+        agentIntro: agents.intro,
+        agentRoleLabel: agents.roleLabel,
       })
       .from(portfolios)
       .leftJoin(agents, eq(agents.portfolioId, portfolios.id))
@@ -223,6 +231,10 @@ export async function getPublishedPortfolioWithAgentByAgentId(agentId: string) {
         agentStrategyMode: agents.strategyMode,
         agentCustomPrompt: agents.customPrompt,
         agentTemperature: agents.temperature,
+        agentDisplayName: agents.displayName,
+        agentAvatarUrl: agents.avatarUrl,
+        agentIntro: agents.intro,
+        agentRoleLabel: agents.roleLabel,
       })
       .from(portfolios)
       .innerJoin(agents, eq(agents.portfolioId, portfolios.id))
@@ -252,6 +264,10 @@ export async function getPortfolioWithAgentByAgentId(agentId: string) {
         agentStrategyMode: agents.strategyMode,
         agentCustomPrompt: agents.customPrompt,
         agentTemperature: agents.temperature,
+        agentDisplayName: agents.displayName,
+        agentAvatarUrl: agents.avatarUrl,
+        agentIntro: agents.intro,
+        agentRoleLabel: agents.roleLabel,
       })
       .from(portfolios)
       .innerJoin(agents, eq(agents.portfolioId, portfolios.id))

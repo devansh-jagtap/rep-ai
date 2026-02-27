@@ -73,6 +73,10 @@ interface AgentClientProps {
     strategyMode: string;
     customPrompt: string | null;
     temperature: number;
+    displayName: string | null;
+    avatarUrl: string | null;
+    intro: string | null;
+    roleLabel: string | null;
   } | null;
   agentId: string | null;
   portfolioHandle: string;
@@ -111,6 +115,10 @@ export function AgentClient({
         strategyMode: (agent.strategyMode && isConversationStrategyMode(agent.strategyMode)) ? agent.strategyMode : "consultative",
         customPrompt: agent.customPrompt || "",
         temperature: agent.temperature,
+        displayName: agent.displayName || "",
+        avatarUrl: agent.avatarUrl || "",
+        intro: agent.intro || "",
+        roleLabel: agent.roleLabel || "",
       });
     }
   }, [agent, resetConfig]);
@@ -139,6 +147,10 @@ export function AgentClient({
           strategyMode: config.strategyMode,
           customPrompt: config.behaviorType === "custom" ? config.customPrompt : null,
           temperature: config.temperature,
+          displayName: config.displayName,
+          avatarUrl: config.avatarUrl,
+          intro: config.intro,
+          roleLabel: config.roleLabel,
         });
         toast.success("Agent configuration saved");
       } catch (error) {
@@ -185,7 +197,7 @@ export function AgentClient({
   const scriptSnippet = scriptUrl ? `<script async src="${scriptUrl}"></script>` : "";
   const iframeSnippet =
     canGenerateWidget && agentId
-      ? `<iframe src="${appOrigin}/embed/${agentId}" width="${widgetWidth}" height="${widgetHeight}" style="border:1px solid rgba(0,0,0,0.12);border-radius:12px;" loading="lazy" title="AI Assistant"></iframe>`
+      ? `<iframe src="${appOrigin}/embed/${agentId}" width="${widgetWidth}" height="${widgetHeight}" style="border:1px solid rgba(0,0,0,0.12);border-radius:12px;" loading="lazy" title="${config.displayName || "AI Assistant"}"></iframe>`
       : "";
 
   return (
@@ -353,6 +365,54 @@ export function AgentClient({
                     {CONVERSATION_STRATEGY_MODES[config.strategyMode].description}
                   </p>
                 </div>
+
+                <div className="space-y-1">
+                  <Label className="text-sm font-semibold">Agent Name</Label>
+                  <p className="text-xs text-muted-foreground">Shown in chat headers and intro copy.</p>
+                </div>
+                <Input
+                  value={config.displayName}
+                  onChange={(e) => setConfig({ displayName: e.target.value })}
+                  placeholder="e.g. Alex from Acme"
+                  maxLength={80}
+                  disabled={isPending}
+                />
+
+                <div className="space-y-1">
+                  <Label className="text-sm font-semibold">Role Label</Label>
+                  <p className="text-xs text-muted-foreground">Optional short descriptor like Sales Advisor.</p>
+                </div>
+                <Input
+                  value={config.roleLabel}
+                  onChange={(e) => setConfig({ roleLabel: e.target.value })}
+                  placeholder="e.g. Solutions Consultant"
+                  maxLength={60}
+                  disabled={isPending}
+                />
+
+                <div className="space-y-1">
+                  <Label className="text-sm font-semibold">Avatar URL</Label>
+                  <p className="text-xs text-muted-foreground">Optional image URL for embed/public chat identity.</p>
+                </div>
+                <Input
+                  value={config.avatarUrl}
+                  onChange={(e) => setConfig({ avatarUrl: e.target.value })}
+                  placeholder="https://..."
+                  disabled={isPending}
+                />
+
+                <div className="space-y-1">
+                  <Label className="text-sm font-semibold">Intro Message</Label>
+                  <p className="text-xs text-muted-foreground">Short intro shown when the chat starts.</p>
+                </div>
+                <Textarea
+                  value={config.intro}
+                  onChange={(e) => setConfig({ intro: e.target.value })}
+                  placeholder="Hi! I'm here to help you evaluate if we're a fit."
+                  maxLength={280}
+                  className="min-h-[90px]"
+                  disabled={isPending}
+                />
 
                       {/* Optional Custom Prompt */}
                       {config.behaviorType === "custom" && (

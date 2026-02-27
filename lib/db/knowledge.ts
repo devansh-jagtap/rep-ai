@@ -294,6 +294,10 @@ export async function getPublicAgentById(agentId: string) {
     .select({
       agentId: agents.id,
       isEnabled: agents.isEnabled,
+      displayName: agents.displayName,
+      avatarUrl: agents.avatarUrl,
+      intro: agents.intro,
+      roleLabel: agents.roleLabel,
       portfolioHandle: portfolios.handle,
       portfolioIsPublished: portfolios.isPublished,
     })
@@ -317,6 +321,10 @@ export async function getAgentCoreConfigById(agentId: string) {
       strategyMode: agents.strategyMode,
       customPrompt: agents.customPrompt,
       temperature: agents.temperature,
+      displayName: agents.displayName,
+      avatarUrl: agents.avatarUrl,
+      intro: agents.intro,
+      roleLabel: agents.roleLabel,
     })
     .from(agents)
     .where(eq(agents.id, agentId))

@@ -19,5 +19,12 @@ export default async function EmbedAgentPage({ params }: EmbedPageProps) {
     notFound();
   }
 
-  return <EmbedChatClient agentId={agentId} />;
+  return (
+    <EmbedChatClient
+      agentId={agentId}
+      agentName={agent.displayName ?? "AI Assistant"}
+      roleLabel={agent.roleLabel ?? null}
+      intro={agent.intro ?? null}
+    />
+  );
 }
