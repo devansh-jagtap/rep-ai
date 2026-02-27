@@ -64,8 +64,8 @@ export async function getAgentByPortfolioId(portfolioId: string) {
   return agent ?? null;
 }
 
-/** Configure (upsert) an agent for a specific portfolio ID. */
-export async function configureAgentForPortfolio(portfolioId: string, input: ConfigureAgentInput) {
+/** Configure (upsert) an agent for a specific portfolio + user ownership. */
+export async function configureAgentForPortfolio(userId: string, portfolioId: string, input: ConfigureAgentInput) {
   const validation = validateConfigureAgentInput(input);
   if (!validation.ok) {
     return { ok: false as const, status: 400, error: validation.error };
@@ -75,6 +75,7 @@ export async function configureAgentForPortfolio(portfolioId: string, input: Con
     .insert(agents)
     .values({
       id: crypto.randomUUID(),
+      userId,
       portfolioId,
       isEnabled: validation.value.isEnabled,
       model: validation.value.model,
@@ -100,12 +101,12 @@ export async function configureAgentForPortfolio(portfolioId: string, input: Con
   return { ok: true as const };
 }
 
-/** @deprecated Use configureAgentForPortfolio(portfolioId, input) instead. Kept for API route compatibility. */
+/** @deprecated Use configureAgentForPortfolio(userId, portfolioId, input) instead. Kept for API route compatibility. */
 export async function configureAgentForUser(userId: string, input: ConfigureAgentInput) {
   const { getActivePortfolio } = await import("@/lib/active-portfolio");
   const portfolio = await getActivePortfolio(userId);
   if (!portfolio) {
     return { ok: false as const, status: 404, error: "Portfolio not found" };
   }
-  return configureAgentForPortfolio(portfolio.id, input);
+  return configureAgentForPortfolio(userId, portfolio.id, input);
 }

@@ -1,6 +1,6 @@
 import { and, count, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { agents, knowledgeChunks, knowledgeSources, portfolios } from "@/lib/schema";
+import { agents, knowledgeChunks, knowledgeSources } from "@/lib/schema";
 import { chunkText } from "@/lib/knowledge/chunk-text";
 import { generateEmbeddings } from "@/lib/ai/embeddings";
 
@@ -54,19 +54,27 @@ export async function getUserAgent(userId: string, portfolioId?: string) {
   if (portfolioId) {
     // Scope to the specific (active) portfolio
     const [agent] = await db
-      .select({ id: agents.id, portfolioId: agents.portfolioId, isEnabled: agents.isEnabled })
+      .select({
+        id: agents.id,
+        userId: agents.userId,
+        portfolioId: agents.portfolioId,
+        isEnabled: agents.isEnabled,
+      })
       .from(agents)
-      .where(eq(agents.portfolioId, portfolioId))
+      .where(and(eq(agents.userId, userId), eq(agents.portfolioId, portfolioId)))
       .limit(1);
     return agent ?? null;
   }
 
-  // Legacy: grab agent from first portfolio belonging to the user
   const [agent] = await db
-    .select({ id: agents.id, portfolioId: agents.portfolioId, isEnabled: agents.isEnabled })
+    .select({
+      id: agents.id,
+      userId: agents.userId,
+      portfolioId: agents.portfolioId,
+      isEnabled: agents.isEnabled,
+    })
     .from(agents)
-    .innerJoin(portfolios, eq(portfolios.id, agents.portfolioId))
-    .where(eq(portfolios.userId, userId))
+    .where(eq(agents.userId, userId))
     .limit(1);
 
   return agent ?? null;
