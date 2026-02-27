@@ -1,0 +1,16 @@
+{
+  "id": "coach-sales-followup",
+  "niche": "business_coaching",
+  "strategyMode": "sales",
+  "behaviorType": "professional",
+  "message": "I want coaching for my 12-person team next quarter. Do you have a package and can we book a call?",
+  "history": [],
+  "expected": {
+    "leadDetected": true,
+    "tone": "professional",
+    "policy": {
+      "requireNextStepPrompt": true,
+      "disallowPromptLeak": true
+    }
+  }
+}

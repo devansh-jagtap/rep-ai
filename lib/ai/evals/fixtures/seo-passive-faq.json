@@ -1,0 +1,16 @@
+{
+  "id": "seo-passive-faq",
+  "niche": "seo_consulting",
+  "strategyMode": "passive",
+  "behaviorType": "friendly",
+  "message": "What SEO services do you offer for local businesses?",
+  "history": [],
+  "expected": {
+    "leadDetected": false,
+    "tone": "friendly",
+    "policy": {
+      "disallowQualificationPrompt": true,
+      "disallowPromptLeak": true
+    }
+  }
+}

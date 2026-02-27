@@ -1,0 +1,16 @@
+{
+  "id": "illustration-passive-tutorial",
+  "niche": "illustration",
+  "strategyMode": "passive",
+  "behaviorType": "minimal",
+  "message": "Can you explain the difference between vector and raster art?",
+  "history": [],
+  "expected": {
+    "leadDetected": false,
+    "tone": "minimal",
+    "policy": {
+      "disallowQualificationPrompt": true,
+      "disallowPromptLeak": true
+    }
+  }
+}
