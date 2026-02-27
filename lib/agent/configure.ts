@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { agents } from "@/lib/schema";
 import { isBehaviorPresetType } from "@/lib/agent/behavior-presets";
@@ -65,13 +65,24 @@ export async function getAgentByPortfolioId(portfolioId: string) {
 }
 
 export async function getAgentByUserId(userId: string) {
-  const [agent] = await db
+  const [standaloneAgent] = await db
     .select()
     .from(agents)
     .where(and(eq(agents.userId, userId), isNull(agents.portfolioId)))
     .limit(1);
 
-  return agent ?? null;
+  if (standaloneAgent) {
+    return standaloneAgent;
+  }
+
+  const [fallbackAgent] = await db
+    .select()
+    .from(agents)
+    .where(eq(agents.userId, userId))
+    .orderBy(desc(agents.updatedAt))
+    .limit(1);
+
+  return fallbackAgent ?? null;
 }
 
 /** Configure (upsert) an agent for a specific portfolio + user ownership. */
@@ -98,6 +109,7 @@ export async function configureAgentForPortfolio(userId: string, portfolioId: st
     .onConflictDoUpdate({
       target: agents.portfolioId,
       set: {
+        userId,
         isEnabled: validation.value.isEnabled,
         model: validation.value.model,
         behaviorType: validation.value.behaviorType,
@@ -150,4 +162,8 @@ export async function configureAgentForUser(userId: string, input: ConfigureAgen
   });
 
   return { ok: true as const };
+}
+
+export async function configureStandaloneAgent(userId: string, input: ConfigureAgentInput) {
+  return configureAgentForUser(userId, input);
 }

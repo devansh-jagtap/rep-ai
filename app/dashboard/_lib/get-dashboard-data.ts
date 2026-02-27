@@ -18,6 +18,7 @@ export async function getDashboardData() {
     return { portfolio: null, agent };
   }
 
-  const agent = await getAgentByPortfolioId(portfolio.id);
+  const portfolioAgent = await getAgentByPortfolioId(portfolio.id);
+  const agent = portfolioAgent ?? (await getAgentByUserId(userId));
   return { portfolio, agent };
 }
