@@ -29,7 +29,7 @@ export interface GenerateAgentReplyInput {
   customPrompt: string | null;
   message: string;
   history: AgentMessage[];
-  portfolio: PortfolioContent;
+  portfolio?: PortfolioContent | null;
 }
 
 export interface GenerateAgentReplyOutput {

@@ -15,7 +15,7 @@ export default async function EmbedAgentPage({ params }: EmbedPageProps) {
   }
 
   const agent = await getPublicAgentById(agentId);
-  if (!agent || !agent.isEnabled || !agent.portfolioIsPublished) {
+  if (!agent || !agent.isEnabled) {
     notFound();
   }
 

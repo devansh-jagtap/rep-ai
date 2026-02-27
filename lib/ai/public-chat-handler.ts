@@ -7,9 +7,10 @@ import {
 import { classifyAiError, logPublicAgentEvent } from "@/lib/ai/safe-logging";
 import { saveLeadWithDedup } from "@/lib/db/agent-leads";
 import { saveChatMessage } from "@/lib/db/lead-chats";
+import { getAgentCoreConfigById } from "@/lib/db/knowledge";
 import {
-  getPortfolioWithAgentByAgentId,
-  getPortfolioWithAgentByHandle,
+  getPortfolioBackedAgentContextByAgentId,
+  getPortfolioBackedAgentContextByHandle,
 } from "@/lib/db/portfolio";
 import { isBehaviorPresetType } from "@/lib/agent/behavior-presets";
 import { isSupportedAgentModel } from "@/lib/agent/models";
@@ -62,7 +63,12 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
     }
 
     if (input.handle && isHandleTemporarilyBlocked(input.handle)) {
-      return { ok: true, reply: "Agent temporarily unavailable. Please try again later.", leadDetected: false, sessionId: input.sessionId || crypto.randomUUID() };
+      return {
+        ok: true,
+        reply: "Agent temporarily unavailable. Please try again later.",
+        leadDetected: false,
+        sessionId: input.sessionId || crypto.randomUUID(),
+      };
     }
 
     if (input.userId) {
@@ -73,51 +79,55 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
     }
 
     const portfolio = input.agentId
-      ? await getPortfolioWithAgentByAgentId(input.agentId)
-      : await getPortfolioWithAgentByHandle(input.handle ?? "");
+      ? await getPortfolioBackedAgentContextByAgentId(input.agentId)
+      : await getPortfolioBackedAgentContextByHandle(input.handle ?? "");
 
-    if (!portfolio || !portfolio.content) {
+    const standaloneAgent = !portfolio && input.agentId ? await getAgentCoreConfigById(input.agentId) : null;
+
+    if (!portfolio && !standaloneAgent) {
+      return { ok: false, error: "Agent not found", status: 404 };
+    }
+
+    if (portfolio && !portfolio.isPublished && portfolio.userId !== input.userId) {
       return { ok: false, error: "Portfolio not found", status: 404 };
     }
 
-    if (!portfolio.isPublished && portfolio.userId !== input.userId) {
-      return { ok: false, error: "Portfolio not found", status: 404 };
-    }
+    const agentId = portfolio?.agentId ?? standaloneAgent?.agentId;
+    const agentIsEnabled = portfolio?.agentIsEnabled ?? standaloneAgent?.isEnabled;
+    const agentModel = portfolio?.agentModel ?? standaloneAgent?.model;
+    const agentTemperature = portfolio?.agentTemperature ?? standaloneAgent?.temperature;
 
-    if (!portfolio.agentId || !portfolio.agentIsEnabled || !portfolio.agentModel) {
+    if (!agentId || !agentIsEnabled || !agentModel) {
       return { ok: false, error: "Agent unavailable", status: 404 };
     }
 
-    if (!isSupportedAgentModel(portfolio.agentModel)) {
+    if (!isSupportedAgentModel(agentModel)) {
       return { ok: false, error: "Agent model misconfigured", status: 500 };
     }
 
-    if (
-      typeof portfolio.agentTemperature !== "number" ||
-      portfolio.agentTemperature < 0.2 ||
-      portfolio.agentTemperature > 0.8
-    ) {
+    if (typeof agentTemperature !== "number" || agentTemperature < 0.2 || agentTemperature > 0.8) {
       return { ok: false, error: "Agent temperature misconfigured", status: 500 };
     }
 
-    const content = validatePortfolioContent(portfolio.content);
+    const behaviorTypeRaw = portfolio?.agentBehaviorType ?? standaloneAgent?.behaviorType;
     const behaviorType =
-      portfolio.agentBehaviorType && isBehaviorPresetType(portfolio.agentBehaviorType)
-        ? portfolio.agentBehaviorType
-        : null;
+      behaviorTypeRaw && isBehaviorPresetType(behaviorTypeRaw) ? behaviorTypeRaw : null;
 
+    const strategyRaw = portfolio?.agentStrategyMode ?? standaloneAgent?.strategyMode;
     const strategyMode: ConversationStrategyMode =
-      portfolio.agentStrategyMode && isConversationStrategyMode(String(portfolio.agentStrategyMode))
-        ? (String(portfolio.agentStrategyMode) as ConversationStrategyMode)
+      strategyRaw && isConversationStrategyMode(String(strategyRaw))
+        ? (String(strategyRaw) as ConversationStrategyMode)
         : "consultative";
 
+    const content = portfolio?.content ? validatePortfolioContent(portfolio.content) : null;
+
     const result = await generateAgentReply({
-      agentId: portfolio.agentId,
-      model: portfolio.agentModel,
-      temperature: portfolio.agentTemperature,
+      agentId,
+      model: agentModel,
+      temperature: agentTemperature,
       behaviorType,
       strategyMode,
-      customPrompt: portfolio.agentCustomPrompt,
+      customPrompt: portfolio?.agentCustomPrompt ?? standaloneAgent?.customPrompt ?? null,
       message: input.message,
       history: input.history,
       portfolio: content,
@@ -147,7 +157,8 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
 
     if (leadDetected) {
       const dedupeResult = await saveLeadWithDedup({
-        portfolioId: portfolio.id,
+        agentId,
+        portfolioId: portfolio?.id ?? null,
         name: result.lead.lead_data?.name?.trim() || null,
         email: result.lead.lead_data?.email?.trim() || null,
         budget: result.lead.lead_data?.budget?.trim() || null,
@@ -160,8 +171,9 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
         console.info(
           JSON.stringify({
             event: "agent_lead_updated",
-            handle: portfolio.handle,
-            portfolioId: portfolio.id,
+            handle: portfolio?.handle ?? null,
+            portfolioId: portfolio?.id ?? null,
+            agentId,
             timestamp: new Date().toISOString(),
           })
         );
@@ -177,29 +189,31 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
     }
 
     logPublicAgentEvent({
-      handle: portfolio.handle,
-      model: portfolio.agentModel,
+      handle: portfolio?.handle ?? input.handle ?? `agent:${agentId}`,
+      model: agentModel,
       tokensUsed: result.usage.totalTokens,
       leadDetected,
       confidence: result.lead.confidence,
       errorType: result.errorType,
     });
 
-    const isFirstMessage = !input.history || input.history.length === 0;
+    if (portfolio) {
+      const isFirstMessage = !input.history || input.history.length === 0;
 
-    if (isFirstMessage) {
+      if (isFirstMessage) {
+        await trackAnalytics({
+          portfolioId: portfolio.id,
+          type: "chat_session_start",
+          sessionId,
+        });
+      }
+
       await trackAnalytics({
         portfolioId: portfolio.id,
-        type: "chat_session_start",
+        type: "chat_message",
         sessionId,
       });
     }
-
-    await trackAnalytics({
-      portfolioId: portfolio.id,
-      type: "chat_message",
-      sessionId,
-    });
 
     return { ok: true, reply: result.reply, leadDetected, sessionId };
   } catch (error) {

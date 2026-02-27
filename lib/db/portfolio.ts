@@ -316,3 +316,12 @@ export async function deletePortfolioByUserId(userId: string) {
     return { ok: false as const };
   }
 }
+
+
+export async function getPortfolioBackedAgentContextByAgentId(agentId: string) {
+  return getPortfolioWithAgentByAgentId(agentId);
+}
+
+export async function getPortfolioBackedAgentContextByHandle(handle: string) {
+  return getPortfolioWithAgentByHandle(handle);
+}
