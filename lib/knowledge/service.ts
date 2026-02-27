@@ -8,6 +8,7 @@ import {
   getKnowledgeChunksForSearch,
   getKnowledgeChunksWithoutEmbeddings,
   getKnowledgeSourceByIdAndAgent,
+  getRecentKnowledgeChunkRecordsByAgentId,
   getRecentKnowledgeChunksByAgentId,
   insertKnowledgeChunks,
   updateChunkEmbedding,
@@ -17,6 +18,13 @@ import { chunkText } from "@/lib/knowledge/chunk-text";
 import { processKnowledgeSource } from "@/lib/knowledge/processor";
 
 const MAX_KNOWLEDGE_SOURCES_PER_AGENT = 50;
+
+
+export interface KnowledgeContextChunk {
+  chunkId: string;
+  sourceId: string;
+  content: string;
+}
 
 async function persistChunksWithEmbeddings(input: {
   sourceId: string;
@@ -110,13 +118,18 @@ export async function updateKnowledgeSource(input: {
   return { ok: true as const };
 }
 
-export async function hybridSearchKnowledgeByAgentId(
+export async function hybridSearchKnowledgeContextByAgentId(
   agentId: string,
   query: string,
   limit = 5
-): Promise<string[]> {
+): Promise<KnowledgeContextChunk[]> {
   if (!query.trim()) {
-    return getRecentKnowledgeChunksByAgentId(agentId, limit);
+    const recentRows = await getRecentKnowledgeChunkRecordsByAgentId(agentId, limit);
+    return recentRows.map((row) => ({
+      chunkId: row.id,
+      sourceId: row.sourceId,
+      content: row.chunkText,
+    }));
   }
 
   let queryEmbedding: number[];
@@ -124,7 +137,12 @@ export async function hybridSearchKnowledgeByAgentId(
     queryEmbedding = await generateEmbedding(query);
   } catch (error) {
     console.warn("Failed to generate embedding, falling back to recency:", error);
-    return getRecentKnowledgeChunksByAgentId(agentId, limit);
+    const recentRows = await getRecentKnowledgeChunkRecordsByAgentId(agentId, limit);
+    return recentRows.map((row) => ({
+      chunkId: row.id,
+      sourceId: row.sourceId,
+      content: row.chunkText,
+    }));
   }
 
   try {
@@ -152,15 +170,34 @@ export async function hybridSearchKnowledgeByAgentId(
         const recencyScore = (createdTime - minDate) / (maxDate - minDate + 1);
         const combinedScore = semanticScore * 0.7 + recencyScore * 0.3;
 
-        return { chunkText: row.chunkText, score: combinedScore };
+        return {
+          chunkId: row.id,
+          sourceId: row.sourceId,
+          content: row.chunkText,
+          score: combinedScore,
+        };
       })
       .sort((a, b) => b.score - a.score)
       .slice(0, limit);
 
-    return scoredChunks.map((chunk) => chunk.chunkText);
+    return scoredChunks.map(({ chunkId, sourceId, content }) => ({ chunkId, sourceId, content }));
   } catch {
-    return getRecentKnowledgeChunksByAgentId(agentId, limit);
+    const recentRows = await getRecentKnowledgeChunkRecordsByAgentId(agentId, limit);
+    return recentRows.map((row) => ({
+      chunkId: row.id,
+      sourceId: row.sourceId,
+      content: row.chunkText,
+    }));
   }
+}
+
+export async function hybridSearchKnowledgeByAgentId(
+  agentId: string,
+  query: string,
+  limit = 5
+): Promise<string[]> {
+  const chunks = await hybridSearchKnowledgeContextByAgentId(agentId, query, limit);
+  return chunks.map((chunk) => chunk.content);
 }
 
 export async function backfillEmbeddingsForAgent(agentId: string): Promise<number> {
