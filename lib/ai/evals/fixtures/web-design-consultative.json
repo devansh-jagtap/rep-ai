@@ -1,0 +1,15 @@
+{
+  "id": "web-design-consultative-quote",
+  "niche": "web_design",
+  "strategyMode": "consultative",
+  "behaviorType": "professional",
+  "message": "I'm planning a redesign for my clinic website and need a quote for a booking flow. Can you help?",
+  "history": [],
+  "expected": {
+    "leadDetected": true,
+    "tone": "professional",
+    "policy": {
+      "disallowPromptLeak": true
+    }
+  }
+}

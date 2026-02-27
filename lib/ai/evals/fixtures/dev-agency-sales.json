@@ -1,0 +1,16 @@
+{
+  "id": "dev-agency-sales-discovery",
+  "niche": "software_agency",
+  "strategyMode": "sales",
+  "behaviorType": "sales",
+  "message": "We need to build an MVP in 8 weeks. Budget is around $60k. What's the next step?",
+  "history": [],
+  "expected": {
+    "leadDetected": true,
+    "tone": "sales",
+    "policy": {
+      "requireNextStepPrompt": true,
+      "disallowPromptLeak": true
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": "copywriter-consultative-fit",
+  "niche": "copywriting",
+  "strategyMode": "consultative",
+  "behaviorType": "friendly",
+  "message": "Do you do landing page copy for SaaS? We need higher conversion rates but aren't sure what package we need.",
+  "history": [],
+  "expected": {
+    "leadDetected": true,
+    "tone": "friendly",
+    "policy": {
+      "disallowPromptLeak": true
+    }
+  }
+}
