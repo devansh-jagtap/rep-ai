@@ -1,48 +1,106 @@
-import { and, desc, eq, gte } from "drizzle-orm";
+import { and, desc, eq, gte, or } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { agentLeads } from "@/lib/schema";
 import { linkMessagesToLead } from "./lead-chats";
 
-interface SaveLeadInput {
+export interface SaveLeadInput {
   agentId: string;
   portfolioId?: string | null;
   name: string | null;
   email: string | null;
+  phone?: string | null;
+  website?: string | null;
   budget: string | null;
   projectDetails: string | null;
   confidence: number;
   sessionId: string;
+  captureTurn?: number | null;
 }
 
-interface ExistingLead {
+export interface ExistingLead {
   id: string;
   name: string | null;
   email: string | null;
+  phone: string | null;
+  website: string | null;
   budget: string | null;
   projectDetails: string | null;
   confidence: number;
   sessionId: string | null;
+  captureTurn: number | null;
 }
 
-export async function findExistingLead(agentId: string, email: string): Promise<ExistingLead | null> {
+export function normalizeEmail(email: string | null | undefined): string {
+  return email?.trim().toLowerCase() ?? "";
+}
+
+export function normalizePhone(phone: string | null | undefined): string {
+  const digitsOnly = (phone ?? "").replace(/[^\d+]/g, "").trim();
+  return digitsOnly;
+}
+
+export function normalizeWebsite(website: string | null | undefined): string {
+  const raw = website?.trim().toLowerCase() ?? "";
+  if (!raw) {
+    return "";
+  }
+
+  return raw.replace(/^https?:\/\//, "").replace(/\/$/, "");
+}
+
+export interface LeadLookupKey {
+  email: string;
+  phone: string;
+  website: string;
+}
+
+export function buildLeadLookup(input: Pick<SaveLeadInput, "email" | "phone" | "website">): LeadLookupKey {
+  return {
+    email: normalizeEmail(input.email),
+    phone: normalizePhone(input.phone),
+    website: normalizeWebsite(input.website),
+  };
+}
+
+async function findExistingLead(agentId: string, lookup: LeadLookupKey): Promise<ExistingLead | null> {
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+  const contactClauses = [];
+  if (lookup.email) {
+    contactClauses.push(eq(agentLeads.email, lookup.email));
+  }
+
+  if (lookup.phone) {
+    contactClauses.push(eq(agentLeads.phone, lookup.phone));
+  }
+
+  if (lookup.website) {
+    contactClauses.push(eq(agentLeads.website, lookup.website));
+  }
+
+  if (contactClauses.length === 0) {
+    return null;
+  }
 
   const [existing] = await db
     .select({
       id: agentLeads.id,
       name: agentLeads.name,
       email: agentLeads.email,
+      phone: agentLeads.phone,
+      website: agentLeads.website,
       budget: agentLeads.budget,
       projectDetails: agentLeads.projectDetails,
       confidence: agentLeads.confidence,
       sessionId: agentLeads.sessionId,
+      captureTurn: agentLeads.captureTurn,
     })
     .from(agentLeads)
     .where(
       and(
         eq(agentLeads.agentId, agentId),
-        eq(agentLeads.email, email),
-        gte(agentLeads.createdAt, since)
+        gte(agentLeads.createdAt, since),
+        or(...contactClauses)
       )
     )
     .orderBy(desc(agentLeads.createdAt))
@@ -51,37 +109,41 @@ export async function findExistingLead(agentId: string, email: string): Promise<
   return existing ?? null;
 }
 
-function mergeLeadData(existing: ExistingLead, input: SaveLeadInput) {
-  const mergedName = input.name?.trim() || existing.name;
-  const mergedBudget = input.budget?.trim() || existing.budget;
-  const mergedProjectDetails = input.projectDetails?.trim() || existing.projectDetails;
-  const mergedConfidence = Math.max(existing.confidence, input.confidence);
-
+export function mergeLeadData(existing: ExistingLead, input: SaveLeadInput, lookup: LeadLookupKey) {
   return {
-    name: mergedName,
-    budget: mergedBudget,
-    projectDetails: mergedProjectDetails,
-    confidence: mergedConfidence,
+    name: input.name?.trim() || existing.name,
+    email: lookup.email || existing.email,
+    phone: lookup.phone || existing.phone,
+    website: lookup.website || existing.website,
+    budget: input.budget?.trim() || existing.budget,
+    projectDetails: input.projectDetails?.trim() || existing.projectDetails,
+    confidence: Math.max(existing.confidence, input.confidence),
+    captureTurn: existing.captureTurn ?? input.captureTurn ?? null,
   };
 }
 
 export async function saveLeadWithDedup(input: SaveLeadInput): Promise<"inserted" | "updated" | "skipped"> {
-  const normalizedEmail = input.email?.trim().toLowerCase() ?? "";
+  const lookup = buildLeadLookup(input);
 
-  if (!normalizedEmail) {
+  const hasContactChannel = Boolean(lookup.email || lookup.phone || lookup.website);
+  if (!hasContactChannel) {
     return "skipped";
   }
 
-  const existing = await findExistingLead(input.agentId, normalizedEmail);
+  const existing = await findExistingLead(input.agentId, lookup);
 
   if (existing) {
-    const merged = mergeLeadData(existing, input);
-    
-    const hasChanges = 
+    const merged = mergeLeadData(existing, input, lookup);
+
+    const hasChanges =
       merged.name !== existing.name ||
+      merged.email !== existing.email ||
+      merged.phone !== existing.phone ||
+      merged.website !== existing.website ||
       merged.budget !== existing.budget ||
       merged.projectDetails !== existing.projectDetails ||
-      merged.confidence !== existing.confidence;
+      merged.confidence !== existing.confidence ||
+      merged.captureTurn !== existing.captureTurn;
 
     if (hasChanges || existing.sessionId !== input.sessionId) {
       await db
@@ -103,11 +165,14 @@ export async function saveLeadWithDedup(input: SaveLeadInput): Promise<"inserted
     agentId: input.agentId,
     portfolioId: input.portfolioId ?? null,
     name: input.name,
-    email: normalizedEmail,
+    email: lookup.email || null,
+    phone: lookup.phone || null,
+    website: lookup.website || null,
     budget: input.budget,
     projectDetails: input.projectDetails,
     confidence: input.confidence,
     sessionId: input.sessionId,
+    captureTurn: input.captureTurn ?? null,
   });
 
   await linkMessagesToLead(leadId, input.sessionId);
