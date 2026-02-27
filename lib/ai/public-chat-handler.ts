@@ -34,6 +34,51 @@ const CREDIT_COST = 1;
 const FALLBACK_REPLY =
   "Thanks for your message. Please leave your email and project details and the professional will get back to you shortly.";
 
+export type LeadFieldPayload = {
+  email: string | null;
+  phone: string | null;
+  website: string | null;
+  projectDetails: string | null;
+  budget: string | null;
+};
+
+function normalizeWebsite(website: string | null | undefined): string | null {
+  const raw = website?.trim().toLowerCase();
+  if (!raw) {
+    return null;
+  }
+
+  return raw.replace(/^https?:\/\//, "").replace(/\/$/, "");
+}
+
+export function parseLeadChannelsFromText(text: string): { phone: string | null; website: string | null } {
+  const phoneMatch = text.match(/\+?[0-9][0-9\s().-]{6,}[0-9]/);
+  const websiteMatch = text.match(/(?:https?:\/\/)?(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:\/[\w-./?%&=]*)?/i);
+
+  return {
+    phone: phoneMatch?.[0]?.trim() ?? null,
+    website: normalizeWebsite(websiteMatch?.[0] ?? null),
+  };
+}
+
+export function hasSufficientLeadFields(mode: ConversationStrategyMode, leadData: LeadFieldPayload): boolean {
+  const hasEmail = Boolean(leadData.email?.trim());
+  const hasProjectDetails = Boolean(leadData.projectDetails?.trim() && leadData.projectDetails.trim().length >= 20);
+  const hasBudget = Boolean(leadData.budget?.trim());
+  const hasAltContact = Boolean(leadData.phone?.trim() || leadData.website?.trim());
+
+  switch (mode) {
+    case "sales":
+      return (hasEmail || hasAltContact) && (hasProjectDetails || hasBudget);
+    case "consultative":
+      return hasEmail || (hasProjectDetails && hasAltContact);
+    case "passive":
+      return false;
+    default:
+      return hasEmail;
+  }
+}
+
 export interface PublicChatInput {
   handle: string | null;
   agentId: string | null;
@@ -174,9 +219,23 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
       await consumeCredits(input.userId, CREDIT_COST);
     }
 
-    const threshold = leadConfidenceThresholdForMode(strategyMode);
+    const industryType = content?.about?.paragraph ?? null;
+    const threshold = leadConfidenceThresholdForMode(strategyMode, industryType);
+    const extractedChannels = parseLeadChannelsFromText(input.message);
+    const leadFields: LeadFieldPayload = {
+      email: result.lead.lead_data?.email?.trim() || null,
+      phone: extractedChannels.phone,
+      website: extractedChannels.website,
+      budget: result.lead.lead_data?.budget?.trim() || null,
+      projectDetails: result.lead.lead_data?.project_details?.trim() || null,
+    };
+
+    const passesFieldThreshold = hasSufficientLeadFields(strategyMode, leadFields);
     const leadDetected =
-      strategyMode !== "passive" && result.lead.lead_detected && result.lead.confidence >= threshold;
+      strategyMode !== "passive" &&
+      result.lead.lead_detected &&
+      result.lead.confidence >= threshold &&
+      passesFieldThreshold;
 
     await saveChatMessage({
       sessionId,
@@ -195,11 +254,14 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
         agentId,
         portfolioId: portfolio?.id ?? null,
         name: result.lead.lead_data?.name?.trim() || null,
-        email: result.lead.lead_data?.email?.trim() || null,
-        budget: result.lead.lead_data?.budget?.trim() || null,
-        projectDetails: result.lead.lead_data?.project_details?.trim() || null,
+        email: leadFields.email,
+        phone: leadFields.phone,
+        website: leadFields.website,
+        budget: leadFields.budget,
+        projectDetails: leadFields.projectDetails,
         confidence: result.lead.confidence,
         sessionId,
+        captureTurn: input.history.length + 1,
       });
 
       if (dedupeResult === "updated") {
@@ -240,6 +302,8 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
       metadata: {
         historyCount: input.history.length,
         threshold,
+        industryType,
+        passesFieldThreshold,
       },
     });
 
