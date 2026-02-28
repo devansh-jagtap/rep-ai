@@ -103,6 +103,7 @@ export default async function PublicPortfolioPage({ params }: PublicPortfolioPag
         <AgentWidget
           handle={handle}
           agentName={portfolio.agentDisplayName ?? "AI Assistant"}
+          avatarUrl={portfolio.agentAvatarUrl ?? null}
           roleLabel={portfolio.agentRoleLabel ?? null}
           intro={portfolio.agentIntro ?? null}
         />

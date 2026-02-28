@@ -18,5 +18,6 @@ export interface LeadDetailData extends LeadListItemData {
   projectDetails?: string | null
   conversationSummary?: string | null
   timeline?: string | null
+  meetingTime?: string | null
 }
 

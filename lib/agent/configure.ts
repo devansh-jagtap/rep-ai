@@ -16,6 +16,8 @@ export interface ConfigureAgentInput {
   avatarUrl: string | null;
   intro: string | null;
   roleLabel: string | null;
+  workingHours?: { dayOfWeek: number; startTime: string; endTime: string; enabled: boolean }[] | null;
+  offDays?: string[] | null;
 }
 
 export function validateConfigureAgentInput(input: ConfigureAgentInput) {
@@ -62,6 +64,8 @@ export function validateConfigureAgentInput(input: ConfigureAgentInput) {
       avatarUrl: normalizedAvatarUrl,
       intro: normalizedIntro,
       roleLabel: normalizedRoleLabel,
+      workingHours: input.workingHours ?? null,
+      offDays: input.offDays ?? null,
     },
   };
 }
@@ -120,6 +124,8 @@ export async function configureAgentForPortfolio(userId: string, portfolioId: st
       avatarUrl: validation.value.avatarUrl,
       intro: validation.value.intro,
       roleLabel: validation.value.roleLabel,
+      workingHours: validation.value.workingHours,
+      offDays: validation.value.offDays,
       updatedAt: new Date(),
     })
     .onConflictDoUpdate({
@@ -136,6 +142,8 @@ export async function configureAgentForPortfolio(userId: string, portfolioId: st
         avatarUrl: validation.value.avatarUrl,
         intro: validation.value.intro,
         roleLabel: validation.value.roleLabel,
+        workingHours: validation.value.workingHours,
+        offDays: validation.value.offDays,
         updatedAt: new Date(),
       },
     });
@@ -165,6 +173,8 @@ export async function configureAgentForUser(userId: string, input: ConfigureAgen
         avatarUrl: validation.value.avatarUrl,
         intro: validation.value.intro,
         roleLabel: validation.value.roleLabel,
+        workingHours: validation.value.workingHours,
+        offDays: validation.value.offDays,
         updatedAt: new Date(),
       })
       .where(eq(agents.id, existingAgent.id));
@@ -186,6 +196,8 @@ export async function configureAgentForUser(userId: string, input: ConfigureAgen
     avatarUrl: validation.value.avatarUrl,
     intro: validation.value.intro,
     roleLabel: validation.value.roleLabel,
+    workingHours: validation.value.workingHours,
+    offDays: validation.value.offDays,
     updatedAt: new Date(),
   });
 

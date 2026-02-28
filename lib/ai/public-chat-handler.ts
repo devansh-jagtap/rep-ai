@@ -206,6 +206,8 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
     const avatarUrl = portfolio?.agentAvatarUrl ?? standaloneAgent?.avatarUrl ?? null;
     const intro = portfolio?.agentIntro ?? standaloneAgent?.intro ?? null;
     const roleLabel = portfolio?.agentRoleLabel ?? standaloneAgent?.roleLabel ?? null;
+    const workingHours = (portfolio as any)?.agentWorkingHours ?? (standaloneAgent as any)?.workingHours ?? null;
+    const offDays = (portfolio as any)?.agentOffDays ?? (standaloneAgent as any)?.offDays ?? null;
 
     const result = await generateAgentReply({
       agentId,
@@ -221,6 +223,8 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
       message: input.message,
       history: input.history,
       portfolio: content,
+      workingHours,
+      offDays,
     });
 
 
@@ -280,6 +284,7 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
             website: leadFields.website,
             budget: leadFields.budget,
             projectDetails: leadFields.projectDetails,
+            meetingTime: result.lead.lead_data?.meeting_time?.trim() || null,
             confidence: result.lead.confidence,
             sessionId,
             captureTurn: input.history.length + 1,

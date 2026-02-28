@@ -12,6 +12,8 @@ interface AgentConfig {
   avatarUrl: string;
   intro: string;
   roleLabel: string;
+  workingHours: { dayOfWeek: number; startTime: string; endTime: string; enabled: boolean }[];
+  offDays: string[];
   googleCalendarEnabled: boolean;
   googleCalendarAccountEmail: string | null;
 }
@@ -47,6 +49,16 @@ const defaultConfig: AgentConfig = {
   avatarUrl: "",
   intro: "",
   roleLabel: "",
+  workingHours: [
+    { dayOfWeek: 0, startTime: "09:00", endTime: "17:00", enabled: false }, // Sunday
+    { dayOfWeek: 1, startTime: "09:00", endTime: "17:00", enabled: true },
+    { dayOfWeek: 2, startTime: "09:00", endTime: "17:00", enabled: true },
+    { dayOfWeek: 3, startTime: "09:00", endTime: "17:00", enabled: true },
+    { dayOfWeek: 4, startTime: "09:00", endTime: "17:00", enabled: true },
+    { dayOfWeek: 5, startTime: "09:00", endTime: "17:00", enabled: true },
+    { dayOfWeek: 6, startTime: "09:00", endTime: "17:00", enabled: false }, // Saturday
+  ],
+  offDays: [],
   googleCalendarEnabled: false,
   googleCalendarAccountEmail: null,
 };

@@ -12,6 +12,7 @@ interface LeadData {
   email: string;
   budget: string;
   project_details: string;
+  meeting_time: string;
 }
 
 export interface AgentLeadPayload {
@@ -36,6 +37,8 @@ export interface GenerateAgentReplyInput {
   portfolio?: PortfolioContent | null;
   /** Pre-fetched Google Calendar access token — avoids a DB round-trip inside the tool loop */
   calendarAccessToken?: string | null;
+  workingHours?: { dayOfWeek: number; startTime: string; endTime: string; enabled: boolean }[] | null;
+  offDays?: string[] | null;
 }
 
 export interface GenerateAgentReplyOutput {

@@ -325,6 +325,8 @@ export async function getAgentCoreConfigById(agentId: string) {
       avatarUrl: agents.avatarUrl,
       intro: agents.intro,
       roleLabel: agents.roleLabel,
+      workingHours: agents.workingHours,
+      offDays: agents.offDays,
     })
     .from(agents)
     .where(eq(agents.id, agentId))

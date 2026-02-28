@@ -98,12 +98,13 @@ export function parseLeadPayload(raw: string): { reply: string; lead: AgentLeadP
         confidence: Math.max(0, Math.min(100, confidence)),
         lead_data: leadData
           ? {
-              name: String(leadData.name ?? ""),
-              email: String(leadData.email ?? ""),
-              budget: String(leadData.budget ?? ""),
-              project_details: String(leadData.project_details ?? ""),
-            }
-          : { name: "", email: "", budget: "", project_details: "" },
+            name: String(leadData.name ?? ""),
+            email: String(leadData.email ?? ""),
+            budget: String(leadData.budget ?? ""),
+            project_details: String(leadData.project_details ?? ""),
+            meeting_time: String(leadData.meeting_time ?? ""),
+          }
+          : { name: "", email: "", budget: "", project_details: "", meeting_time: "" },
       },
     };
   } catch {

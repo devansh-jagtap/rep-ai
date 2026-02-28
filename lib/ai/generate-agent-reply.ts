@@ -116,8 +116,32 @@ async function requestReply(input: GenerateAgentReplyInput): Promise<{ text: str
                         targetDate = parsed;
                       }
                     }
-
+                    const targetDayOfWeek = targetDate.getDay();
                     const dateStr = targetDate.toISOString().split("T")[0];
+
+                    const offDays = input.offDays || [];
+                    if (offDays.includes(dateStr)) {
+                      console.log(`[tool:check_availability] Agent is off on ${dateStr}`);
+                      return {
+                        date: dateStr,
+                        availability: "Unavailable. The agent is marked as off on this specific date.",
+                        busy_slots: [],
+                        summary: "Agent is off on this date."
+                      };
+                    }
+
+                    const wh = (input.workingHours || []).find(w => w.dayOfWeek === targetDayOfWeek);
+                    if (wh && !wh.enabled) {
+                      const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+                      console.log(`[tool:check_availability] Agent is closed on ${days[targetDayOfWeek]}s`);
+                      return {
+                        date: dateStr,
+                        availability: `Unavailable. The agent is closed on ${days[targetDayOfWeek]}s.`,
+                        busy_slots: [],
+                        summary: "Agent is closed on this day of the week."
+                      };
+                    }
+
                     const timeMin = new Date(targetDate);
                     timeMin.setHours(0, 0, 0, 0);
                     const timeMax = new Date(targetDate);
@@ -272,7 +296,7 @@ async function requestReply(input: GenerateAgentReplyInput): Promise<{ text: str
 const DEFAULT_LEAD: GenerateAgentReplyOutput["lead"] = {
   lead_detected: false,
   confidence: 0,
-  lead_data: { name: "", email: "", budget: "", project_details: "" },
+  lead_data: { name: "", email: "", budget: "", project_details: "", meeting_time: "" },
 };
 
 function stripTrailingJsonNoise(text: string): string {

@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { MessageSquare, X, ArrowUpIcon, Loader2 } from "lucide-react";
+import { MessageSquare, X, ArrowUpIcon, Loader2, Bot } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Conversation,
   ConversationContent,
@@ -30,17 +31,33 @@ type ChatMessage = {
 interface AgentWidgetProps {
   handle: string;
   agentName?: string;
+  avatarUrl?: string | null;
   roleLabel?: string | null;
   intro?: string | null;
 }
 
-export function AgentWidget({ handle, agentName = "AI Assistant", roleLabel, intro }: AgentWidgetProps) {
+export function AgentWidget({ handle, agentName = "AI Assistant", avatarUrl, roleLabel, intro }: AgentWidgetProps) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    const defaultIntro = "Hi! I'm the AI assistant for this portfolio. How can I help you today?";
+    return [{ id: "intro", role: "assistant", content: intro || defaultIntro }];
+  });
   const [loading, setLoading] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
   const sessionIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const handleGlobalClick = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement).closest('a[href="#contact"]');
+      if (target) {
+        e.preventDefault();
+        setOpen(true);
+      }
+    };
+    document.addEventListener('click', handleGlobalClick);
+    return () => document.removeEventListener('click', handleGlobalClick);
+  }, []);
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,7 +69,7 @@ export function AgentWidget({ handle, agentName = "AI Assistant", roleLabel, int
       role: "user",
       content: message,
     };
-    
+
     const nextMessages = [...messages, userMessage];
     setMessages(nextMessages);
     setInput("");
@@ -89,10 +106,10 @@ export function AgentWidget({ handle, agentName = "AI Assistant", roleLabel, int
     } catch {
       setMessages((prev) => [
         ...prev,
-        { 
-          id: crypto.randomUUID(), 
-          role: "assistant", 
-          content: "Something went wrong. Please try again." 
+        {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: "Something went wrong. Please try again."
         },
       ]);
     } finally {
@@ -123,8 +140,16 @@ export function AgentWidget({ handle, agentName = "AI Assistant", roleLabel, int
       ) : (
         <div className="bg-background flex h-[520px] w-[380px] max-w-[calc(100vw-48px)] flex-col rounded-2xl border shadow-2xl overflow-hidden">
           <div className="flex items-center justify-between border-b px-4 py-3 bg-muted/30">
-              <div className="flex items-center gap-2">
-                <div className="size-2 rounded-full bg-green-500 animate-pulse" />
+            <div className="flex items-center gap-3">
+              <div className="relative flex items-center justify-center">
+                <Avatar className="size-8">
+                  <AvatarImage src={avatarUrl || ""} alt={agentName} />
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    <Bot className="size-4" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full bg-green-500 border-2 border-background animate-pulse" />
+              </div>
               <div className="flex flex-col">
                 <p className="font-medium text-sm">{agentName}</p>
                 {roleLabel ? <p className="text-[11px] text-muted-foreground">{roleLabel}</p> : null}

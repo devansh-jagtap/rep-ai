@@ -39,6 +39,10 @@ export function LeadBody({ lead }: { lead: LeadDetailData }) {
               <dd className="font-medium">{lead.timeline || "—"}</dd>
             </div>
             <div className="space-y-1">
+              <dt className="text-muted-foreground">Meeting Time</dt>
+              <dd className="font-medium">{lead.meetingTime || "—"}</dd>
+            </div>
+            <div className="space-y-1">
               <dt className="text-muted-foreground">Budget</dt>
               <dd className="font-medium">{lead.budget || "—"}</dd>
             </div>

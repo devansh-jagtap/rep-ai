@@ -12,6 +12,7 @@ export interface SaveLeadInput {
   website?: string | null;
   budget: string | null;
   projectDetails: string | null;
+  meetingTime: string | null;
   confidence: number;
   sessionId: string;
   captureTurn?: number | null;
@@ -25,6 +26,7 @@ export interface ExistingLead {
   website: string | null;
   budget: string | null;
   projectDetails: string | null;
+  meetingTime: string | null;
   confidence: number;
   sessionId: string | null;
   captureTurn: number | null;
@@ -91,6 +93,7 @@ async function findExistingLead(agentId: string, lookup: LeadLookupKey): Promise
       website: agentLeads.website,
       budget: agentLeads.budget,
       projectDetails: agentLeads.projectDetails,
+      meetingTime: agentLeads.meetingTime,
       confidence: agentLeads.confidence,
       sessionId: agentLeads.sessionId,
       captureTurn: agentLeads.captureTurn,
@@ -117,6 +120,7 @@ export function mergeLeadData(existing: ExistingLead, input: SaveLeadInput, look
     website: lookup.website || existing.website,
     budget: input.budget?.trim() || existing.budget,
     projectDetails: input.projectDetails?.trim() || existing.projectDetails,
+    meetingTime: input.meetingTime?.trim() || existing.meetingTime,
     confidence: Math.max(existing.confidence, input.confidence),
     captureTurn: existing.captureTurn ?? input.captureTurn ?? null,
   };
@@ -142,6 +146,7 @@ export async function saveLeadWithDedup(input: SaveLeadInput): Promise<"inserted
       merged.website !== existing.website ||
       merged.budget !== existing.budget ||
       merged.projectDetails !== existing.projectDetails ||
+      merged.meetingTime !== existing.meetingTime ||
       merged.confidence !== existing.confidence ||
       merged.captureTurn !== existing.captureTurn;
 
@@ -170,6 +175,7 @@ export async function saveLeadWithDedup(input: SaveLeadInput): Promise<"inserted
     website: lookup.website || null,
     budget: input.budget,
     projectDetails: input.projectDetails,
+    meetingTime: input.meetingTime,
     confidence: input.confidence,
     sessionId: input.sessionId,
     captureTurn: input.captureTurn ?? null,

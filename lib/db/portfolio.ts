@@ -169,6 +169,8 @@ export async function getPublishedPortfolioWithAgentByHandle(handle: string) {
         agentAvatarUrl: agents.avatarUrl,
         agentIntro: agents.intro,
         agentRoleLabel: agents.roleLabel,
+        agentWorkingHours: agents.workingHours,
+        agentOffDays: agents.offDays,
       })
       .from(portfolios)
       .leftJoin(agents, eq(agents.portfolioId, portfolios.id))
@@ -202,6 +204,8 @@ export async function getPortfolioWithAgentByHandle(handle: string) {
         agentAvatarUrl: agents.avatarUrl,
         agentIntro: agents.intro,
         agentRoleLabel: agents.roleLabel,
+        agentWorkingHours: agents.workingHours,
+        agentOffDays: agents.offDays,
       })
       .from(portfolios)
       .leftJoin(agents, eq(agents.portfolioId, portfolios.id))
@@ -235,6 +239,8 @@ export async function getPublishedPortfolioWithAgentByAgentId(agentId: string) {
         agentAvatarUrl: agents.avatarUrl,
         agentIntro: agents.intro,
         agentRoleLabel: agents.roleLabel,
+        agentWorkingHours: agents.workingHours,
+        agentOffDays: agents.offDays,
       })
       .from(portfolios)
       .innerJoin(agents, eq(agents.portfolioId, portfolios.id))
@@ -268,6 +274,8 @@ export async function getPortfolioWithAgentByAgentId(agentId: string) {
         agentAvatarUrl: agents.avatarUrl,
         agentIntro: agents.intro,
         agentRoleLabel: agents.roleLabel,
+        agentWorkingHours: agents.workingHours,
+        agentOffDays: agents.offDays,
       })
       .from(portfolios)
       .innerJoin(agents, eq(agents.portfolioId, portfolios.id))
