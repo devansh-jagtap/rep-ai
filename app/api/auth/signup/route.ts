@@ -37,13 +37,13 @@ export async function POST(request: Request) {
     }
     return response;
   } catch (error: unknown) {
-    const err = error as { code?: string; message?: string };
+    console.error("Signup error", error);
+    const err = error as { code?: string };
     if (err.code === "USER_ALREADY_EXISTS") {
       return NextResponse.json({ error: "Email is already in use." }, { status: 409 });
     }
-    return NextResponse.json(
-      { error: err.message ?? "Failed to create account" },
-      { status: 500 }
-    );
+
+    return NextResponse.json({ error: "Failed to create account" }, { status: 500 });
   }
+
 }

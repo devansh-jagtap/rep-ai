@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
-import { knowledgeSources, knowledgeChunks } from "@/lib/schema";
+import { knowledgeSources } from "@/lib/schema";
 import { eq } from "drizzle-orm";
-import { extractTextFromPdf, extractTextFromUrl } from "@/lib/knowledge/extract-pdf";
+import { extractTextFromPdf } from "@/lib/knowledge/extract-pdf";
 import { generateEmbeddings } from "@/lib/ai/embeddings";
 import { chunkText } from "@/lib/knowledge/chunk-text";
 import { insertKnowledgeChunks, deleteKnowledgeChunksBySourceId } from "@/lib/db/knowledge";
@@ -72,9 +72,11 @@ export async function processKnowledgeSource(sourceId: string): Promise<{ succes
 
     if (source.fileUrl && source.mimeType === "application/pdf") {
       const s3Key = getKeyFromUrl(source.fileUrl);
-      const extraction = s3Key
-        ? await extractTextFromPdf(await getFileBuffer(s3Key))
-        : await extractTextFromUrl(source.fileUrl);
+      if (!s3Key) {
+        throw new Error("Invalid knowledge file URL. Could not derive S3 key.");
+      }
+
+      const extraction = await extractTextFromPdf(await getFileBuffer(s3Key));
       content = extraction.text;
 
       try {

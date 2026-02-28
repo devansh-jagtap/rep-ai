@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { authInstance } from "@/auth-helper";
 
 const protectedRoutes = [
   "/dashboard",
@@ -16,24 +17,15 @@ const authRoutes = [
   "/auth/error",
 ];
 
-const SESSION_COOKIE = "better-auth.session_token";
-const SECURE_SESSION_COOKIE = "__better-auth.session_token";
-
-function hasSessionToken(request: NextRequest): boolean {
-  return (
-    request.cookies.has(SESSION_COOKIE) ||
-    request.cookies.has(SECURE_SESSION_COOKIE)
-  );
-}
-
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isAuth = hasSessionToken(request);
+  const session = await authInstance.api.getSession({ headers: request.headers });
+  const isAuthenticated = !!session?.user?.id;
 
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
 
   if (isAuthRoute) {
-    if (isAuth) {
+    if (isAuthenticated) {
       return NextResponse.redirect(new URL("/dashboard", request.nextUrl));
     }
     return NextResponse.next();
@@ -41,7 +33,7 @@ export function proxy(request: NextRequest) {
 
   const isProtected = protectedRoutes.some((route) => pathname.startsWith(route));
 
-  if (isProtected && !isAuth) {
+  if (isProtected && !isAuthenticated) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

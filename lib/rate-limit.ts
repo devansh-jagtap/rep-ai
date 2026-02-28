@@ -94,3 +94,12 @@ export function checkPublicChatAgentRateLimit(agentId: string): boolean {
   });
 }
 
+
+
+export function checkAnalyticsRateLimit(ip: string, handle: string): boolean {
+  return checkRateLimitWithConfig({
+    key: `analytics:${ip}:${handle.toLowerCase()}`,
+    maxRequests: 30,
+    windowMs: 60_000,
+  });
+}
