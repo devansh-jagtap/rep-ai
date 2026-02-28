@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryProvider } from "@/lib/providers/query-provider";
 import { Instrument_Serif, Figtree } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next"
 import "./globals.css";
 
 const instrumentSerif = Instrument_Serif({
@@ -32,6 +33,7 @@ export default function RootLayout({
       <body
         className={`${instrumentSerif.variable} ${figtree.variable} antialiased`}
       >
+        <Analytics />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <TooltipProvider>
             <QueryProvider>
