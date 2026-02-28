@@ -1,18 +1,17 @@
 import { db } from "@/lib/db";
 import { agents } from "@/lib/schema";
+import { decrypt, encrypt } from "@/lib/crypto";
 import { eq } from "drizzle-orm";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
-const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/$/, "");
-const GOOGLE_REDIRECT_URI = `${APP_URL}/api/integrations/google-calendar/callback`;
 
 const getRedirectUri = (origin?: string) => {
   const base = (origin || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/$/, "");
   return `${base}/api/integrations/google-calendar/callback`;
 };
 
-export function getGoogleOAuthUrl(origin?: string): string {
+export function getGoogleOAuthUrl(state: string, origin?: string): string {
   const clientId = process.env.GOOGLE_CLIENT_ID || "";
   const redirectUri = getRedirectUri(origin);
 
@@ -26,6 +25,7 @@ export function getGoogleOAuthUrl(origin?: string): string {
   return `https://accounts.google.com/o/oauth2/v2/auth?` +
     `client_id=${clientId}` +
     `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    `&state=${encodeURIComponent(state)}` +
     `&response_type=code` +
     `&scope=${encodeURIComponent(scopes.join(" "))}` +
     `&access_type=offline` +
@@ -163,8 +163,8 @@ export async function updateAgentCalendarConnection(
     .update(agents)
     .set({
       googleCalendarEnabled: true,
-      googleCalendarAccessToken: tokens.access_token,
-      googleCalendarRefreshToken: tokens.refresh_token,
+      googleCalendarAccessToken: encrypt(tokens.access_token),
+      googleCalendarRefreshToken: encrypt(tokens.refresh_token),
       googleCalendarTokenExpiry: tokenExpiry,
       googleCalendarAccountEmail: accountEmail,
       updatedAt: new Date(),
@@ -191,25 +191,42 @@ export async function getValidAccessToken(agent: typeof agents.$inferSelect): Pr
     return null;
   }
 
+  let accessToken: string;
+  try {
+    accessToken = decrypt(agent.googleCalendarAccessToken);
+  } catch (error) {
+    console.error("Failed to decrypt Google Calendar access token:", error);
+    return null;
+  }
+
   if (
     agent.googleCalendarTokenExpiry &&
     new Date(agent.googleCalendarTokenExpiry) > new Date(Date.now() + 5 * 60 * 1000)
   ) {
-    return agent.googleCalendarAccessToken;
+    return accessToken;
   }
 
   if (!agent.googleCalendarRefreshToken) {
     return null;
   }
 
+  let refreshToken: string;
   try {
-    const tokens = await refreshAccessToken(agent.googleCalendarRefreshToken);
+    refreshToken = decrypt(agent.googleCalendarRefreshToken);
+  } catch (error) {
+    console.error("Failed to decrypt Google Calendar refresh token:", error);
+    return null;
+  }
+
+  try {
+    const tokens = await refreshAccessToken(refreshToken);
     const tokenExpiry = new Date(Date.now() + tokens.expires_in * 1000);
 
     await db
       .update(agents)
       .set({
-        googleCalendarAccessToken: tokens.access_token,
+        googleCalendarAccessToken: encrypt(tokens.access_token),
+        ...(tokens.refresh_token && { googleCalendarRefreshToken: encrypt(tokens.refresh_token) }),
         googleCalendarTokenExpiry: tokenExpiry,
         updatedAt: new Date(),
       })

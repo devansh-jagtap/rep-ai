@@ -25,6 +25,24 @@ function sanitizeText(input: string): string {
   return input.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 }
 
+function isValidKnowledgeFileUrl(fileUrl: string): boolean {
+  const expectedHost = process.env.S3_PUBLIC_HOST;
+  if (!expectedHost) {
+    return false;
+  }
+
+  try {
+    const parsedUrl = new URL(fileUrl);
+    return (
+      parsedUrl.protocol === "https:" &&
+      parsedUrl.hostname === expectedHost &&
+      parsedUrl.pathname.startsWith("/knowledge/")
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function parseKnowledgeInput(body: Record<string, unknown> | null): KnowledgeInput | null {
   if (!body) {
     return null;
@@ -42,6 +60,10 @@ export function parseKnowledgeInput(body: Record<string, unknown> | null): Knowl
     const fileSize = Number(body.fileSize) || 0;
 
     if (mimeType !== "application/pdf") {
+      return null;
+    }
+
+    if (!isValidKnowledgeFileUrl(fileUrl)) {
       return null;
     }
 

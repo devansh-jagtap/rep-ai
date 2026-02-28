@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { trackAnalytics, getPortfolioIdByHandle, type AnalyticsType } from "@/lib/db/analytics";
+import { checkAnalyticsRateLimit } from "@/lib/rate-limit";
 
 interface AnalyticsRequestBody {
   handle: string;
@@ -13,6 +14,13 @@ export async function POST(request: Request) {
 
     if (!body?.handle || !body?.type) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    const forwardedFor = request.headers.get("x-forwarded-for");
+    const ip = forwardedFor?.split(",")[0]?.trim() || "unknown";
+
+    if (!checkAnalyticsRateLimit(ip, body.handle)) {
+      return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
     }
 
     const validTypes = ["page_view", "chat_session_start", "chat_message"];
