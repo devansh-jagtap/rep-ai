@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { motion, AnimatePresence } from 'motion/react'
 
 import { Cloud, Cpu, Shield, ChevronRight } from 'lucide-react'
 import { Vercel } from '@/components/ui/svgs/vercel'
@@ -68,7 +69,7 @@ export default function Features() {
                         </button>
                     </div>
                 </div>
-                <div className="@max-xl:-mx-6 not-dark:bg-linear-to-b not-dark:via-muted relative flex items-center overflow-hidden rounded-3xl *:w-full">
+                <div className="@max-xl:-mx-6 not-dark:bg-linear-to-b not-dark:via-muted relative flex items-center overflow-hidden rounded-3xl *:w-full min-h-[220px]">
                     <div
                         aria-hidden
                         className={cn('*:bg-linear-to-r not-dark:opacity-50 mask-y-from-65% *:to-muted dark:*:to-foreground/2 absolute inset-0 grid grid-cols-4 duration-300', feature === 'seamless-integrations' && '*:bg-linear-to-t grid-cols-1 grid-rows-12', feature === 'developer-first' && '*:bg-linear-to-l grid-cols-2 dark:opacity-50', feature === 'real-time-sync' && '*:opacity-35')}>
@@ -77,10 +78,23 @@ export default function Features() {
                         <div />
                         <div />
                     </div>
-                    {feature === 'seamless-integrations' && <IntegrationsIllustration />}
-                    {feature === 'real-time-sync' && <RealTimeIllustration />}
-                    {feature === 'developer-first' && <DeveloperIllustration />}
-                    {feature === 'enterprise-ready' && <EnterpriseIllustration />}
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={feature}
+                            initial={{ opacity: 0, y: 10, filter: "blur(2px)" }}
+                            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                            exit={{ opacity: 0, y: -10, filter: "blur(2px)" }}
+                            transition={{ duration: 0.2 }}
+                            className="absolute inset-0 flex items-center justify-center w-full h-full"
+                        >
+                            <div className="w-full">
+                                {feature === 'seamless-integrations' && <IntegrationsIllustration />}
+                                {feature === 'real-time-sync' && <RealTimeIllustration />}
+                                {feature === 'developer-first' && <DeveloperIllustration />}
+                                {feature === 'enterprise-ready' && <EnterpriseIllustration />}
+                            </div>
+                        </motion.div>
+                    </AnimatePresence>
                 </div>
             </div>
         </section>

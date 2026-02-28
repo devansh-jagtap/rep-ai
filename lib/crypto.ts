@@ -32,23 +32,39 @@ export function encrypt(plaintext: string): string {
 }
 
 export function decrypt(ciphertext: string): string {
-  const key = getEncryptionKey();
-  const [ivBase64, authTagBase64, encryptedBase64] = ciphertext.split(":");
-
-  if (!ivBase64 || !authTagBase64 || !encryptedBase64) {
-    throw new Error("Invalid ciphertext format");
+  if (!ciphertext || typeof ciphertext !== "string") {
+    return ciphertext;
   }
 
-  const iv = Buffer.from(ivBase64, "base64");
-  const authTag = Buffer.from(authTagBase64, "base64");
-  const encrypted = Buffer.from(encryptedBase64, "base64");
+  const parts = ciphertext.split(":");
+  if (parts.length !== 3) {
+    // Return original string as it's not in the expected format (likely unencrypted)
+    return ciphertext;
+  }
 
-  const decipher = crypto.createDecipheriv(ALGORITHM, key, iv, {
-    authTagLength: AUTH_TAG_LENGTH,
-  });
+  const [ivBase64, authTagBase64, encryptedBase64] = parts;
 
-  decipher.setAuthTag(authTag);
+  if (!ivBase64 || !authTagBase64 || !encryptedBase64) {
+    // If any part is empty, it's not our format
+    return ciphertext;
+  }
 
-  const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
-  return decrypted.toString("utf8");
+  try {
+    const key = getEncryptionKey();
+    const iv = Buffer.from(ivBase64, "base64");
+    const authTag = Buffer.from(authTagBase64, "base64");
+    const encrypted = Buffer.from(encryptedBase64, "base64");
+
+    const decipher = crypto.createDecipheriv(ALGORITHM, key, iv, {
+      authTagLength: AUTH_TAG_LENGTH,
+    });
+
+    decipher.setAuthTag(authTag);
+
+    const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
+    return decrypted.toString("utf8");
+  } catch (error) {
+    // If decryption fails (e.g. wrong key, bad data), return the original string as a fallback
+    return ciphertext;
+  }
 }

@@ -10,6 +10,7 @@ import { ensureBaseUrl } from "@/lib/auth-url";
 
 const authInstance = betterAuth({
   baseURL: ensureBaseUrl(process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL),
+  trustHost: process.env.NODE_ENV === "production",
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {
@@ -35,7 +36,14 @@ const authInstance = betterAuth({
       maxAge: 5 * 60,
     },
   },
-  trustedOrigins: process.env.TRUSTED_ORIGINS?.split(",") || ["http://localhost:3000"],
+  trustedOrigins: [
+    ...(process.env.TRUSTED_ORIGINS?.split(",") || []),
+    "http://localhost:3000",
+    process.env.NEXT_PUBLIC_APP_URL ? ensureBaseUrl(process.env.NEXT_PUBLIC_APP_URL) : "",
+    process.env.BETTER_AUTH_URL ? ensureBaseUrl(process.env.BETTER_AUTH_URL) : "",
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "",
+    process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : ""
+  ].filter(Boolean),
   secret: process.env.AUTH_SECRET,
   socialProviders: {
     google: {

@@ -62,7 +62,7 @@ export default function Pricing() {
                         <Card
                             key={plan.name}
                             variant={plan.highlighted ? 'default' : 'mixed'}
-                            className={cn('relative p-6', plan.highlighted && 'ring-primary')}>
+                            className={cn('relative p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl', plan.highlighted && 'ring-primary')}>
                             <div className="mb-6">
                                 <h3 className="text-foreground font-medium text-lg">{plan.name}</h3>
                                 <p className="text-muted-foreground mt-1 text-sm min-h-[40px]">{plan.description}</p>

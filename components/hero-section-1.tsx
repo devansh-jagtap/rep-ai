@@ -1,5 +1,7 @@
+'use client';
 import React from 'react'
 import Link from 'next/link'
+import { motion } from 'motion/react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { HeroHeader } from './header'
@@ -33,74 +35,95 @@ export default function HeroSection() {
                         </div>
                         <div className="relative z-10 mx-auto w-full max-w-5xl px-6">
                             <div className="mx-auto max-w-md text-center">
-                                <h1 className="text-balance font-serif text-4xl font-medium sm:text-5xl">Your 24/7 AI representative.</h1>
-                                <p className="text-muted-foreground mt-4 text-balance">Ref helps you build personal AI agents that generate leads and showcase your skills, even when you’re offline.</p>
+                                <motion.h1
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.5 }}
+                                    className="text-balance font-serif text-4xl font-medium sm:text-5xl"
+                                >
+                                    Your 24/7 AI representative.
+                                </motion.h1>
+                                <motion.p
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.5, delay: 0.1 }}
+                                    className="text-muted-foreground mt-4 text-balance"
+                                >
+                                    Ref helps you build personal AI agents that generate leads and showcase your skills, even when you’re offline.
+                                </motion.p>
 
-                                <Button
-                                    asChild
-                                    className="mt-6 pr-1.5">
-                                    <Link href="/auth/signup">
-                                        <span className="text-nowrap">Start Building</span>
-                                        <ChevronRight className="opacity-50" />
-                                    </Link>
-                                </Button>
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.5, delay: 0.2 }}
+                                >
+                                    <Button
+                                        asChild
+                                        className="mt-6 pr-1.5"
+                                    >
+                                        <Link href="/auth/signup">
+                                            <span className="text-nowrap">Start Building</span>
+                                            <ChevronRight className="opacity-50" />
+                                        </Link>
+                                    </Button>
+                                </motion.div>
                             </div>
                             <div className="mx-auto mt-24 max-w-xl">
                                 <div className="**:fill-foreground grid scale-95 grid-cols-3 gap-12">
-                                    <div className="ml-auto blur-[2px]">
+                                    <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.1 }} className="ml-auto blur-[2px]">
                                         <Card className="shadow-foreground/10 flex h-8 w-fit items-center gap-2 rounded-xl px-3 sm:h-10 sm:px-4">
                                             <Supabase className="size-4" />
                                             <span className="text-nowrap font-medium max-sm:text-xs">Supabase</span>
                                         </Card>
-                                    </div>
-                                    <div className="ml-auto">
+                                    </motion.div>
+                                    <motion.div animate={{ y: [0, -12, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1.2 }} className="ml-auto">
                                         <Card className="shadow-foreground/10 flex h-8 w-fit items-center gap-2 rounded-xl px-3 sm:h-10 sm:px-4">
                                             <Slack className="size-4" />
                                             <span className="text-nowrap font-medium max-sm:text-xs">Slack</span>
                                         </Card>
-                                    </div>
-                                    <div className="ml-auto blur-[2px]">
+                                    </motion.div>
+                                    <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }} className="ml-auto blur-[2px]">
                                         <Card className="shadow-foreground/10 flex h-8 w-fit items-center gap-2 rounded-xl px-3 sm:h-10 sm:px-4">
                                             <Figma className="size-4" />
                                             <span className="text-nowrap font-medium max-sm:text-xs">Figma</span>
                                         </Card>
-                                    </div>
-                                    <div className="mr-auto">
+                                    </motion.div>
+                                    <motion.div animate={{ y: [0, -15, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.8 }} className="mr-auto">
                                         <Card className="shadow-foreground/10 flex h-8 w-fit items-center gap-2 rounded-xl px-3 sm:h-10 sm:px-4">
                                             <Vercel className="size-4" />
                                             <span className="text-nowrap font-medium max-sm:text-xs">Vercel</span>
                                         </Card>
-                                    </div>
-                                    <div className="blur-[2px]">
+                                    </motion.div>
+                                    <motion.div animate={{ y: [0, -9, 0] }} transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut", delay: 0.3 }} className="blur-[2px]">
                                         <Card className="shadow-foreground/10 flex h-8 w-fit items-center gap-2 rounded-xl px-3 sm:h-10 sm:px-4">
                                             <Firebase className="size-3 sm:size-4" />
                                             <span className="text-nowrap font-medium max-sm:text-xs">Firebase</span>
                                         </Card>
-                                    </div>
-                                    <div>
+                                    </motion.div>
+                                    <motion.div animate={{ y: [0, -11, 0] }} transition={{ duration: 4.8, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}>
                                         <Card className="shadow-foreground/10 mx-a flex h-8 w-fit items-center gap-2 rounded-xl px-3 sm:h-10 sm:px-4">
                                             <Linear className="size-3 sm:size-4" />
                                             <span className="text-nowrap font-medium max-sm:text-xs">Linear</span>
                                         </Card>
-                                    </div>
-                                    <div className="ml-auto blur-[2px]">
+                                    </motion.div>
+                                    <motion.div animate={{ y: [0, -14, 0] }} transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut", delay: 2.1 }} className="ml-auto blur-[2px]">
                                         <Card className="shadow-foreground/10 flex h-8 w-fit items-center gap-2 rounded-xl px-3 sm:h-10 sm:px-4">
                                             <Twilio className="size-3 sm:size-4" />
                                             <span className="text-nowrap font-medium max-sm:text-xs">Twilio</span>
                                         </Card>
-                                    </div>
-                                    <div>
+                                    </motion.div>
+                                    <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 0.7 }}>
                                         <Card className="shadow-foreground/10 mx-a flex h-8 w-fit items-center gap-2 rounded-xl px-3 sm:h-10 sm:px-4">
                                             <Claude className="size-3 sm:size-4" />
                                             <span className="text-nowrap font-medium max-sm:text-xs">Claude AI</span>
                                         </Card>
-                                    </div>
-                                    <div className="blur-[2px]">
+                                    </motion.div>
+                                    <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1.8 }} className="blur-[2px]">
                                         <Card className="shadow-foreground/10 flex h-8 w-fit items-center gap-2 rounded-xl px-3 sm:h-10 sm:px-4">
                                             <Clerk className="size-3 sm:size-4" />
                                             <span className="text-nowrap font-medium max-sm:text-xs">Clerk </span>
                                         </Card>
-                                    </div>
+                                    </motion.div>
                                 </div>
                             </div>
                         </div>
