@@ -3,6 +3,11 @@ export const PORTFOLIO_SECTION_REGISTRY = [
   { key: "about", label: "About", defaultVisible: true },
   { key: "services", label: "Services", defaultVisible: true },
   { key: "projects", label: "Projects", defaultVisible: true },
+  { key: "products", label: "Products", defaultVisible: false },
+  { key: "history", label: "History", defaultVisible: false },
+  { key: "testimonials", label: "Testimonials", defaultVisible: false },
+  { key: "faq", label: "FAQ", defaultVisible: false },
+  { key: "gallery", label: "Gallery", defaultVisible: false },
   { key: "cta", label: "Contact / CTA", defaultVisible: true },
 ] as const;
 

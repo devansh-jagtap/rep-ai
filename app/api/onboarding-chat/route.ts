@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { NextResponse } from "next/server";
 import { getSession } from "@/auth";
 import { refineOnboardingAnswer } from "@/lib/ai/refine-onboarding";

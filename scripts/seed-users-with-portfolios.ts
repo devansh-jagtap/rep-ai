@@ -49,6 +49,7 @@ const SEED_DATA: {
     ],
     tone: "Professional",
     content: {
+      visibleSections: ["hero", "about", "services", "projects", "cta"],
       hero: { headline: "Building Digital Experiences That Scale", subheadline: "Full-stack developer specializing in React, Node.js, and cloud infrastructure.", ctaText: "Let's Build Together" },
       about: { paragraph: "I've spent over a decade crafting web applications that millions of users rely on. From startups to enterprises, I bring a focus on maintainability, performance, and team collaboration." },
       services: [
@@ -80,6 +81,7 @@ const SEED_DATA: {
     ],
     tone: "Friendly",
     content: {
+      visibleSections: ["hero", "about", "services", "projects", "cta"],
       hero: { headline: "Design That Feels Human", subheadline: "UX/UI designer crafting accessible, delightful digital experiences.", ctaText: "View My Work" },
       about: { paragraph: "I believe great design is invisible—it just works. With a background in psychology and design, I create interfaces that feel intuitive and inclusive for everyone." },
       services: [
@@ -111,6 +113,7 @@ const SEED_DATA: {
     ],
     tone: "Bold",
     content: {
+      visibleSections: ["hero", "about", "services", "projects", "cta"],
       hero: { headline: "Images That Sell", subheadline: "Commercial photographer bringing brands to life through compelling visuals.", ctaText: "Book a Shoot" },
       about: { paragraph: "Every brand has a story. I capture it through light, composition, and authenticity. From product launches to lifestyle campaigns, I create imagery that resonates and converts." },
       services: [
@@ -142,6 +145,7 @@ const SEED_DATA: {
     ],
     tone: "Minimal",
     content: {
+      visibleSections: ["hero", "about", "services", "projects", "cta"],
       hero: { headline: "Motion That Matters", subheadline: "Motion designer crafting purposeful animations for products and brands.", ctaText: "See My Work" },
       about: { paragraph: "Animation isn't decoration—it's communication. I create motion that guides users, reinforces brand, and makes digital experiences feel alive." },
       services: [
@@ -173,6 +177,7 @@ const SEED_DATA: {
     ],
     tone: "Friendly",
     content: {
+      visibleSections: ["hero", "about", "services", "projects", "cta"],
       hero: { headline: "Words That Work", subheadline: "Content strategist helping brands connect with their audience through thoughtful copy and strategy.", ctaText: "Start a Conversation" },
       about: { paragraph: "Great content isn't about volume—it's about resonance. I help brands articulate their value, tell their story, and build lasting relationships with their audience." },
       services: [
@@ -204,6 +209,7 @@ const SEED_DATA: {
     ],
     tone: "Professional",
     content: {
+      visibleSections: ["hero", "about", "services", "projects", "cta"],
       hero: { headline: "Infrastructure That Scales", subheadline: "DevOps engineer building reliable, scalable systems. Former Google SRE.", ctaText: "Connect" },
       about: { paragraph: "I build systems that don't break when it matters. With experience at scale, I bring a focus on reliability, observability, and operational excellence." },
       services: [
@@ -235,6 +241,7 @@ const SEED_DATA: {
     ],
     tone: "Professional",
     content: {
+      visibleSections: ["hero", "about", "services", "projects", "cta"],
       hero: { headline: "Data-Driven Decisions", subheadline: "Data scientist specializing in ML, analytics, and scalable data infrastructure.", ctaText: "Get in Touch" },
       about: { paragraph: "Data is only as valuable as the decisions it enables. I build models, pipelines, and analytics that drive real business outcomes." },
       services: [
@@ -266,6 +273,7 @@ const SEED_DATA: {
     ],
     tone: "Bold",
     content: {
+      visibleSections: ["hero", "about", "services", "projects", "cta"],
       hero: { headline: "Visual Stories That Stick", subheadline: "Illustrator creating memorable imagery for brands and publications.", ctaText: "View Portfolio" },
       about: { paragraph: "I create illustrations that capture attention and convey complex ideas with clarity and style. From editorial to brand work, each project gets a unique visual voice." },
       services: [
@@ -297,6 +305,7 @@ const SEED_DATA: {
     ],
     tone: "Professional",
     content: {
+      visibleSections: ["hero", "about", "services", "projects", "cta"],
       hero: { headline: "Products That Deliver", subheadline: "Product manager with a track record of shipping products that users love and businesses value.", ctaText: "Let's Talk" },
       about: { paragraph: "I bridge user needs and business goals. With experience from zero-to-one to scale, I bring structure, empathy, and execution to product development." },
       services: [
@@ -328,6 +337,7 @@ const SEED_DATA: {
     ],
     tone: "Bold",
     content: {
+      visibleSections: ["hero", "about", "services", "projects", "cta"],
       hero: { headline: "Video That Moves People", subheadline: "Video producer crafting commercials, documentaries, and social content that resonates.", ctaText: "Watch Reel" },
       about: { paragraph: "Video is the most powerful medium for storytelling. I produce content that captures attention, builds emotion, and drives action." },
       services: [
@@ -359,6 +369,7 @@ const SEED_DATA: {
     ],
     tone: "Friendly",
     content: {
+      visibleSections: ["hero", "about", "services", "projects", "cta"],
       hero: { headline: "Growth That Scales", subheadline: "Growth marketing lead helping startups acquire and retain customers efficiently.", ctaText: "Book a Call" },
       about: { paragraph: "I've scaled marketing for startups from seed to Series B. My focus is on sustainable growth—acquiring customers who stay and optimizing every step of the funnel." },
       services: [
@@ -390,6 +401,7 @@ const SEED_DATA: {
     ],
     tone: "Professional",
     content: {
+      visibleSections: ["hero", "about", "services", "projects", "cta"],
       hero: { headline: "Security You Can Trust", subheadline: "Security consultant helping organizations build and maintain resilient systems.", ctaText: "Schedule Audit" },
       about: { paragraph: "Security isn't a feature—it's a foundation. I help companies understand their risks, fix vulnerabilities, and build security into their culture and processes." },
       services: [
@@ -421,6 +433,7 @@ const SEED_DATA: {
     ],
     tone: "Bold",
     content: {
+      visibleSections: ["hero", "about", "services", "projects", "cta"],
       hero: { headline: "Brands That Stand Out", subheadline: "Brand strategist helping companies define and express who they are.", ctaText: "Start a Project" },
       about: { paragraph: "A strong brand is a competitive advantage. I help companies articulate their purpose, differentiate in the market, and create cohesive brand experiences." },
       services: [
@@ -452,6 +465,7 @@ const SEED_DATA: {
     ],
     tone: "Minimal",
     content: {
+      visibleSections: ["hero", "about", "services", "projects", "cta"],
       hero: { headline: "Apps People Love", subheadline: "Mobile developer building native and cross-platform apps for iOS and Android.", ctaText: "View Apps" },
       about: { paragraph: "Great mobile experiences require attention to platform conventions, performance, and polish. I build apps that feel native and perform flawlessly." },
       services: [
@@ -483,6 +497,7 @@ const SEED_DATA: {
     ],
     tone: "Friendly",
     content: {
+      visibleSections: ["hero", "about", "services", "projects", "cta"],
       hero: { headline: "Spaces That Inspire", subheadline: "Interior designer creating residential and commercial spaces that reflect your vision.", ctaText: "Book a Consultation" },
       about: { paragraph: "Every space tells a story. I create interiors that balance aesthetics, function, and your unique style—from cozy homes to dynamic commercial spaces." },
       services: [
@@ -514,6 +529,7 @@ const SEED_DATA: {
     ],
     tone: "Bold",
     content: {
+      visibleSections: ["hero", "about", "services", "projects", "cta"],
       hero: { headline: "Games That Delight", subheadline: "Game developer creating memorable experiences across platforms.", ctaText: "Play My Games" },
       about: { paragraph: "I make games that are fun to play and rewarding to create. From puzzle games to VR experiences, I bring ideas to life with polished execution." },
       services: [
@@ -545,6 +561,7 @@ const SEED_DATA: {
     ],
     tone: "Professional",
     content: {
+      visibleSections: ["hero", "about", "services", "projects", "cta"],
       hero: { headline: "Legal Clarity for Startups", subheadline: "Legal consultant specializing in tech, startups, and growth-stage companies.", ctaText: "Schedule a Call" },
       about: { paragraph: "Startups need legal support that moves at their pace. I provide practical advice on contracts, compliance, fundraising, and IP—without the Big Law overhead." },
       services: [
@@ -576,6 +593,7 @@ const SEED_DATA: {
     ],
     tone: "Friendly",
     content: {
+      visibleSections: ["hero", "about", "services", "projects", "cta"],
       hero: { headline: "Sales Teams That Win", subheadline: "Sales coach helping B2B teams build pipeline, close deals, and scale revenue.", ctaText: "Book a Session" },
       about: { paragraph: "Great sales is a system, not a personality. I help teams build repeatable processes, develop skills, and create cultures that win." },
       services: [
@@ -607,6 +625,7 @@ const SEED_DATA: {
     ],
     tone: "Professional",
     content: {
+      visibleSections: ["hero", "about", "services", "projects", "cta"],
       hero: { headline: "Business for a Better Planet", subheadline: "Sustainability consultant helping companies build ESG strategy and reduce environmental impact.", ctaText: "Get Started" },
       about: { paragraph: "Sustainability isn't optional anymore—it's a business imperative. I help companies measure, reduce, and report their environmental impact with practical, actionable strategies." },
       services: [
@@ -638,6 +657,7 @@ const SEED_DATA: {
     ],
     tone: "Professional",
     content: {
+      visibleSections: ["hero", "about", "services", "projects", "cta"],
       hero: { headline: "Strategy That Executes", subheadline: "Management consultant helping companies grow, transform, and perform.", ctaText: "Connect" },
       about: { paragraph: "I help leaders make better decisions and execute with clarity. From strategy to operations to M&A, I bring structure and rigor to complex business challenges." },
       services: [
@@ -669,6 +689,7 @@ const SEED_DATA: {
     ],
     tone: "Bold",
     content: {
+      visibleSections: ["hero", "about", "services", "projects", "cta"],
       hero: { headline: "Fashion With Purpose", subheadline: "Fashion designer creating sustainable, beautiful clothing for the conscious consumer.", ctaText: "View Collection" },
       about: { paragraph: "Fashion can be both beautiful and responsible. I design collections that minimize environmental impact while maximizing style and wearability." },
       services: [
@@ -700,6 +721,7 @@ const SEED_DATA: {
     ],
     tone: "Minimal",
     content: {
+      visibleSections: ["hero", "about", "services", "projects", "cta"],
       hero: { headline: "Intelligence at Scale", subheadline: "AI/ML engineer building LLMs, vision systems, and intelligent applications.", ctaText: "Get in Touch" },
       about: { paragraph: "AI is transforming every industry. I build practical ML systems that solve real problems—from RAG and chatbots to computer vision and beyond." },
       services: [
@@ -759,8 +781,8 @@ async function main() {
         accountId: data.email,
         providerId: "credential",
         password: passwordHash,
-        createdAt: now,
-        updatedAt: now,
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString(),
       });
 
       await db.insert(portfolios).values({

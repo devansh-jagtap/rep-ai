@@ -67,5 +67,5 @@ export function getPreviousStep(step: OnboardingStep, state?: Partial<Onboarding
 }
 
 export function getQuestionForStep(step: OnboardingStep) {
-  return getQuestionConfigForStep(step);
+  return getQuestionForStep(step);
 }

@@ -32,6 +32,32 @@ export type PortfolioContent = {
     description: string;
     result: string;
   }[];
+  products?: {
+    title: string;
+    description: string;
+    price: string;
+    url: string;
+    image: string;
+  }[];
+  history?: {
+    role: string;
+    company: string;
+    period: string;
+    description: string;
+  }[];
+  testimonials?: {
+    quote: string;
+    author: string;
+    role: string;
+  }[];
+  faq?: {
+    question: string;
+    answer: string;
+  }[];
+  gallery?: {
+    url: string;
+    caption: string;
+  }[];
   cta: {
     headline: string;
     subtext: string;
@@ -61,6 +87,47 @@ const projectSchema = z
     title: z.string().min(1),
     description: z.string().min(1),
     result: z.string().min(1),
+  })
+  .strict();
+
+const productSchema = z
+  .object({
+    title: z.string().min(1),
+    description: z.string().min(1),
+    price: z.string(),
+    url: z.string(),
+    image: z.string(),
+  })
+  .strict();
+
+const historySchema = z
+  .object({
+    role: z.string().min(1),
+    company: z.string().min(1),
+    period: z.string(),
+    description: z.string().min(1),
+  })
+  .strict();
+
+const testimonialSchema = z
+  .object({
+    quote: z.string().min(1),
+    author: z.string().min(1),
+    role: z.string(),
+  })
+  .strict();
+
+const faqSchema = z
+  .object({
+    question: z.string().min(1),
+    answer: z.string().min(1),
+  })
+  .strict();
+
+const gallerySchema = z
+  .object({
+    url: z.string().url(),
+    caption: z.string(),
   })
   .strict();
 
@@ -96,6 +163,11 @@ const portfolioContentSchema = z
       .strict(),
     services: z.array(serviceSchema),
     projects: z.array(projectSchema),
+    products: z.array(productSchema).optional().default([]),
+    history: z.array(historySchema).optional().default([]),
+    testimonials: z.array(testimonialSchema).optional().default([]),
+    faq: z.array(faqSchema).optional().default([]),
+    gallery: z.array(gallerySchema).optional().default([]),
     cta: z
       .object({
         headline: z.string().min(1),

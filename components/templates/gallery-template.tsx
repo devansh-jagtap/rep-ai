@@ -1,8 +1,11 @@
 "use client";
 
 import type { PortfolioContent } from "@/lib/validation/portfolio-schema";
+import { isSectionVisible, mergeVisibleSections } from "@/lib/portfolio/section-registry";
 import { Button } from "@/components/ui/button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import { MobileMenu } from "@/components/portfolio/mobile-menu";
+import { DesktopNav } from "@/components/portfolio/desktop-nav";
 import { ArrowRightIcon, XIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { AnimateIn, StaggerChildren, StaggerItem } from "@/components/animate-in";
 import { motion, AnimatePresence } from "motion/react";
@@ -21,7 +24,7 @@ const platformIcons: Record<string, React.ComponentType<{ className?: string }>>
 
 function SocialLinks({ socialLinks }: { socialLinks: PortfolioContent["socialLinks"] }) {
   if (!socialLinks || socialLinks.length === 0) return null;
-  
+
   const enabledLinks = socialLinks.filter(link => link.enabled && link.url);
   if (enabledLinks.length === 0) return null;
 
@@ -47,6 +50,7 @@ function SocialLinks({ socialLinks }: { socialLinks: PortfolioContent["socialLin
 }
 
 export function GalleryTemplate({ content }: { content: PortfolioContent }) {
+  const visibleSections = mergeVisibleSections(content.visibleSections);
   const [selectedProject, setSelectedProject] = useState<number | null>(null);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
 
@@ -88,102 +92,266 @@ export function GalleryTemplate({ content }: { content: PortfolioContent }) {
           <a href="#" className="flex items-center gap-2">
             <span className="text-sm font-semibold tracking-wide">Gallery</span>
           </a>
-          <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-medium">
-            <a href="#about" className="text-muted-foreground hover:text-foreground transition-colors">About</a>
-            <a href="#work" className="text-muted-foreground hover:text-foreground transition-colors">Work</a>
-            <a href="#contact" className="text-muted-foreground hover:text-foreground transition-colors">Contact</a>
-          </nav>
-          <ThemeSwitcher />
+          <DesktopNav visibleSections={visibleSections} />
+          <div className="flex items-center gap-2">
+            <ThemeSwitcher />
+            <MobileMenu visibleSections={visibleSections} />
+          </div>
         </div>
       </header>
 
       <div className="mx-auto max-w-6xl px-6 py-16 sm:py-24 space-y-32">
-        <section className="space-y-8 max-w-4xl pt-8 sm:pt-16">
-          <AnimateIn from="bottom" duration={0.8}>
-            <h1 className="text-5xl sm:text-7xl font-semibold tracking-tight text-balance leading-[1.1]">
-              {content.hero.headline}
-            </h1>
-          </AnimateIn>
-          <AnimateIn delay={0.15}>
-            <p className="text-xl sm:text-2xl text-muted-foreground max-w-2xl leading-relaxed">
-              {content.hero.subheadline}
-            </p>
-          </AnimateIn>
-          <AnimateIn delay={0.3}>
-            <div className="pt-4">
-              <Button asChild size="lg" className="rounded-none px-8 h-12 text-base font-medium group">
-                <a href="#contact">
-                  {content.hero.ctaText}
-                  <ArrowRightIcon className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
-                </a>
-              </Button>
-            </div>
-          </AnimateIn>
-        </section>
-
-        <section id="about" className="max-w-3xl">
-          <AnimateIn>
-            <p className="text-sm font-medium text-muted-foreground mb-4">About</p>
-            <p className="text-2xl sm:text-3xl font-medium leading-relaxed text-balance">
-              {content.about.paragraph}
-            </p>
-          </AnimateIn>
-        </section>
-
-        <section id="work" className="space-y-12">
-          <AnimateIn>
-            <div className="flex items-center justify-between border-b border-border/50 pb-4">
-              <h2 className="text-2xl font-semibold">Selected Work</h2>
-              <span className="text-sm text-muted-foreground">{content.projects.length} Projects</span>
-            </div>
-          </AnimateIn>
-
-          <StaggerChildren stagger={0.1} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {content.projects.map((project, i) => (
-              <StaggerItem key={i}>
-                <button
-                  onClick={() => openProject(i)}
-                  className="group relative w-full text-left aspect-square bg-muted/30 overflow-hidden block"
-                >
-                  <div className="absolute inset-0 bg-muted/50 flex items-center justify-center">
-                    <span className="text-muted-foreground/30 text-6xl font-bold">
-                      {i + 1}
-                    </span>
-                  </div>
-                  <div className="absolute inset-0 bg-background/90 opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-6 flex flex-col justify-end">
-                    <h3 className="text-xl font-semibold text-foreground translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                      {project.title}
-                    </h3>
-                    <p className="mt-2 text-sm text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100 line-clamp-2">
-                      {project.description}
-                    </p>
-                  </div>
-                </button>
-              </StaggerItem>
-            ))}
-          </StaggerChildren>
-        </section>
-
-        <section id="contact" className="py-24 border-t border-border/50">
-          <AnimateIn>
-            <div className="max-w-2xl space-y-6">
-              <h2 className="text-4xl sm:text-5xl font-semibold text-balance tracking-tight">
-                {content.cta.headline}
-              </h2>
-              <p className="text-lg text-muted-foreground max-w-xl text-balance">
-                {content.cta.subtext}
+        {isSectionVisible(visibleSections, "hero") && (
+          <section className="space-y-8 max-w-4xl pt-8 sm:pt-16">
+            <AnimateIn from="bottom" duration={0.8}>
+              <h1 className="text-5xl sm:text-7xl font-semibold tracking-tight text-balance leading-[1.1]">
+                {content.hero.headline}
+              </h1>
+            </AnimateIn>
+            <AnimateIn delay={0.15}>
+              <p className="text-xl sm:text-2xl text-muted-foreground max-w-2xl leading-relaxed">
+                {content.hero.subheadline}
               </p>
-              <div className="pt-6">
-                <Button asChild size="lg" className="rounded-none px-8 h-12 font-medium group">
-                  <a href="#contact">
+            </AnimateIn>
+            <AnimateIn delay={0.3}>
+              <div className="pt-4">
+                <Button asChild size="lg" className="rounded-none px-8 h-12 text-base font-medium group">
+                  <a href={isSectionVisible(visibleSections, "cta") ? "#contact" : "#"}>
                     {content.hero.ctaText}
-                    <ArrowRightIcon className="ml-2 size-5 transition-transform group-hover:translate-x-1" />
+                    <ArrowRightIcon className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
                   </a>
                 </Button>
               </div>
+            </AnimateIn>
+          </section>
+        )}
+
+        {isSectionVisible(visibleSections, "about") && (
+          <section id="about" className="max-w-3xl">
+            <AnimateIn>
+              <p className="text-sm font-medium text-muted-foreground mb-4">About</p>
+              <p className="text-2xl sm:text-3xl font-medium leading-relaxed text-balance">
+                {content.about.paragraph}
+              </p>
+            </AnimateIn>
+          </section>
+        )}
+
+        {isSectionVisible(visibleSections, "projects") && content.projects && content.projects.length > 0 && (
+          <section id="work" className="space-y-12">
+            <AnimateIn>
+              <div className="flex items-center justify-between border-b border-border/50 pb-4">
+                <h2 className="text-2xl font-semibold">Selected Work</h2>
+                <span className="text-sm text-muted-foreground">{content.projects.length} Projects</span>
+              </div>
+            </AnimateIn>
+
+            <StaggerChildren stagger={0.1} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {content.projects.map((project, i) => (
+                <StaggerItem key={i}>
+                  <button
+                    onClick={() => openProject(i)}
+                    className="group relative w-full text-left aspect-square bg-muted/30 overflow-hidden block"
+                  >
+                    <div className="absolute inset-0 bg-muted/50 flex items-center justify-center">
+                      <span className="text-muted-foreground/30 text-6xl font-bold">
+                        {i + 1}
+                      </span>
+                    </div>
+                    <div className="absolute inset-0 bg-background/90 opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-6 flex flex-col justify-end">
+                      <h3 className="text-xl font-semibold text-foreground translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                        {project.title}
+                      </h3>
+                      <p className="mt-2 text-sm text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100 line-clamp-2">
+                        {project.description}
+                      </p>
+                    </div>
+                  </button>
+                </StaggerItem>
+              ))}
+            </StaggerChildren>
+          </section>
+        )}
+
+        {isSectionVisible(visibleSections, "products") && content.products && content.products.length > 0 && (
+          <section id="products" className="space-y-12">
+            <AnimateIn>
+              <div className="flex items-center justify-between border-b border-border/50 pb-4">
+                <h2 className="text-2xl font-semibold">Products</h2>
+                <span className="text-sm text-muted-foreground">{content.products.length} Items</span>
+              </div>
+            </AnimateIn>
+
+            <StaggerChildren stagger={0.1} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {content.products.map((product, i) => (
+                <StaggerItem key={i}>
+                  <div className="group border border-border/50 bg-muted/10 overflow-hidden flex flex-col h-full hover:border-foreground/30 transition-colors">
+                    {product.image && (
+                      <div className="aspect-[4/3] w-full overflow-hidden bg-muted/30">
+                        <img
+                          src={product.image}
+                          alt={product.title}
+                          className="object-cover w-full h-full grayscale group-hover:grayscale-0 transition-all duration-500 transform group-hover:scale-105"
+                        />
+                      </div>
+                    )}
+                    <div className="p-6 flex flex-col flex-grow">
+                      <div className="flex items-start justify-between gap-4 mb-2">
+                        <h3 className="text-lg font-semibold">{product.title}</h3>
+                        <span className="text-sm font-medium bg-foreground text-background px-2.5 py-0.5 rounded-full whitespace-nowrap">{product.price}</span>
+                      </div>
+                      <p className="text-muted-foreground text-sm leading-relaxed mb-6 flex-grow">{product.description}</p>
+                      {product.url && (
+                        <div className="pt-4 border-t border-border/50 mt-auto">
+                          <a
+                            href={product.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm font-medium group/link flex items-center hover:text-primary transition-colors w-fit"
+                          >
+                            View Details
+                            <ArrowRightIcon className="ml-1 size-4 transition-transform group-hover/link:translate-x-1" />
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </StaggerItem>
+              ))}
+            </StaggerChildren>
+          </section>
+        )}
+
+        {isSectionVisible(visibleSections, "history") && content.history && content.history.length > 0 && (
+          <section id="history" className="space-y-12">
+            <AnimateIn>
+              <div className="flex items-center justify-between border-b border-border/50 pb-4">
+                <h2 className="text-2xl font-semibold">Experience</h2>
+              </div>
+            </AnimateIn>
+
+            <div className="space-y-10 pl-4 border-l-2 border-muted">
+              {content.history.map((item, i) => (
+                <AnimateIn key={i} from="bottom" delay={i * 0.1}>
+                  <div className="relative pl-6">
+                    <div className="absolute -left-[27px] top-1.5 size-4 rounded-full bg-background border-2 border-foreground"></div>
+                    <p className="text-sm font-semibold tracking-wide text-muted-foreground mb-1">{item.period}</p>
+                    <h3 className="text-xl font-semibold text-foreground mb-1">{item.role}</h3>
+                    <p className="text-base text-foreground/80 font-medium mb-3">{item.company}</p>
+                    <p className="text-muted-foreground leading-relaxed max-w-3xl">{item.description}</p>
+                  </div>
+                </AnimateIn>
+              ))}
             </div>
-          </AnimateIn>
-        </section>
+          </section>
+        )}
+
+        {isSectionVisible(visibleSections, "testimonials") && content.testimonials && content.testimonials.length > 0 && (
+          <section id="testimonials" className="space-y-12">
+            <AnimateIn>
+              <div className="flex items-center justify-between border-b border-border/50 pb-4">
+                <h2 className="text-2xl font-semibold">Client Feedback</h2>
+              </div>
+            </AnimateIn>
+
+            <StaggerChildren stagger={0.1} className="grid sm:grid-cols-2 gap-6">
+              {content.testimonials.map((t, i) => (
+                <StaggerItem key={i}>
+                  <div className="border border-border/50 bg-muted/10 p-8 h-full flex flex-col hover:border-foreground/30 transition-colors">
+                    <div className="mb-6 flex-grow">
+                      <svg className="size-8 text-muted-foreground/30 mb-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+                      </svg>
+                      <p className="text-lg text-foreground/90 leading-relaxed font-medium">"{t.quote}"</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground">{t.author}</p>
+                      {t.role && <p className="text-sm text-muted-foreground mt-0.5">{t.role}</p>}
+                    </div>
+                  </div>
+                </StaggerItem>
+              ))}
+            </StaggerChildren>
+          </section>
+        )}
+
+        {isSectionVisible(visibleSections, "faq") && content.faq && content.faq.length > 0 && (
+          <section id="faq" className="space-y-12">
+            <AnimateIn>
+              <div className="flex items-center justify-between border-b border-border/50 pb-4">
+                <h2 className="text-2xl font-semibold">Frequently Asked Questions</h2>
+              </div>
+            </AnimateIn>
+
+            <div className="space-y-8 max-w-3xl">
+              {content.faq.map((f, i) => (
+                <AnimateIn key={i} from="bottom" delay={i * 0.1}>
+                  <div className="group">
+                    <h3 className="text-xl font-semibold text-foreground mb-3 flex items-start gap-4">
+                      <span className="text-muted-foreground font-mono mt-0.5">Q.</span>
+                      {f.question}
+                    </h3>
+                    <div className="pl-9 text-muted-foreground leading-relaxed">
+                      {f.answer}
+                    </div>
+                  </div>
+                </AnimateIn>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {isSectionVisible(visibleSections, "gallery") && content.gallery && content.gallery.length > 0 && (
+          <section id="gallery" className="space-y-12">
+            <AnimateIn>
+              <div className="flex items-center justify-between border-b border-border/50 pb-4">
+                <h2 className="text-2xl font-semibold">Gallery</h2>
+              </div>
+            </AnimateIn>
+
+            <StaggerChildren stagger={0.1} className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {content.gallery.map((g, i) => (
+                <StaggerItem key={i}>
+                  <div className="group relative aspect-square overflow-hidden bg-muted/30">
+                    <img
+                      src={g.url}
+                      alt={g.caption}
+                      className="object-cover w-full h-full grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:scale-105"
+                    />
+                    {g.caption && (
+                      <div className="absolute inset-0 bg-background/80 flex flex-col justify-center items-center p-4 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <p className="text-sm font-semibold text-foreground">{g.caption}</p>
+                      </div>
+                    )}
+                  </div>
+                </StaggerItem>
+              ))}
+            </StaggerChildren>
+          </section>
+        )}
+
+        {isSectionVisible(visibleSections, "cta") && (
+          <section id="contact" className="py-24 border-t border-border/50">
+            <AnimateIn>
+              <div className="max-w-2xl space-y-6">
+                <h2 className="text-4xl sm:text-5xl font-semibold text-balance tracking-tight">
+                  {content.cta.headline}
+                </h2>
+                <p className="text-lg text-muted-foreground max-w-xl text-balance">
+                  {content.cta.subtext}
+                </p>
+                <div className="pt-6">
+                  <Button asChild size="lg" className="rounded-none px-8 h-12 font-medium group">
+                    <a href="#contact">
+                      {content.hero.ctaText}
+                      <ArrowRightIcon className="ml-2 size-5 transition-transform group-hover:translate-x-1" />
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            </AnimateIn>
+          </section>
+        )}
       </div>
 
       <AnimatePresence>
@@ -228,7 +396,7 @@ export function GalleryTemplate({ content }: { content: PortfolioContent }) {
             >
               <div className="grid md:grid-cols-2 gap-12 items-center">
                 <div className="aspect-square bg-muted/30 flex items-center justify-center relative">
-                   <span className="text-muted-foreground/30 text-8xl font-bold">
+                  <span className="text-muted-foreground/30 text-8xl font-bold">
                     {selectedProject + 1}
                   </span>
                 </div>

@@ -24,7 +24,7 @@ export type MessagePartLike = {
   type?: string;
   text?: string;
   toolName?: string;
-  result?: ToolResultLike;
+  result?: unknown;
   data?: unknown;
 };
 

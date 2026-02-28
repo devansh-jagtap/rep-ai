@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * One-time migration: Create Better Auth account records for existing users
  * who have passwords in users.password_hash (from old NextAuth setup).

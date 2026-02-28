@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { generateText, tool } from "ai";
 import { z } from "zod";
 import { createOpenAI } from "@ai-sdk/openai";

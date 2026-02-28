@@ -54,15 +54,16 @@ export async function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const fetchedLeads = activePortfolio
     ? await db
-        .select()
-        .from(agentLeads)
-        .where(eq(agentLeads.portfolioId, activePortfolio.id))
-        .orderBy(desc(agentLeads.createdAt))
+      .select()
+      .from(agentLeads)
+      .where(eq(agentLeads.portfolioId, activePortfolio.id))
+      .orderBy(desc(agentLeads.createdAt))
     : [];
 
   const formattedLeads = fetchedLeads.map((lead) => ({
     id: lead.id,
     name: lead.name,
+    email: lead.email,
     budget: lead.budget,
     confidence: lead.confidence,
     isRead: lead.isRead ?? false,

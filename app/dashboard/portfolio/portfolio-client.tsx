@@ -36,8 +36,7 @@ interface PortfolioClientProps {
 }
 
 const getVisibleSections = (content: PortfolioContent | null | undefined) => ({
-  ...defaultVisibleSections,
-  ...content?.visibleSections,
+  ...mergeVisibleSections(content?.visibleSections),
 });
 
 export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
@@ -144,6 +143,111 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
     setEditedContent({ ...editedContent, projects: newProjects });
   };
 
+  const updateProduct = (index: number, field: string, value: string) => {
+    if (!editedContent?.products) return;
+    const newProducts = [...editedContent.products];
+    newProducts[index] = { ...newProducts[index], [field]: value };
+    setEditedContent({ ...editedContent, products: newProducts });
+  };
+
+  const addProduct = () => {
+    if (!editedContent) return;
+    setEditedContent({
+      ...editedContent,
+      products: [...(editedContent.products || []), { title: "New Product", description: "Description", price: "$0.00", url: "", image: "" }]
+    });
+  };
+
+  const removeProduct = (index: number) => {
+    if (!editedContent?.products) return;
+    const newProducts = editedContent.products.filter((_: any, i: number) => i !== index);
+    setEditedContent({ ...editedContent, products: newProducts });
+  };
+
+  const updateHistory = (index: number, field: string, value: string) => {
+    if (!editedContent?.history) return;
+    const newHistory = [...editedContent.history];
+    newHistory[index] = { ...newHistory[index], [field]: value };
+    setEditedContent({ ...editedContent, history: newHistory });
+  };
+
+  const addHistory = () => {
+    if (!editedContent) return;
+    setEditedContent({
+      ...editedContent,
+      history: [...(editedContent.history || []), { role: "Role", company: "Company", period: "2020-2024", description: "Description" }]
+    });
+  };
+
+  const removeHistory = (index: number) => {
+    if (!editedContent?.history) return;
+    const newHistory = editedContent.history.filter((_: any, i: number) => i !== index);
+    setEditedContent({ ...editedContent, history: newHistory });
+  };
+
+  const updateTestimonial = (index: number, field: string, value: string) => {
+    if (!editedContent?.testimonials) return;
+    const newTestimonials = [...editedContent.testimonials];
+    newTestimonials[index] = { ...newTestimonials[index], [field]: value };
+    setEditedContent({ ...editedContent, testimonials: newTestimonials });
+  };
+
+  const addTestimonial = () => {
+    if (!editedContent) return;
+    setEditedContent({
+      ...editedContent,
+      testimonials: [...(editedContent.testimonials || []), { quote: "Great work!", author: "John Doe", role: "CEO" }]
+    });
+  };
+
+  const removeTestimonial = (index: number) => {
+    if (!editedContent?.testimonials) return;
+    const newTestimonials = editedContent.testimonials.filter((_: any, i: number) => i !== index);
+    setEditedContent({ ...editedContent, testimonials: newTestimonials });
+  };
+
+  const updateFaq = (index: number, field: string, value: string) => {
+    if (!editedContent?.faq) return;
+    const newFaq = [...editedContent.faq];
+    newFaq[index] = { ...newFaq[index], [field]: value };
+    setEditedContent({ ...editedContent, faq: newFaq });
+  };
+
+  const addFaq = () => {
+    if (!editedContent) return;
+    setEditedContent({
+      ...editedContent,
+      faq: [...(editedContent.faq || []), { question: "Question?", answer: "Answer" }]
+    });
+  };
+
+  const removeFaq = (index: number) => {
+    if (!editedContent?.faq) return;
+    const newFaq = editedContent.faq.filter((_: any, i: number) => i !== index);
+    setEditedContent({ ...editedContent, faq: newFaq });
+  };
+
+  const updateGallery = (index: number, field: string, value: string) => {
+    if (!editedContent?.gallery) return;
+    const newGallery = [...editedContent.gallery];
+    newGallery[index] = { ...newGallery[index], [field]: value };
+    setEditedContent({ ...editedContent, gallery: newGallery });
+  };
+
+  const addGalleryImage = () => {
+    if (!editedContent) return;
+    setEditedContent({
+      ...editedContent,
+      gallery: [...(editedContent.gallery || []), { url: "https://example.com/image.jpg", caption: "Caption" }]
+    });
+  };
+
+  const removeGalleryImage = (index: number) => {
+    if (!editedContent?.gallery) return;
+    const newGallery = editedContent.gallery.filter((_: any, i: number) => i !== index);
+    setEditedContent({ ...editedContent, gallery: newGallery });
+  };
+
   const updateVisibleSection = (section: PortfolioSectionKey, visible: boolean) => {
     if (!editedContent) return;
     const current = mergeVisibleSections(editedContent.visibleSections);
@@ -156,26 +260,26 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
 
   const updateSocialLink = (platform: SocialPlatform, field: "enabled" | "url", value: boolean | string) => {
     if (!editedContent) return;
-    
+
     const currentLinks = editedContent.socialLinks || [];
     const existingIndex = currentLinks.findIndex((l) => l.platform === platform);
-    
+
     let newLinks: SocialLink[];
     if (existingIndex >= 0) {
       newLinks = [...currentLinks];
-      newLinks[existingIndex] = { 
-        ...newLinks[existingIndex], 
+      newLinks[existingIndex] = {
+        ...newLinks[existingIndex],
         [field]: value,
         platform // ensure platform type is correct
       };
     } else {
-      newLinks = [...currentLinks, { 
-        platform, 
-        enabled: field === "enabled" ? (value as boolean) : false, 
-        url: field === "url" ? (value as string) : "" 
+      newLinks = [...currentLinks, {
+        platform,
+        enabled: field === "enabled" ? (value as boolean) : false,
+        url: field === "url" ? (value as string) : ""
       }];
     }
-    
+
     const newContent = { ...editedContent, socialLinks: newLinks };
     setEditedContent(newContent);
   };
@@ -365,42 +469,42 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
             <Accordion type="multiple" defaultValue={["hero", "socials"]} className="w-full">
               {/* Hero */}
               {isContentSectionVisible("hero") && (
-              <AccordionItem value="hero">
-                <AccordionTrigger className="hover:no-underline">
-                  <div className="flex items-center gap-2">
-                    <Globe className="size-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Hero Section</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  {editMode ? (
-                    <div className="space-y-3 pt-2">
-                      <div className="space-y-1.5">
-                        <Label className="text-xs text-muted-foreground">Headline</Label>
-                        <Input
-                          value={displayContent.hero?.headline || ""}
-                          onChange={(e) => updateHero("headline", e.target.value)}
-                          placeholder="Your headline"
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-xs text-muted-foreground">Subheadline</Label>
-                        <Textarea
-                          value={displayContent.hero?.subheadline || ""}
-                          onChange={(e) => updateHero("subheadline", e.target.value)}
-                          placeholder="Your subheadline"
-                          rows={2}
-                        />
-                      </div>
+                <AccordionItem value="hero">
+                  <AccordionTrigger className="hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <Globe className="size-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Hero Section</span>
                     </div>
-                  ) : (
-                    <div className="bg-muted p-4 rounded-lg space-y-1 pt-2">
-                      <p className="font-semibold text-lg">{displayContent.hero?.headline}</p>
-                      <p className="text-sm text-muted-foreground">{displayContent.hero?.subheadline}</p>
-                    </div>
-                  )}
-                </AccordionContent>
-              </AccordionItem>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    {editMode ? (
+                      <div className="space-y-3 pt-2">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-muted-foreground">Headline</Label>
+                          <Input
+                            value={displayContent.hero?.headline || ""}
+                            onChange={(e) => updateHero("headline", e.target.value)}
+                            placeholder="Your headline"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-muted-foreground">Subheadline</Label>
+                          <Textarea
+                            value={displayContent.hero?.subheadline || ""}
+                            onChange={(e) => updateHero("subheadline", e.target.value)}
+                            placeholder="Your subheadline"
+                            rows={2}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-muted p-4 rounded-lg space-y-1 pt-2">
+                        <p className="font-semibold text-lg">{displayContent.hero?.headline}</p>
+                        <p className="text-sm text-muted-foreground">{displayContent.hero?.subheadline}</p>
+                      </div>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
               )}
 
               {/* Section Visibility */}
@@ -417,6 +521,11 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
                       { key: "about", label: "About" },
                       { key: "services", label: "Services" },
                       { key: "projects", label: "Projects" },
+                      { key: "products", label: "Products" },
+                      { key: "history", label: "History" },
+                      { key: "testimonials", label: "Testimonials" },
+                      { key: "faq", label: "FAQ" },
+                      { key: "gallery", label: "Gallery" },
                       { key: "cta", label: "CTA" },
                       { key: "socials", label: "Social Links" },
                     ].map((item) => (
@@ -440,189 +549,552 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
 
               {/* About */}
               {isContentSectionVisible("about") && (
-              <AccordionItem value="about">
-                <AccordionTrigger className="hover:no-underline">
-                  <div className="flex items-center gap-2">
-                    <FileText className="size-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">About Section</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  {editMode ? (
-                    <Textarea
-                      value={displayContent.about?.paragraph || ""}
-                      onChange={(e) => updateAbout(e.target.value)}
-                      placeholder="Tell visitors about yourself..."
-                      rows={6}
-                      className="pt-2"
-                    />
-                  ) : (
-                    <div className="bg-muted p-4 rounded-lg pt-2">
-                      <p className="text-sm leading-relaxed">{displayContent.about?.paragraph}</p>
+                <AccordionItem value="about">
+                  <AccordionTrigger className="hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <FileText className="size-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">About Section</span>
                     </div>
-                  )}
-                </AccordionContent>
-              </AccordionItem>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    {editMode ? (
+                      <Textarea
+                        value={displayContent.about?.paragraph || ""}
+                        onChange={(e) => updateAbout(e.target.value)}
+                        placeholder="Tell visitors about yourself..."
+                        rows={6}
+                        className="pt-2"
+                      />
+                    ) : (
+                      <div className="bg-muted p-4 rounded-lg pt-2">
+                        <p className="text-sm leading-relaxed">{displayContent.about?.paragraph}</p>
+                      </div>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
               )}
 
               {/* Services */}
               {isContentSectionVisible("services") && (
-              <AccordionItem value="services">
-                <AccordionTrigger className="hover:no-underline">
-                  <div className="flex items-center gap-2">
-                    <Briefcase className="size-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Services ({displayContent.services?.length || 0})</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="pt-2 space-y-3">
-                    {editMode && (
-                      <div className="flex justify-end">
-                        <Button size="sm" variant="outline" onClick={addService}>
-                          <Plus className="size-3.5 mr-1" />
-                          Add Service
-                        </Button>
-                      </div>
-                    )}
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {displayContent.services?.map((s, i) => (
-                        <div key={i} className={`bg-muted p-3 rounded-lg ${editMode ? "space-y-2" : "space-y-1"}`}>
-                          {editMode ? (
-                            <>
-                              <Input
-                                value={s.title}
-                                onChange={(e) => updateService(i, "title", e.target.value)}
-                                placeholder="Service title"
-                                className="font-medium"
-                              />
-                              <Textarea
-                                value={s.description}
-                                onChange={(e) => updateService(i, "description", e.target.value)}
-                                placeholder="Service description"
-                                rows={2}
-                              />
-                              <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600 hover:bg-red-50 w-full" onClick={() => removeService(i)}>
-                                <Trash2 className="size-3.5 mr-1" />
-                                Remove
-                              </Button>
-                            </>
-                          ) : (
-                            <>
-                              <p className="text-sm font-medium">{s.title}</p>
-                              <p className="text-xs text-muted-foreground">{s.description}</p>
-                            </>
-                          )}
-                        </div>
-                      ))}
+                <AccordionItem value="services">
+                  <AccordionTrigger className="hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <Briefcase className="size-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Services ({displayContent.services?.length || 0})</span>
                     </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="pt-2 space-y-3">
+                      {editMode && (
+                        <div className="flex justify-end">
+                          <Button size="sm" variant="outline" onClick={addService}>
+                            <Plus className="size-3.5 mr-1" />
+                            Add Service
+                          </Button>
+                        </div>
+                      )}
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {displayContent.services?.map((s, i) => (
+                          <div key={i} className={`bg-muted p-3 rounded-lg ${editMode ? "space-y-2" : "space-y-1"}`}>
+                            {editMode ? (
+                              <>
+                                <Input
+                                  value={s.title}
+                                  onChange={(e) => updateService(i, "title", e.target.value)}
+                                  placeholder="Service title"
+                                  className="font-medium"
+                                />
+                                <Textarea
+                                  value={s.description}
+                                  onChange={(e) => updateService(i, "description", e.target.value)}
+                                  placeholder="Service description"
+                                  rows={2}
+                                />
+                                <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600 hover:bg-red-50 w-full" onClick={() => removeService(i)}>
+                                  <Trash2 className="size-3.5 mr-1" />
+                                  Remove
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <p className="text-sm font-medium">{s.title}</p>
+                                <p className="text-xs text-muted-foreground">{s.description}</p>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
               )}
 
               {/* Projects */}
               {isContentSectionVisible("projects") && (
-              <AccordionItem value="projects">
-                <AccordionTrigger className="hover:no-underline">
-                  <div className="flex items-center gap-2">
-                    <Megaphone className="size-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Projects ({displayContent.projects?.length || 0})</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="pt-2 space-y-3">
-                    {editMode && (
-                      <div className="flex justify-end">
-                        <Button size="sm" variant="outline" onClick={addProject}>
-                          <Plus className="size-3.5 mr-1" />
-                          Add Project
-                        </Button>
-                      </div>
-                    )}
-                    <div className="space-y-3">
-                      {displayContent.projects?.map((p, i) => (
-                        <div key={i} className={`bg-muted p-3 rounded-lg ${editMode ? "space-y-2" : "space-y-1"}`}>
-                          {editMode ? (
-                            <>
-                              <Input
-                                value={p.title}
-                                onChange={(e) => updateProject(i, "title", e.target.value)}
-                                placeholder="Project title"
-                                className="font-medium"
-                              />
-                              <Textarea
-                                value={p.description}
-                                onChange={(e) => updateProject(i, "description", e.target.value)}
-                                placeholder="Project description"
-                                rows={2}
-                              />
-                              <div className="space-y-1.5">
-                                <Label className="text-xs text-muted-foreground">Result</Label>
-                                <Input
-                                  value={p.result}
-                                  onChange={(e) => updateProject(i, "result", e.target.value)}
-                                  placeholder="Project result"
-                                />
-                              </div>
-                              <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600 hover:bg-red-50 w-full" onClick={() => removeProject(i)}>
-                                <Trash2 className="size-3.5 mr-1" />
-                                Remove
-                              </Button>
-                            </>
-                          ) : (
-                            <>
-                              <p className="text-sm font-medium">{p.title}</p>
-                              <p className="text-xs text-muted-foreground">{p.description}</p>
-                              <Separator className="my-1.5" />
-                              <p className="text-xs text-primary">Result: {p.result}</p>
-                            </>
-                          )}
-                        </div>
-                      ))}
+                <AccordionItem value="projects">
+                  <AccordionTrigger className="hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <Megaphone className="size-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Projects ({displayContent.projects?.length || 0})</span>
                     </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="pt-2 space-y-3">
+                      {editMode && (
+                        <div className="flex justify-end">
+                          <Button size="sm" variant="outline" onClick={addProject}>
+                            <Plus className="size-3.5 mr-1" />
+                            Add Project
+                          </Button>
+                        </div>
+                      )}
+                      <div className="space-y-3">
+                        {displayContent.projects?.map((p, i) => (
+                          <div key={i} className={`bg-muted p-3 rounded-lg ${editMode ? "space-y-2" : "space-y-1"}`}>
+                            {editMode ? (
+                              <>
+                                <Input
+                                  value={p.title}
+                                  onChange={(e) => updateProject(i, "title", e.target.value)}
+                                  placeholder="Project title"
+                                  className="font-medium"
+                                />
+                                <Textarea
+                                  value={p.description}
+                                  onChange={(e) => updateProject(i, "description", e.target.value)}
+                                  placeholder="Project description"
+                                  rows={2}
+                                />
+                                <div className="space-y-1.5">
+                                  <Label className="text-xs text-muted-foreground">Result</Label>
+                                  <Input
+                                    value={p.result}
+                                    onChange={(e) => updateProject(i, "result", e.target.value)}
+                                    placeholder="Project result"
+                                  />
+                                </div>
+                                <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600 hover:bg-red-50 w-full" onClick={() => removeProject(i)}>
+                                  <Trash2 className="size-3.5 mr-1" />
+                                  Remove
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <p className="text-sm font-medium">{p.title}</p>
+                                <p className="text-xs text-muted-foreground">{p.description}</p>
+                                <Separator className="my-1.5" />
+                                <p className="text-xs text-primary">Result: {p.result}</p>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+
+              {/* Products */}
+              {isContentSectionVisible("products") && (
+                <AccordionItem value="products">
+                  <AccordionTrigger className="hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <Briefcase className="size-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Products ({displayContent.products?.length || 0})</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="pt-2 space-y-3">
+                      {editMode && (
+                        <div className="flex justify-end">
+                          <Button size="sm" variant="outline" onClick={addProduct}>
+                            <Plus className="size-3.5 mr-1" />
+                            Add Product
+                          </Button>
+                        </div>
+                      )}
+                      <div className="space-y-3">
+                        {displayContent.products?.map((p: any, i: number) => (
+                          <div key={i} className={`bg-muted p-3 rounded-lg ${editMode ? "space-y-2" : "space-y-1"}`}>
+                            {editMode ? (
+                              <>
+                                <Input
+                                  value={p.title}
+                                  onChange={(e) => updateProduct(i, "title", e.target.value)}
+                                  placeholder="Product title"
+                                  className="font-medium"
+                                />
+                                <Textarea
+                                  value={p.description}
+                                  onChange={(e) => updateProduct(i, "description", e.target.value)}
+                                  placeholder="Product description"
+                                  rows={2}
+                                />
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="space-y-1.5">
+                                    <Label className="text-xs text-muted-foreground">Price</Label>
+                                    <Input
+                                      value={p.price}
+                                      onChange={(e) => updateProduct(i, "price", e.target.value)}
+                                      placeholder="Price"
+                                    />
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    <Label className="text-xs text-muted-foreground">URL</Label>
+                                    <Input
+                                      value={p.url}
+                                      onChange={(e) => updateProduct(i, "url", e.target.value)}
+                                      placeholder="Link"
+                                    />
+                                  </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                  <Label className="text-xs text-muted-foreground">Image URL</Label>
+                                  <Input
+                                    value={p.image}
+                                    onChange={(e) => updateProduct(i, "image", e.target.value)}
+                                    placeholder="Image URL"
+                                  />
+                                </div>
+                                <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600 hover:bg-red-50 w-full" onClick={() => removeProduct(i)}>
+                                  <Trash2 className="size-3.5 mr-1" />
+                                  Remove
+                                </Button>
+                              </>
+                            ) : (
+                              <div className="flex items-start gap-4">
+                                {p.image && (
+                                  <img src={p.image} alt={p.title} className="w-16 h-16 object-cover rounded-md" />
+                                )}
+                                <div>
+                                  <p className="text-sm font-medium">{p.title} <span className="text-muted-foreground ml-2">{p.price}</span></p>
+                                  <p className="text-xs text-muted-foreground mt-1">{p.description}</p>
+                                  {p.url && <a href={p.url} className="text-xs text-primary mt-1 inline-block">View Link</a>}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+
+              {/* History */}
+              {isContentSectionVisible("history") && (
+                <AccordionItem value="history">
+                  <AccordionTrigger className="hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <FileText className="size-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">History ({displayContent.history?.length || 0})</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="pt-2 space-y-3">
+                      {editMode && (
+                        <div className="flex justify-end">
+                          <Button size="sm" variant="outline" onClick={addHistory}>
+                            <Plus className="size-3.5 mr-1" />
+                            Add History Entry
+                          </Button>
+                        </div>
+                      )}
+                      <div className="space-y-3">
+                        {displayContent.history?.map((h: any, i: number) => (
+                          <div key={i} className={`bg-muted p-3 rounded-lg ${editMode ? "space-y-2" : "space-y-1"}`}>
+                            {editMode ? (
+                              <>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="space-y-1.5">
+                                    <Label className="text-xs text-muted-foreground">Role/Title</Label>
+                                    <Input
+                                      value={h.role}
+                                      onChange={(e) => updateHistory(i, "role", e.target.value)}
+                                      placeholder="Role"
+                                      className="font-medium"
+                                    />
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    <Label className="text-xs text-muted-foreground">Company</Label>
+                                    <Input
+                                      value={h.company}
+                                      onChange={(e) => updateHistory(i, "company", e.target.value)}
+                                      placeholder="Company"
+                                    />
+                                  </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                  <Label className="text-xs text-muted-foreground">Period</Label>
+                                  <Input
+                                    value={h.period}
+                                    onChange={(e) => updateHistory(i, "period", e.target.value)}
+                                    placeholder="e.g. 2020 - Present"
+                                  />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <Label className="text-xs text-muted-foreground">Description</Label>
+                                  <Textarea
+                                    value={h.description}
+                                    onChange={(e) => updateHistory(i, "description", e.target.value)}
+                                    placeholder="Description"
+                                    rows={2}
+                                  />
+                                </div>
+                                <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600 hover:bg-red-50 w-full" onClick={() => removeHistory(i)}>
+                                  <Trash2 className="size-3.5 mr-1" />
+                                  Remove
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <div className="flex items-center justify-between">
+                                  <p className="text-sm font-medium">{h.role}</p>
+                                  <span className="text-xs bg-background px-2 py-0.5 rounded-full">{h.period}</span>
+                                </div>
+                                <p className="text-xs font-medium text-muted-foreground mt-0.5">{h.company}</p>
+                                <p className="text-xs text-muted-foreground mt-2">{h.description}</p>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+
+              {/* Testimonials */}
+              {isContentSectionVisible("testimonials") && (
+                <AccordionItem value="testimonials">
+                  <AccordionTrigger className="hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="size-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Testimonials ({displayContent.testimonials?.length || 0})</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="pt-2 space-y-3">
+                      {editMode && (
+                        <div className="flex justify-end">
+                          <Button size="sm" variant="outline" onClick={addTestimonial}>
+                            <Plus className="size-3.5 mr-1" />
+                            Add Testimonial
+                          </Button>
+                        </div>
+                      )}
+                      <div className="space-y-3">
+                        {displayContent.testimonials?.map((t: any, i: number) => (
+                          <div key={i} className={`bg-muted p-3 rounded-lg ${editMode ? "space-y-2" : "space-y-1"}`}>
+                            {editMode ? (
+                              <>
+                                <div className="space-y-1.5">
+                                  <Label className="text-xs text-muted-foreground">Quote</Label>
+                                  <Textarea
+                                    value={t.quote}
+                                    onChange={(e) => updateTestimonial(i, "quote", e.target.value)}
+                                    placeholder="Testimonial quote"
+                                    rows={3}
+                                  />
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="space-y-1.5">
+                                    <Label className="text-xs text-muted-foreground">Author</Label>
+                                    <Input
+                                      value={t.author}
+                                      onChange={(e) => updateTestimonial(i, "author", e.target.value)}
+                                      placeholder="Author name"
+                                    />
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    <Label className="text-xs text-muted-foreground">Role/Company</Label>
+                                    <Input
+                                      value={t.role}
+                                      onChange={(e) => updateTestimonial(i, "role", e.target.value)}
+                                      placeholder="Role or Company"
+                                    />
+                                  </div>
+                                </div>
+                                <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600 hover:bg-red-50 w-full" onClick={() => removeTestimonial(i)}>
+                                  <Trash2 className="size-3.5 mr-1" />
+                                  Remove
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <p className="text-sm italic">"{t.quote}"</p>
+                                <div className="mt-2 text-xs">
+                                  <span className="font-semibold">{t.author}</span>
+                                  {t.role && <span className="text-muted-foreground">, {t.role}</span>}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+
+              {/* FAQ */}
+              {isContentSectionVisible("faq") && (
+                <AccordionItem value="faq">
+                  <AccordionTrigger className="hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <FileText className="size-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">FAQ ({displayContent.faq?.length || 0})</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="pt-2 space-y-3">
+                      {editMode && (
+                        <div className="flex justify-end">
+                          <Button size="sm" variant="outline" onClick={addFaq}>
+                            <Plus className="size-3.5 mr-1" />
+                            Add Question
+                          </Button>
+                        </div>
+                      )}
+                      <div className="space-y-3">
+                        {displayContent.faq?.map((f: any, i: number) => (
+                          <div key={i} className={`bg-muted p-3 rounded-lg ${editMode ? "space-y-2" : "space-y-1"}`}>
+                            {editMode ? (
+                              <>
+                                <div className="space-y-1.5">
+                                  <Label className="text-xs text-muted-foreground">Question</Label>
+                                  <Input
+                                    value={f.question}
+                                    onChange={(e) => updateFaq(i, "question", e.target.value)}
+                                    placeholder="Question"
+                                    className="font-medium"
+                                  />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <Label className="text-xs text-muted-foreground">Answer</Label>
+                                  <Textarea
+                                    value={f.answer}
+                                    onChange={(e) => updateFaq(i, "answer", e.target.value)}
+                                    placeholder="Answer"
+                                    rows={3}
+                                  />
+                                </div>
+                                <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600 hover:bg-red-50 w-full" onClick={() => removeFaq(i)}>
+                                  <Trash2 className="size-3.5 mr-1" />
+                                  Remove
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <p className="text-sm font-medium">{f.question}</p>
+                                <p className="text-xs text-muted-foreground mt-1">{f.answer}</p>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+
+              {/* Gallery */}
+              {isContentSectionVisible("gallery") && (
+                <AccordionItem value="gallery">
+                  <AccordionTrigger className="hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <Megaphone className="size-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Gallery ({displayContent.gallery?.length || 0})</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="pt-2 space-y-3">
+                      {editMode && (
+                        <div className="flex justify-end">
+                          <Button size="sm" variant="outline" onClick={addGalleryImage}>
+                            <Plus className="size-3.5 mr-1" />
+                            Add Image
+                          </Button>
+                        </div>
+                      )}
+                      <div className="grid grid-cols-2 gap-3">
+                        {displayContent.gallery?.map((g: any, i: number) => (
+                          <div key={i} className={`bg-muted p-3 rounded-lg ${editMode ? "space-y-2 col-span-2" : "space-y-1 col-span-1"}`}>
+                            {editMode ? (
+                              <>
+                                <div className="space-y-1.5">
+                                  <Label className="text-xs text-muted-foreground">Image URL</Label>
+                                  <Input
+                                    value={g.url}
+                                    onChange={(e) => updateGallery(i, "url", e.target.value)}
+                                    placeholder="https://..."
+                                  />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <Label className="text-xs text-muted-foreground">Caption</Label>
+                                  <Input
+                                    value={g.caption}
+                                    onChange={(e) => updateGallery(i, "caption", e.target.value)}
+                                    placeholder="Image caption"
+                                  />
+                                </div>
+                                <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600 hover:bg-red-50 w-full" onClick={() => removeGalleryImage(i)}>
+                                  <Trash2 className="size-3.5 mr-1" />
+                                  Remove
+                                </Button>
+                              </>
+                            ) : (
+                              <div className="space-y-1">
+                                <img src={g.url} alt={g.caption} className="w-full h-24 object-cover rounded-md bg-background" />
+                                <p className="text-[10px] text-center text-muted-foreground truncate">{g.caption}</p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
               )}
 
               {/* CTA */}
               {isContentSectionVisible("cta") && (
-              <AccordionItem value="cta">
-                <AccordionTrigger className="hover:no-underline">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="size-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Call to Action</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  {editMode ? (
-                    <div className="space-y-3 pt-2">
-                      <div className="space-y-1.5">
-                        <Label className="text-xs text-muted-foreground">Headline</Label>
-                        <Input
-                          value={displayContent.cta?.headline || ""}
-                          onChange={(e) => updateCta("headline", e.target.value)}
-                          placeholder="CTA headline"
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-xs text-muted-foreground">Subtext</Label>
-                        <Textarea
-                          value={displayContent.cta?.subtext || ""}
-                          onChange={(e) => updateCta("subtext", e.target.value)}
-                          placeholder="CTA subtext"
-                          rows={2}
-                        />
-                      </div>
+                <AccordionItem value="cta">
+                  <AccordionTrigger className="hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="size-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Call to Action</span>
                     </div>
-                  ) : (
-                    <div className="bg-muted p-4 rounded-lg space-y-1 pt-2">
-                      <p className="font-semibold">{displayContent.cta?.headline}</p>
-                      <p className="text-sm text-muted-foreground">{displayContent.cta?.subtext}</p>
-                    </div>
-                  )}
-                </AccordionContent>
-              </AccordionItem>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    {editMode ? (
+                      <div className="space-y-3 pt-2">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-muted-foreground">Headline</Label>
+                          <Input
+                            value={displayContent.cta?.headline || ""}
+                            onChange={(e) => updateCta("headline", e.target.value)}
+                            placeholder="CTA headline"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-muted-foreground">Subtext</Label>
+                          <Textarea
+                            value={displayContent.cta?.subtext || ""}
+                            onChange={(e) => updateCta("subtext", e.target.value)}
+                            placeholder="CTA subtext"
+                            rows={2}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-muted p-4 rounded-lg space-y-1 pt-2">
+                        <p className="font-semibold">{displayContent.cta?.headline}</p>
+                        <p className="text-sm text-muted-foreground">{displayContent.cta?.subtext}</p>
+                      </div>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
               )}
 
               {/* Social Links */}

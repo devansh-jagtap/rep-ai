@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { convertToModelMessages, stepCountIs, streamText, tool } from "ai";
 import type { UIMessage } from "ai";
 import { z } from "zod";

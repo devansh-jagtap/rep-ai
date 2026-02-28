@@ -27,6 +27,11 @@ export type PortfolioContent = {
   about?: { paragraph?: string };
   services?: { title: string; description: string }[];
   projects?: { title: string; description: string; result: string }[];
+  products?: { title: string; description: string; price: string; url: string; image: string }[];
+  history?: { role: string; company: string; period: string; description: string }[];
+  testimonials?: { quote: string; author: string; role: string }[];
+  faq?: { question: string; answer: string }[];
+  gallery?: { url: string; caption: string }[];
   cta?: { headline?: string; subtext?: string };
   socialLinks?: { platform: "twitter" | "linkedin" | "github" | "instagram" | "youtube" | "facebook" | "website"; enabled: boolean; url: string }[];
 };

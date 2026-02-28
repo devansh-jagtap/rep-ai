@@ -26,7 +26,8 @@ Do not include code fences.
 Do not include explanations.
 Do not include comments.
 Do not include any keys other than the required schema.
-Use a professional, concise, client-facing tone.
+Use a professional, concise, client-facing tone. Keep all descriptions strictly short and punchy.
+For arrays (services, projects, products, history, testimonials, faq, gallery), generate a MAXIMUM of 2 to 3 items each. Give very concise placeholder text if needed.
 Output must be a single JSON object matching this exact TypeScript shape:
 {
   "hero": {
@@ -50,11 +51,47 @@ Output must be a single JSON object matching this exact TypeScript shape:
       "result": string
     }
   ],
+  "products": [
+    {
+      "title": string,
+      "description": string,
+      "price": string,
+      "url": string,
+      "image": string
+    }
+  ],
+  "history": [
+    {
+      "role": string,
+      "company": string,
+      "period": string,
+      "description": string
+    }
+  ],
+  "testimonials": [
+    {
+      "quote": string,
+      "author": string,
+      "role": string
+    }
+  ],
+  "faq": [
+    {
+      "question": string,
+      "answer": string
+    }
+  ],
+  "gallery": [
+    {
+      "url": string,
+      "caption": string
+    }
+  ],
   "cta": {
     "headline": string,
     "subtext": string
   },
-  "visibleSections": ("hero" | "about" | "services" | "projects" | "cta")[]
+  "visibleSections": ("hero" | "about" | "services" | "projects" | "products" | "history" | "testimonials" | "faq" | "gallery" | "cta")[]
 }`;
 
 export class PortfolioGenerationError extends Error {
@@ -82,10 +119,11 @@ function tryParsePortfolioContent(text: string): PortfolioContent {
   return validatePortfolioContent(parsed);
 }
 
-async function generatePortfolioContent(onboardingData: unknown): Promise<PortfolioContent> {
+async function generatePortfolioContent(onboardingData: unknown, currentVisibleSections?: string[]): Promise<PortfolioContent> {
   const data = onboardingData as { setupPath?: string; siteUrl?: string; sections?: unknown } | undefined;
   const isExistingSite = data?.setupPath === "existing-site";
-  const selectedSections = mergeVisibleSections(data?.sections, getDefaultVisibleSections());
+  const baseSections = currentVisibleSections?.length ? currentVisibleSections : data?.sections;
+  const selectedSections = mergeVisibleSections(baseSections, getDefaultVisibleSections());
   const siteHint = isExistingSite && data?.siteUrl
     ? `
 
@@ -93,7 +131,7 @@ This user chose "I already have a website"—create a minimal landing page that 
     : "";
   const sectionHint = `
 
-Use these selected sections as visibility intent: ${selectedSections.join(", ")}. Include "visibleSections" in the response with these values (or a subset if some sections are not applicable).`;
+Use these selected sections as visibility intent: ${selectedSections.join(", ")}. Include "visibleSections" in the response with these values (or a subset if some sections are not applicable). Make sure to generate content for these sections!`;
   const prompt = `Create portfolio content from the onboarding_data below. Return valid JSON only.${siteHint}${sectionHint}
 
 onboarding_data:
@@ -105,7 +143,7 @@ ${JSON.stringify(onboardingData)}`;
       system: SYSTEM_PROMPT,
       prompt,
       temperature: 0.5,
-      maxOutputTokens: 4096, // Increased to avoid truncated JSON
+      maxOutputTokens: 8192, // Increased to avoid truncated JSON
     });
 
     try {
@@ -116,7 +154,7 @@ ${JSON.stringify(onboardingData)}`;
         system: SYSTEM_PROMPT,
         prompt: `${prompt}\n\nYour previous output was invalid JSON. Return only valid JSON matching the exact schema without truncation.`,
         temperature: 0.5,
-        maxOutputTokens: 4096,
+        maxOutputTokens: 8192,
       });
 
       return tryParsePortfolioContent(retryResponse.text);
@@ -138,11 +176,11 @@ export async function generatePortfolio(userId: string, portfolioId?: string): P
   console.info("[portfolio-generation] start", { userId, portfolioId });
 
   try {
-    let portfolio: { id: string; onboardingData: unknown } | undefined;
+    let portfolio: { id: string; onboardingData: unknown; content: unknown } | undefined;
 
     if (portfolioId) {
       const [found] = await db
-        .select({ id: portfolios.id, onboardingData: portfolios.onboardingData })
+        .select({ id: portfolios.id, onboardingData: portfolios.onboardingData, content: portfolios.content })
         .from(portfolios)
         .where(eq(portfolios.id, portfolioId))
         .limit(1);
@@ -150,7 +188,7 @@ export async function generatePortfolio(userId: string, portfolioId?: string): P
     } else {
       // Legacy: fetch first portfolio for user
       const [found] = await db
-        .select({ id: portfolios.id, onboardingData: portfolios.onboardingData })
+        .select({ id: portfolios.id, onboardingData: portfolios.onboardingData, content: portfolios.content })
         .from(portfolios)
         .where(eq(portfolios.userId, userId))
         .limit(1);
@@ -161,10 +199,14 @@ export async function generatePortfolio(userId: string, portfolioId?: string): P
       throw new PortfolioGenerationError("Portfolio not found");
     }
 
-    const generatedContent = await generatePortfolioContent(portfolio.onboardingData);
+    const currentVisibleSections = (portfolio.content as PortfolioContent | null)?.visibleSections;
+    const generatedContent = await generatePortfolioContent(portfolio.onboardingData, currentVisibleSections);
+
     const onboardingSections = (portfolio.onboardingData as { sections?: unknown } | null | undefined)?.sections;
+    const fallbackSections = currentVisibleSections?.length ? currentVisibleSections : onboardingSections;
+
     const visibleSections = mergeVisibleSections(
-      generatedContent.visibleSections?.length ? generatedContent.visibleSections : onboardingSections,
+      generatedContent.visibleSections?.length ? generatedContent.visibleSections : fallbackSections,
       getDefaultVisibleSections()
     );
 

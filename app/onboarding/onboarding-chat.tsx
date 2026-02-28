@@ -203,8 +203,8 @@ export function OnboardingChat() {
   const shouldShowToneSelector = detectedStep === "tone";
   const shouldShowHandleInput = detectedStep === "handle";
 
-  const shouldShowAnyEnhancedUI = shouldShowSectionSelector || shouldShowSetupPath || shouldShowToneSelector || 
-    shouldShowServicesSelector || shouldShowProjectsEditor || shouldShowHandleInput || 
+  const shouldShowAnyEnhancedUI = shouldShowSectionSelector || shouldShowSetupPath || shouldShowToneSelector ||
+    shouldShowServicesSelector || shouldShowProjectsEditor || shouldShowHandleInput ||
     shouldShowTargetAudience || shouldShowContactPreferences || shouldShowFAQsEditor || shouldShowTitleSuggestions;
 
   const handleSectionsSubmit = async () => {
@@ -279,8 +279,8 @@ export function OnboardingChat() {
                   <MessageContent className={cn("text-base max-w-2xl", message.role === "assistant" && "text-primary")}>
                     {(() => {
                       const messageParts = (message.parts || []) as MessagePartLike[];
-                      if (messageParts.length === 0 && typeof message.content === "string") {
-                        const cleaned = message.content.replace(/\[Attached Resume:[^\]]*\]\([^\)]+\)/g, "").trim();
+                      if (messageParts.length === 0 && typeof (message as any).content === "string") {
+                        const cleaned = String((message as any).content).replace(/\[Attached Resume:[^\]]*\]\([^\)]+\)/g, "").trim();
                         return cleaned ? <OnboardingMessageResponse key={`${message.id}-content`}>{cleaned}</OnboardingMessageResponse> : null;
                       }
 
