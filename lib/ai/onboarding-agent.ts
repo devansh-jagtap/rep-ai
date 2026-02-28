@@ -13,8 +13,6 @@ import {
 import { ONBOARDING_STEPS } from "@/lib/onboarding/types";
 import { resolveChatModel } from "./model-provider";
 
-const MODEL = "google/gemini-3-flash";
-
 function buildSystemPrompt(
   collected: Partial<OnboardingData>,
   resumeText?: string
@@ -112,8 +110,10 @@ export async function streamOnboardingChat({
   const systemPrompt = buildSystemPrompt(collected, resumeText);
   const modelMessages = await convertToModelMessages(messages);
 
+  const modelToUse = resumeText ? "google/gemini-3-flash" : "moonshotai/Kimi-K2.5";
+
   const result = streamText({
-    model: resolveChatModel(MODEL),
+    model: resolveChatModel(modelToUse),
     system: systemPrompt,
     messages: modelMessages,
     stopWhen: stepCountIs(15),
