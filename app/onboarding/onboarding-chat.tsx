@@ -405,7 +405,7 @@ export function OnboardingChat() {
         </Conversation>
 
         {previewData ? (
-          <div className="shrink-0 border-t bg-background/95 backdrop-blur px-4 py-6">
+          <div className="shrink-0 border-t bg-background/95 backdrop-blur p-4 md:py-6 overflow-y-auto max-h-[50dvh] md:max-h-[60dvh]">
             <div className="mx-auto max-w-3xl space-y-4">
               <p className="text-muted-foreground text-center text-sm">Review your portfolio below. Click Edit to change something, or Confirm when ready.</p>
               <OnboardingPreviewCard data={previewData} onConfirm={handleConfirm} onEdit={() => document.getElementById("onboarding-edit-input")?.focus()} isConfirming={isConfirming} />

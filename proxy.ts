@@ -18,7 +18,37 @@ const authRoutes = [
 ];
 
 export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const url = request.nextUrl.clone();
+  const { pathname } = url;
+
+  // 1. Subdomain Routing Logic
+  const hostname = request.headers.get("host") || "";
+  let baseDomain = process.env.NEXT_PUBLIC_APP_URL || "localhost:3000";
+  baseDomain = baseDomain.replace(/^https?:\/\//, "").replace(/"/g, "").replace(/'/g, "");
+
+  // Check if it's a subdomain 
+  // - It must end with the base domain
+  // - It must not be EXACTLY the base domain or www.base domain
+  // - We also ignore base localhost unless there's a clear subdomain
+  const isSubdomain =
+    hostname.endsWith(`.${baseDomain}`) &&
+    hostname !== baseDomain &&
+    hostname !== `www.${baseDomain}` &&
+    !hostname.startsWith("localhost:") && // Ignore direct localhost:port access
+    hostname !== "localhost";
+
+  if (isSubdomain) {
+    // Determine handle by removing the base domain suffix
+    // e.g. "anam.rep-ai-nine.vercel.app" -> replace ".rep-ai-nine.vercel.app" -> "anam"
+    const handle = hostname.replace(`.${baseDomain}`, "");
+
+    if (handle && !pathname.startsWith(`/${handle}`)) {
+      // Rewrite to /[handle]
+      return NextResponse.rewrite(new URL(`/${handle}${pathname === "/" ? "" : pathname}`, request.url));
+    }
+  }
+
+  // 2. Authentication Logic
   const session = await authInstance.api.getSession({ headers: request.headers });
   const isAuthenticated = !!session?.user?.id;
 
@@ -48,13 +78,7 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/dashboard/:path*",
-    "/onboarding",
-    "/auth/:path*",
-    "/api/chat",
-    "/api/onboarding/:path*",
-    "/api/profile",
-    "/api/leads/:path*",
-    "/api/analytics/:path*",
+    // We need to match everything except static files/api for subdomain routing
+    "/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
   ],
 };
