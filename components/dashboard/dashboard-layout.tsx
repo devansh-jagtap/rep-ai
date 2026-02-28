@@ -87,6 +87,7 @@ export async function DashboardLayout({ children }: DashboardLayoutProps) {
       >
         <AppSidebar
           credits={profile?.credits ?? 0}
+          plan={profile?.plan ?? "free"}
           userName={profile?.name ?? "User"}
           userEmail={session.user.email ?? ""}
           userImage={profile?.image}

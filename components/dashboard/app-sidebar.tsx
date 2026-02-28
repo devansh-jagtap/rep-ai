@@ -22,6 +22,7 @@ import {
   BarChart3,
   Coins,
   User,
+  CreditCard,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -30,6 +31,7 @@ import { PortfolioSwitcher } from "./portfolio-switcher";
 
 interface AppSidebarProps {
   credits: number;
+  plan: "free" | "pro" | "business";
   userName: string;
   userEmail: string;
   userImage?: string | null;
@@ -42,9 +44,10 @@ const navigation = [
   { title: "Leads", url: "/dashboard/leads", icon: Users },
   { title: "Analytics", url: "/dashboard/analytics", icon: BarChart3 },
   { title: "Knowledge", url: "/dashboard/knowledge", icon: BookText },
+  { title: "Pricing", url: "/dashboard/pricing", icon: CreditCard },
 ];
 
-export function AppSidebar({ credits, userName, userEmail, userImage }: AppSidebarProps) {
+export function AppSidebar({ credits, plan, userName, userEmail, userImage }: AppSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -106,6 +109,14 @@ export function AppSidebar({ credits, userName, userEmail, userImage }: AppSideb
             {credits}
           </span>
         </div>
+
+        {plan !== "free" && (
+          <div className="px-4 py-1 group-data-[collapsible=icon]:hidden">
+            <span className="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10 dark:bg-indigo-400/10 dark:text-indigo-400 dark:ring-indigo-400/30 capitalize">
+              {plan}
+            </span>
+          </div>
+        )}
 
         <div className="flex items-center gap-3 px-2 py-1.5 group-data-[collapsible=icon]:justify-center">
           {userImage ? (

@@ -4,6 +4,8 @@ import { consumeCredits, getCredits } from "@/lib/credits";
 import { parseJsonBody, requireUserId } from "@/lib/api/route-helpers";
 import { checkRateLimit } from "@/lib/rate-limit";
 
+import { checkAiMessageLimit } from "@/lib/billing";
+
 interface ChatRequestBody {
   prompt?: unknown;
 }
@@ -25,6 +27,14 @@ export async function POST(request: Request) {
 
   if (!checkRateLimit(`chat:${authResult.userId}`)) {
     return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+  }
+
+  const limitCheck = await checkAiMessageLimit(authResult.userId);
+  if (!limitCheck.allowed) {
+    return NextResponse.json(
+      { error: "Monthly message limit reached. Upgrade to continue chatting." },
+      { status: 403 }
+    );
   }
 
   const currentCredits = await getCredits(authResult.userId);

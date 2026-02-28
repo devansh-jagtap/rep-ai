@@ -288,8 +288,15 @@ export async function getPortfolioWithAgentByAgentId(agentId: string) {
   }
 }
 
+import { checkPortfolioLimit } from "@/lib/billing";
+
 export async function createPortfolio(input: CreatePortfolioInput) {
   try {
+    const limitCheck = await checkPortfolioLimit(input.userId);
+    if (!limitCheck.allowed) {
+      return { ok: false as const, reason: "limit_reached" as const };
+    }
+
     const firstName = input.onboardingData.name?.split(" ")[0];
     const portfolioName =
       input.name ?? (firstName ? `${firstName}'s Portfolio` : "My Portfolio");

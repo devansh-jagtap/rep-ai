@@ -7,7 +7,7 @@ import { leads, users } from "@/lib/schema";
 export interface Profile {
   id: string;
   name: string;
-  plan: "free" | "pro";
+  plan: "free" | "pro" | "business";
   credits: number;
   email: string;
   image?: string | null;
@@ -101,7 +101,7 @@ export async function getProfileById(id: string): Promise<Profile | null> {
   return {
     ...user,
     name: user.name ?? "User",
-    plan: user.plan as "free" | "pro",
+    plan: user.plan as "free" | "pro" | "business",
   };
 }
 

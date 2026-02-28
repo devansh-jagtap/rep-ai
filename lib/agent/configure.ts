@@ -4,6 +4,7 @@ import { agents } from "@/lib/schema";
 import { isBehaviorPresetType } from "@/lib/agent/behavior-presets";
 import { isSupportedAgentModel } from "@/lib/agent/models";
 import { isConversationStrategyMode } from "@/lib/agent/strategy-modes";
+import { checkAgentLimit } from "@/lib/billing";
 
 export interface ConfigureAgentInput {
   isEnabled: boolean;
@@ -108,6 +109,14 @@ export async function configureAgentForPortfolio(userId: string, portfolioId: st
     return { ok: false as const, status: 400, error: validation.error };
   }
 
+  const existingAgent = await getAgentByPortfolioId(portfolioId);
+  if (!existingAgent) {
+    const limitCheck = await checkAgentLimit(userId);
+    if (!limitCheck.allowed) {
+      return { ok: false as const, status: 403, error: "Agent limit reached for your plan" };
+    }
+  }
+
   await db
     .insert(agents)
     .values({
@@ -180,6 +189,11 @@ export async function configureAgentForUser(userId: string, input: ConfigureAgen
       .where(eq(agents.id, existingAgent.id));
 
     return { ok: true as const };
+  }
+
+  const limitCheck = await checkAgentLimit(userId);
+  if (!limitCheck.allowed) {
+    return { ok: false as const, status: 403, error: "Agent limit reached for your plan" };
   }
 
   await db.insert(agents).values({

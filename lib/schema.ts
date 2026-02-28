@@ -48,10 +48,11 @@ export const users = pgTable("users", {
   image: text("image"),
   passwordHash: text("password_hash"),
   plan: varchar("plan", { length: 20 }).notNull().default("free"),
+  billingCustomerId: text("billing_customer_id"),
+  billingSubscriptionId: text("billing_subscription_id"),
   credits: integer("credits").notNull().default(500),
-  createdAt: safeTimestamp("created_at").notNull().default(sql`now()`),
-  updatedAt: safeTimestamp("updated_at").notNull().default(sql`now()`),
-  activePortfolioId: uuid("active_portfolio_id"),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
 });
 
 export const sessions = pgTable("sessions", {
@@ -60,9 +61,9 @@ export const sessions = pgTable("sessions", {
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  expiresAt: safeTimestamp("expires_at").notNull(),
-  createdAt: safeTimestamp("created_at").notNull().default(sql`now()`),
-  updatedAt: safeTimestamp("updated_at").notNull().default(sql`now()`),
+  expiresAt: timestamp("expires_at", { mode: "date" }).notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
 });
@@ -79,12 +80,12 @@ export const accounts = pgTable(
     refreshToken: text("refresh_token"),
     accessToken: text("access_token"),
     idToken: text("id_token"),
-    accessTokenExpiresAt: safeTimestamp("access_token_expires_at"),
-    refreshTokenExpiresAt: safeTimestamp("refresh_token_expires_at"),
+    accessTokenExpiresAt: timestamp("access_token_expires_at", { mode: "date" }),
+    refreshTokenExpiresAt: timestamp("refresh_token_expires_at", { mode: "date" }),
     scope: text("scope"),
     password: text("password"),
-    createdAt: safeTimestamp("created_at").notNull(),
-    updatedAt: safeTimestamp("updated_at").notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" }).notNull(),
   },
   (account) => [
     uniqueIndex("account_provider_id_idx").on(account.providerId, account.accountId),
@@ -97,9 +98,9 @@ export const verifications = pgTable(
     id: text("id").primaryKey(),
     identifier: text("identifier").notNull(),
     value: text("value").notNull(),
-    expiresAt: safeTimestamp("expires_at").notNull(),
-    createdAt: safeTimestamp("created_at"),
-    updatedAt: safeTimestamp("updated_at"),
+    expiresAt: timestamp("expires_at", { mode: "date" }).notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }),
+    updatedAt: timestamp("updated_at", { mode: "date" }),
   },
   (verification) => [
     uniqueIndex("verification_identifier_idx").on(verification.identifier, verification.value),

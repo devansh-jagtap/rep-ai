@@ -48,13 +48,13 @@ export function PortfolioSwitcher() {
                     className="w-full data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
                     {/* Portfolio icon badge */}
-                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shrink-0">
+                    {/* <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shrink-0">
                         {isLoading ? (
                             <Loader2 className="size-4 animate-spin" />
                         ) : (
-                            <Briefcase className="size-4" />
+                            <></>
                         )}
-                    </div>
+                    </div> */}
 
                     {/* Name + handle */}
                     <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
@@ -91,7 +91,7 @@ export function PortfolioSwitcher() {
                             )}
                         >
                             {/* Mini badge */}
-                            <div
+                            {/* <div
                                 className={cn(
                                     "flex size-7 items-center justify-center rounded-md border shrink-0",
                                     isActive
@@ -100,7 +100,7 @@ export function PortfolioSwitcher() {
                                 )}
                             >
                                 <Briefcase className="size-3.5" />
-                            </div>
+                            </div> */}
 
                             <div className="flex-1 overflow-hidden">
                                 <p className="truncate text-sm font-medium leading-none">{portfolio.name}</p>
@@ -137,6 +137,6 @@ export function PortfolioSwitcher() {
                     <span className="text-sm">Add New Portfolio</span>
                 </DropdownMenuItem>
             </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu >
     );
 }
