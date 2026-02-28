@@ -12,6 +12,8 @@ interface AgentConfig {
   avatarUrl: string;
   intro: string;
   roleLabel: string;
+  googleCalendarEnabled: boolean;
+  googleCalendarAccountEmail: string | null;
 }
 
 interface ChatMessage {
@@ -24,7 +26,7 @@ interface AgentState {
   chatMessages: ChatMessage[];
   chatInput: string;
   isChatLoading: boolean;
-  
+
   setConfig: (config: Partial<AgentConfig>) => void;
   setChatMessages: (messages: ChatMessage[]) => void;
   addChatMessage: (message: ChatMessage) => void;
@@ -45,6 +47,8 @@ const defaultConfig: AgentConfig = {
   avatarUrl: "",
   intro: "",
   roleLabel: "",
+  googleCalendarEnabled: false,
+  googleCalendarAccountEmail: null,
 };
 
 export const useAgentStore = create<AgentState>((set) => ({

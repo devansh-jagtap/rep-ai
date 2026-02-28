@@ -1,5 +1,5 @@
 import { eq, and, gte, lte, count, sql, desc } from "drizzle-orm";
-import { db } from "@/lib/db";
+import { db, withRetry } from "@/lib/db";
 import { portfolioAnalytics, portfolios } from "@/lib/schema";
 
 export type AnalyticsType = "page_view" | "chat_session_start" | "chat_message";
@@ -14,7 +14,7 @@ interface TrackAnalyticsInput {
 }
 
 export async function trackAnalytics(input: TrackAnalyticsInput) {
-  await db.insert(portfolioAnalytics).values({
+  await withRetry(() => db.insert(portfolioAnalytics).values({
     id: crypto.randomUUID(),
     portfolioId: input.portfolioId,
     type: input.type,
@@ -22,7 +22,7 @@ export async function trackAnalytics(input: TrackAnalyticsInput) {
     userAgent: input.userAgent || null,
     country: input.country || null,
     sessionId: input.sessionId || null,
-  });
+  }));
 }
 
 interface GetAnalyticsInput {
@@ -107,11 +107,11 @@ export async function getDailyAnalytics(input: GetAnalyticsInput): Promise<Daily
 }
 
 export async function getPortfolioIdByHandle(handle: string): Promise<string | null> {
-  const [portfolio] = await db
+  const [portfolio] = await withRetry(() => db
     .select({ id: portfolios.id })
     .from(portfolios)
     .where(eq(portfolios.handle, handle))
-    .limit(1);
+    .limit(1));
 
   return portfolio?.id ?? null;
 }

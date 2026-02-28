@@ -29,12 +29,56 @@ if (!process.env.DATABASE_URL && process.env.NODE_ENV !== "production") {
   console.warn("DATABASE_URL is not set; using fallback local connection string for build/dev checks.");
 }
 
-const sql = globalForDb.sql ?? postgres(databaseUrl, { prepare: false });
+const sql = globalForDb.sql ?? postgres(databaseUrl, {
+  prepare: false,
+  ssl: "require",
+  connect_timeout: 30,
+  idle_timeout: 20,    // 20s: long enough to reuse connections, short enough to avoid stale pooler sockets
+  max_lifetime: 60 * 5, // 5 minutes
+  onnotice: () => { }, // Silence notices
+});
+
 if (process.env.NODE_ENV !== "production") {
   globalForDb.sql = sql;
 }
 
 export const db = drizzle(sql, { schema });
+
+/**
+ * Executes a database operation with retry logic for transient errors.
+ */
+export async function withRetry<T>(
+  operation: () => Promise<T>,
+  maxRetries = 3,
+  delay = 100
+): Promise<T> {
+  let lastError: any;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await operation();
+    } catch (error: any) {
+      lastError = error;
+      // Retry on ECONNRESET or other transient Postgres errors
+      const isTransient =
+        error?.code === 'ECONNRESET' ||
+        error?.code === 'CONNECT_TIMEOUT' ||
+        error?.cause?.code === 'CONNECT_TIMEOUT' ||
+        error?.message?.includes('ECONNRESET') ||
+        error?.message?.includes('read ECONNRESET') ||
+        error?.message?.includes('CONNECT_TIMEOUT') ||
+        error?.severity === 'FATAL'; // Often indicates connection lost
+
+      if (!isTransient || i === maxRetries - 1) {
+        throw error;
+      }
+
+      console.warn(`Database query failed (attempt ${i + 1}/${maxRetries}). Retrying in ${delay}ms...`, error.message);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      delay *= 2; // Exponential backoff
+    }
+  }
+  throw lastError;
+}
 
 export async function getProfileById(id: string): Promise<Profile | null> {
   const [user] = await db

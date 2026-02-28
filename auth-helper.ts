@@ -37,7 +37,23 @@ const authInstance = betterAuth({
   },
   trustedOrigins: process.env.TRUSTED_ORIGINS?.split(",") || ["http://localhost:3000"],
   secret: process.env.AUTH_SECRET,
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    },
+  },
+  account: {
+    accountLinking: {
+      trustedProviders: ["google"],
+    },
+  },
   plugins: [nextCookies()],
+  advanced: {
+    database: {
+      generateId: () => crypto.randomUUID(),
+    },
+  },
 });
 
 export const handlers = toNextJsHandler(authInstance);
@@ -60,7 +76,7 @@ export async function auth() {
         email: session.user.email,
         image: session.user.image,
       },
-      expires: session.session.expiresAt.toISOString(),
+      expires: String(session.session.expiresAt),
     };
   } catch {
     return null;

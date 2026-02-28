@@ -5,6 +5,11 @@ import { getActivePortfolio } from "@/lib/active-portfolio";
 import { getAgentByPortfolioId } from "@/lib/agent/configure";
 import { isConversationStrategyMode, type ConversationStrategyMode } from "@/lib/agent/strategy-modes";
 
+interface GoogleCalendarConfig {
+  googleCalendarEnabled: boolean;
+  googleCalendarAccountEmail: string | null;
+}
+
 export default async function AgentDashboardPage() {
   const session = await getSession();
   if (!session?.user?.id) {
@@ -22,6 +27,11 @@ export default async function AgentDashboardPage() {
       ? (String(agent.strategyMode) as ConversationStrategyMode)
       : "consultative";
 
+  const calendarConfig: GoogleCalendarConfig = {
+    googleCalendarEnabled: agent?.googleCalendarEnabled ?? false,
+    googleCalendarAccountEmail: agent?.googleCalendarAccountEmail ?? null,
+  };
+
   return (
     <main className="mx-auto max-w-3xl p-8">
       <h1 className="text-3xl font-bold">AI Agent</h1>
@@ -35,6 +45,7 @@ export default async function AgentDashboardPage() {
           customPrompt: agent?.customPrompt ?? "",
           temperature: agent?.temperature ?? 0.5,
         }}
+        googleCalendarConfig={calendarConfig}
       />
     </main>
   );

@@ -1,16 +1,16 @@
 import { and, desc, eq } from "drizzle-orm";
-import { db } from "@/lib/db";
+import { db, withRetry } from "@/lib/db";
 import { agents, portfolios } from "@/lib/schema";
 
 export type PortfolioTone = "Professional" | "Friendly" | "Bold" | "Minimal";
 
 export async function isHandleAvailable(handle: string): Promise<boolean> {
   try {
-    const [existing] = await db
+    const [existing] = await withRetry(() => db
       .select({ id: portfolios.id })
       .from(portfolios)
       .where(eq(portfolios.handle, handle))
-      .limit(1);
+      .limit(1));
     return !existing;
   } catch (error) {
     console.error("Failed to check handle availability", error);
@@ -92,7 +92,7 @@ export async function getPortfolioByIdAndUserId(id: string, userId: string) {
 
 export async function getPortfolioByHandle(handle: string) {
   try {
-    const [portfolio] = await db
+    const [portfolio] = await withRetry(() => db
       .select({
         id: portfolios.id,
         handle: portfolios.handle,
@@ -102,7 +102,7 @@ export async function getPortfolioByHandle(handle: string) {
       })
       .from(portfolios)
       .where(eq(portfolios.handle, handle))
-      .limit(1);
+      .limit(1));
     return portfolio ?? null;
   } catch (error) {
     console.error("Failed to fetch portfolio by handle", error);
@@ -132,7 +132,7 @@ export async function getAllPublishedPortfolios() {
 
 export async function getPublishedPortfolioByHandle(handle: string) {
   try {
-    const [portfolio] = await db
+    const [portfolio] = await withRetry(() => db
       .select({
         handle: portfolios.handle,
         template: portfolios.template,
@@ -140,7 +140,7 @@ export async function getPublishedPortfolioByHandle(handle: string) {
       })
       .from(portfolios)
       .where(and(eq(portfolios.handle, handle), eq(portfolios.isPublished, true)))
-      .limit(1);
+      .limit(1));
     return portfolio ?? null;
   } catch (error) {
     console.error("Failed to fetch published portfolio by handle", error);
@@ -150,7 +150,7 @@ export async function getPublishedPortfolioByHandle(handle: string) {
 
 export async function getPublishedPortfolioWithAgentByHandle(handle: string) {
   try {
-    const [row] = await db
+    const [row] = await withRetry(() => db
       .select({
         id: portfolios.id,
         userId: portfolios.userId,
@@ -173,7 +173,7 @@ export async function getPublishedPortfolioWithAgentByHandle(handle: string) {
       .from(portfolios)
       .leftJoin(agents, eq(agents.portfolioId, portfolios.id))
       .where(and(eq(portfolios.handle, handle), eq(portfolios.isPublished, true)))
-      .limit(1);
+      .limit(1));
     return row ?? null;
   } catch (error) {
     console.error("Failed to fetch published portfolio with agent", error);

@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   experimental: {
-    turbopackUseSystemTlsCerts: true,
+    turbopackUseSystemTlsCerts: false,
   },
   images: {
     remotePatterns: [

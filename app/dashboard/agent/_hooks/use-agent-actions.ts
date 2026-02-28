@@ -43,7 +43,11 @@ export function useAgentActions(params: {
         throw new Error(result.error);
       }
 
-      params.addChatMessage({ role: "assistant", content: result.reply });
+      const finalReply = result.reply?.trim()
+        ? result.reply
+        : "I'm having trouble responding right now. Could you try asking in a different way?";
+
+      params.addChatMessage({ role: "assistant", content: finalReply });
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Agent unavailable";
       params.addChatMessage({ role: "assistant", content: `Error: ${errorMsg}` });

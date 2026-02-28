@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import {
   boolean,
   check,
+  customType,
   index,
   integer,
   real,
@@ -15,16 +16,41 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
+/**
+ * Custom timestamp column for better-auth tables.
+ * The postgres driver uses `prepare: false` (simple query mode) where all
+ * params must be strings. better-auth passes Date objects for timestamp fields.
+ * This custom type safely converts any value (Date, string, number) to an
+ * ISO string before sending to the driver.
+ */
+const safeTimestamp = customType<{
+  data: string;
+  driverData: string;
+}>({
+  dataType() {
+    return "timestamp with time zone";
+  },
+  toDriver(value: unknown): string {
+    if (value instanceof Date) return value.toISOString();
+    if (typeof value === "number") return new Date(value).toISOString();
+    return String(value ?? "");
+  },
+  fromDriver(value: unknown): string {
+    return String(value ?? "");
+  },
+});
+
 export const users = pgTable("users", {
   id: uuid("id").primaryKey(),
   name: text("name"),
   email: text("email").notNull().unique(),
-  emailVerified: timestamp("email_verified", { mode: "date" }),
+  emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
-  passwordHash: text("password_hash").notNull(),
+  passwordHash: text("password_hash"),
   plan: varchar("plan", { length: 20 }).notNull().default("free"),
   credits: integer("credits").notNull().default(500),
-  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  createdAt: safeTimestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: safeTimestamp("updated_at").notNull().default(sql`now()`),
   activePortfolioId: uuid("active_portfolio_id"),
 });
 
@@ -34,9 +60,9 @@ export const sessions = pgTable("sessions", {
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  expiresAt: timestamp("expires_at", { mode: "date" }).notNull(),
-  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+  expiresAt: safeTimestamp("expires_at").notNull(),
+  createdAt: safeTimestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: safeTimestamp("updated_at").notNull().default(sql`now()`),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
 });
@@ -53,15 +79,14 @@ export const accounts = pgTable(
     refreshToken: text("refresh_token"),
     accessToken: text("access_token"),
     idToken: text("id_token"),
-    accessTokenExpiresAt: timestamp("access_token_expires_at", { mode: "date" }),
-    refreshTokenExpiresAt: timestamp("refresh_token_expires_at", { mode: "date" }),
+    accessTokenExpiresAt: safeTimestamp("access_token_expires_at"),
+    refreshTokenExpiresAt: safeTimestamp("refresh_token_expires_at"),
     scope: text("scope"),
     password: text("password"),
-    createdAt: timestamp("created_at", { mode: "date" }).notNull(),
-    updatedAt: timestamp("updated_at", { mode: "date" }).notNull(),
+    createdAt: safeTimestamp("created_at").notNull(),
+    updatedAt: safeTimestamp("updated_at").notNull(),
   },
   (account) => [
-    uniqueIndex("account_user_id_idx").on(account.userId),
     uniqueIndex("account_provider_id_idx").on(account.providerId, account.accountId),
   ]
 );
@@ -72,9 +97,9 @@ export const verifications = pgTable(
     id: text("id").primaryKey(),
     identifier: text("identifier").notNull(),
     value: text("value").notNull(),
-    expiresAt: timestamp("expires_at", { mode: "date" }).notNull(),
-    createdAt: timestamp("created_at", { mode: "date" }),
-    updatedAt: timestamp("updated_at", { mode: "date" }),
+    expiresAt: safeTimestamp("expires_at").notNull(),
+    createdAt: safeTimestamp("created_at"),
+    updatedAt: safeTimestamp("updated_at"),
   },
   (verification) => [
     uniqueIndex("verification_identifier_idx").on(verification.identifier, verification.value),
@@ -154,6 +179,11 @@ export const agents = pgTable(
     avatarUrl: text("avatar_url"),
     intro: text("intro"),
     roleLabel: varchar("role_label", { length: 60 }),
+    googleCalendarEnabled: boolean("google_calendar_enabled").notNull().default(false),
+    googleCalendarAccessToken: text("google_calendar_access_token"),
+    googleCalendarRefreshToken: text("google_calendar_refresh_token"),
+    googleCalendarTokenExpiry: timestamp("google_calendar_token_expiry", { mode: "date" }),
+    googleCalendarAccountEmail: varchar("google_calendar_account_email", { length: 255 }),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
   },

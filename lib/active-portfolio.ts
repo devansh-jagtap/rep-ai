@@ -20,10 +20,11 @@ const MAX_DB_RETRIES = 2;
 function isConnectionError(err: unknown): boolean {
   const code = err && typeof err === "object" && "code" in err ? (err as NodeJS.ErrnoException).code : null;
   const cause = err && typeof err === "object" && "cause" in err ? (err as { cause?: unknown }).cause : null;
-  if (code === "ECONNRESET" || code === "ECONNREFUSED" || code === "ETIMEDOUT") return true;
+  const TRANSIENT = new Set(["ECONNRESET", "ECONNREFUSED", "ETIMEDOUT", "CONNECT_TIMEOUT"]);
+  if (code && TRANSIENT.has(code)) return true;
   if (cause && typeof cause === "object" && "code" in cause) {
     const c = (cause as NodeJS.ErrnoException).code;
-    if (c === "ECONNRESET" || c === "ECONNREFUSED" || c === "ETIMEDOUT") return true;
+    if (c && TRANSIENT.has(c)) return true;
   }
   return false;
 }
@@ -51,30 +52,30 @@ async function withDbRetry<T>(fn: () => Promise<T>): Promise<T> {
  * Retries once on connection errors (e.g. ECONNRESET).
  */
 export async function getActivePortfolio(userId: string) {
-    try {
-        const cookieStore = await cookies();
-        const cookiePortfolioId = cookieStore.get(ACTIVE_PORTFOLIO_COOKIE)?.value;
+  try {
+    const cookieStore = await cookies();
+    const cookiePortfolioId = cookieStore.get(ACTIVE_PORTFOLIO_COOKIE)?.value;
 
-        const userPortfolios = await withDbRetry(() =>
-            db
-                .select()
-                .from(portfolios)
-                .where(eq(portfolios.userId, userId))
-                .orderBy(desc(portfolios.createdAt))
-        );
+    const userPortfolios = await withDbRetry(() =>
+      db
+        .select()
+        .from(portfolios)
+        .where(eq(portfolios.userId, userId))
+        .orderBy(desc(portfolios.createdAt))
+    );
 
-        if (userPortfolios.length === 0) return null;
+    if (userPortfolios.length === 0) return null;
 
-        if (cookiePortfolioId) {
-            const found = userPortfolios.find((p) => p.id === cookiePortfolioId);
-            if (found) return found;
-        }
-
-        return userPortfolios[0];
-    } catch (error) {
-        console.error("Failed to get active portfolio", error);
-        return null;
+    if (cookiePortfolioId) {
+      const found = userPortfolios.find((p) => p.id === cookiePortfolioId);
+      if (found) return found;
     }
+
+    return userPortfolios[0];
+  } catch (error) {
+    console.error("Failed to get active portfolio", error);
+    return null;
+  }
 }
 
 /**
@@ -82,16 +83,16 @@ export async function getActivePortfolio(userId: string) {
  * Retries on connection errors (e.g. ECONNRESET).
  */
 export async function getAllPortfolios(userId: string) {
-    try {
-        return await withDbRetry(() =>
-            db
-                .select()
-                .from(portfolios)
-                .where(eq(portfolios.userId, userId))
-                .orderBy(desc(portfolios.createdAt))
-        );
-    } catch (error) {
-        console.error("Failed to fetch user portfolios", error);
-        return [];
-    }
+  try {
+    return await withDbRetry(() =>
+      db
+        .select()
+        .from(portfolios)
+        .where(eq(portfolios.userId, userId))
+        .orderBy(desc(portfolios.createdAt))
+    );
+  } catch (error) {
+    console.error("Failed to fetch user portfolios", error);
+    return [];
+  }
 }

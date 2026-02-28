@@ -223,9 +223,6 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
       portfolio: content,
     });
 
-    if (input.userId) {
-      await consumeCredits(input.userId, CREDIT_COST);
-    }
 
     const industryType = content?.about?.paragraph ?? null;
     const threshold = leadConfidenceThresholdForMode(strategyMode, industryType);
@@ -245,46 +242,6 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
       result.lead.confidence >= threshold &&
       passesFieldThreshold;
 
-    await saveChatMessage({
-      sessionId,
-      role: "user",
-      content: input.message,
-    });
-
-    await saveChatMessage({
-      sessionId,
-      role: "assistant",
-      content: result.reply,
-    });
-
-    if (leadDetected) {
-      const dedupeResult = await saveLeadWithDedup({
-        agentId,
-        portfolioId: portfolio?.id ?? null,
-        name: result.lead.lead_data?.name?.trim() || null,
-        email: leadFields.email,
-        phone: leadFields.phone,
-        website: leadFields.website,
-        budget: leadFields.budget,
-        projectDetails: leadFields.projectDetails,
-        confidence: result.lead.confidence,
-        sessionId,
-        captureTurn: input.history.length + 1,
-      });
-
-      if (dedupeResult === "updated") {
-        console.info(
-          JSON.stringify({
-            event: "agent_lead_updated",
-            handle: portfolio?.handle ?? null,
-            portfolioId: portfolio?.id ?? null,
-            agentId,
-            timestamp: new Date().toISOString(),
-          })
-        );
-      }
-    }
-
     if (input.handle) {
       if (result.errorType) {
         markHandleAiFailure(input.handle);
@@ -293,45 +250,103 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
       }
     }
 
-    await logPublicAgentEvent({
-      handle,
-      agentId,
-      portfolioId: portfolio?.id ?? null,
-      sessionId,
-      model: agentModel,
-      mode: strategyMode,
-      tokensUsed: result.usage.totalTokens,
-      leadDetected,
-      confidence: result.lead.confidence,
-      success: !result.errorType,
-      fallbackReason: result.errorType ?? null,
-      latencyMs: Date.now() - startedAt,
-      creditCost: input.userId ? CREDIT_COST : 0,
-      metadata: {
-        historyCount: input.history.length,
-        threshold,
-        industryType,
-        passesFieldThreshold,
-      },
-    });
+    // Fire-and-forget: don't block the reply on DB writes
+    const latencyMs = Date.now() - startedAt;
+    void (async () => {
+      try {
+        if (input.userId) {
+          await consumeCredits(input.userId, CREDIT_COST);
+        }
 
-    if (portfolio) {
-      const isFirstMessage = !input.history || input.history.length === 0;
-
-      if (isFirstMessage) {
-        await trackAnalytics({
-          portfolioId: portfolio.id,
-          type: "chat_session_start",
+        await saveChatMessage({
           sessionId,
+          role: "user",
+          content: input.message,
         });
-      }
 
-      await trackAnalytics({
-        portfolioId: portfolio.id,
-        type: "chat_message",
-        sessionId,
-      });
-    }
+        await saveChatMessage({
+          sessionId,
+          role: "assistant",
+          content: result.reply,
+        });
+
+        if (leadDetected) {
+          const dedupeResult = await saveLeadWithDedup({
+            agentId,
+            portfolioId: portfolio?.id ?? null,
+            name: result.lead.lead_data?.name?.trim() || null,
+            email: leadFields.email,
+            phone: leadFields.phone,
+            website: leadFields.website,
+            budget: leadFields.budget,
+            projectDetails: leadFields.projectDetails,
+            confidence: result.lead.confidence,
+            sessionId,
+            captureTurn: input.history.length + 1,
+          });
+
+          if (dedupeResult === "updated") {
+            console.info(
+              JSON.stringify({
+                event: "agent_lead_updated",
+                handle: portfolio?.handle ?? null,
+                portfolioId: portfolio?.id ?? null,
+                agentId,
+                timestamp: new Date().toISOString(),
+              })
+            );
+          }
+        }
+
+        await logPublicAgentEvent({
+          handle,
+          agentId,
+          portfolioId: portfolio?.id ?? null,
+          sessionId,
+          model: agentModel,
+          mode: strategyMode,
+          tokensUsed: result.usage.totalTokens,
+          leadDetected,
+          confidence: result.lead.confidence,
+          success: !result.errorType,
+          fallbackReason: result.errorType ?? null,
+          latencyMs,
+          creditCost: input.userId ? CREDIT_COST : 0,
+          metadata: {
+            historyCount: input.history.length,
+            threshold,
+            industryType,
+            passesFieldThreshold,
+          },
+        });
+
+        if (portfolio) {
+          const isFirstMessage = !input.history || input.history.length === 0;
+
+          if (isFirstMessage) {
+            await trackAnalytics({
+              portfolioId: portfolio.id,
+              type: "chat_session_start",
+              sessionId,
+            });
+          }
+
+          await trackAnalytics({
+            portfolioId: portfolio.id,
+            type: "chat_message",
+            sessionId,
+          });
+        }
+      } catch (bgErr) {
+        console.error(
+          JSON.stringify({
+            event: "public_chat_background_error",
+            message: bgErr instanceof Error ? bgErr.message : String(bgErr),
+            timestamp: new Date().toISOString(),
+          })
+        );
+      }
+    })();
 
     return { ok: true, reply: result.reply, leadDetected, sessionId };
   } catch (error) {

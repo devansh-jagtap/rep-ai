@@ -34,6 +34,8 @@ export interface GenerateAgentReplyInput {
   message: string;
   history: AgentMessage[];
   portfolio?: PortfolioContent | null;
+  /** Pre-fetched Google Calendar access token — avoids a DB round-trip inside the tool loop */
+  calendarAccessToken?: string | null;
 }
 
 export interface GenerateAgentReplyOutput {

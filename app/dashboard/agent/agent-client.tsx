@@ -11,7 +11,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { CodeBlock } from "@/components/ui/code-block";
 import { Input } from "@/components/ui/input";
 import { useTransition, useEffect, useMemo, useState } from "react";
-import { Save, AlertCircle, ExternalLink, ArrowUpIcon, Loader2, Activity, Globe, Cpu, MessageCircle } from "lucide-react";
+import { Save, AlertCircle, ExternalLink, ArrowUpIcon, Loader2, Activity, Globe, Cpu, MessageCircle, Calendar, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { saveAgentConfig } from "../actions";
 import {
@@ -61,6 +61,7 @@ const STRATEGY_MODES = [
 
 const AGENT_TABS = [
   { label: "Settings", value: "settings" },
+  { label: "Integrations", value: "integrations" },
   { label: "Widget", value: "widget" },
   { label: "Test Chat", value: "test" },
 ];
@@ -77,6 +78,8 @@ interface AgentClientProps {
     avatarUrl: string | null;
     intro: string | null;
     roleLabel: string | null;
+    googleCalendarEnabled: boolean;
+    googleCalendarAccountEmail: string | null;
   } | null;
   agentId: string | null;
   portfolioHandle: string;
@@ -119,9 +122,24 @@ export function AgentClient({
         avatarUrl: agent.avatarUrl || "",
         intro: agent.intro || "",
         roleLabel: agent.roleLabel || "",
+        googleCalendarEnabled: agent.googleCalendarEnabled,
+        googleCalendarAccountEmail: agent.googleCalendarAccountEmail,
       });
     }
   }, [agent, resetConfig]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("calendar") === "connected") {
+      toast.success("Google Calendar connected successfully");
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+    if (params.get("calendar_error")) {
+      const error = params.get("calendar_error");
+      toast.error(`Failed to connect Google Calendar: ${error}`);
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
 
   const [widgetLabel, setWidgetLabel] = useState("Chat");
   const [widgetPosition, setWidgetPosition] = useState<"bottom-right" | "bottom-left">("bottom-right");
@@ -157,6 +175,23 @@ export function AgentClient({
         toast.error(error instanceof Error ? error.message : "Failed to save");
       }
     });
+  };
+
+  const [isDisconnectingCalendar, setIsDisconnectingCalendar] = useState(false);
+  const handleCalendarDisconnect = async () => {
+    setIsDisconnectingCalendar(true);
+    try {
+      const resp = await fetch("/api/integrations/google-calendar/disconnect", {
+        method: "POST",
+      });
+      if (!resp.ok) throw new Error("Failed to disconnect");
+      setConfig({ googleCalendarEnabled: false, googleCalendarAccountEmail: null });
+      toast.success("Google Calendar disconnected");
+    } catch (error) {
+      toast.error("Failed to disconnect Google Calendar");
+    } finally {
+      setIsDisconnectingCalendar(false);
+    }
   };
 
   const { sendTestMessage } = useAgentActions({
@@ -211,7 +246,7 @@ export function AgentClient({
 
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Status */}
-        <div className="flex items-center gap-3 rounded-lg border border-border bg-transparent px-4 py-3">          
+        <div className="flex items-center gap-3 rounded-lg border border-border bg-transparent px-4 py-3">
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-foreground">Status</span>
@@ -225,7 +260,7 @@ export function AgentClient({
 
         {/* Portfolio */}
         <div className="flex items-center gap-3 rounded-lg border border-border bg-transparent px-4 py-3">
-          
+
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-foreground">Portfolio</span>
@@ -238,7 +273,7 @@ export function AgentClient({
 
         {/* Model */}
         <div className="flex items-center gap-3 rounded-lg border border-border bg-transparent px-4 py-3">
-          
+
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-foreground">Model</span>
@@ -251,7 +286,7 @@ export function AgentClient({
 
         {/* Mode */}
         <div className="flex items-center gap-3 rounded-lg border border-border bg-transparent px-4 py-3">
-          
+
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-foreground">Mode</span>
@@ -269,202 +304,202 @@ export function AgentClient({
           if (tab.value === "settings") {
             return (
               <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-lg">Enable AI Assistant</CardTitle>
-                <CardDescription>Responds to visitor questions and captures leads.</CardDescription>
-              </div>
-              <Switch
-                checked={config.isEnabled}
-                onCheckedChange={(checked) => setConfig({ isEnabled: checked })}
-                disabled={isPending}
-              />
-                  </CardHeader>
-
-                  <CardContent
-              className={`${config.isEnabled ? "" : "opacity-60 pointer-events-none"} transition-opacity duration-200`}
-            >
-              <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-x-8 gap-y-8">
-                      {/* Setting Row 1 */}
-                      <div className="space-y-1">
-                  <Label className="text-sm font-semibold">AI Model</Label>
-                  <p className="text-xs text-muted-foreground">Select the underlying model power.</p>
-                </div>
-                <div>
-                  <Select
-                    value={config.model}
-                    onValueChange={(value) => setConfig({ model: value })}
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-lg">Enable AI Assistant</CardTitle>
+                    <CardDescription>Responds to visitor questions and captures leads.</CardDescription>
+                  </div>
+                  <Switch
+                    checked={config.isEnabled}
+                    onCheckedChange={(checked) => setConfig({ isEnabled: checked })}
                     disabled={isPending}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select a model" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MODELS.map((model) => (
-                        <SelectItem key={model.value} value={model.value}>
-                          <div className="flex items-center justify-between w-full pr-4 gap-4">
-                            <span className="font-medium">{model.label}</span>
-                            <span className="text-xs text-muted-foreground">{model.description}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                  />
+                </CardHeader>
 
-                      {/* Setting Row 2 */}
-                      <div className="space-y-1">
-                  <Label className="text-sm font-semibold">Behavior Preset</Label>
-                  <p className="text-xs text-muted-foreground">How the assistant communicates.</p>
-                </div>
-                <div>
-                  <Select
-                    value={config.behaviorType}
-                    onValueChange={(value) => setConfig({ behaviorType: value })}
-                    disabled={isPending}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select a preset" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {BEHAVIOR_PRESETS.map((preset) => (
-                        <SelectItem key={preset.value} value={preset.value} className="font-medium">
-                          {preset.label}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="custom" className="font-medium">
-                        Custom Instructions
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                      {/* Setting Row 3 */}
-                      <div className="space-y-1">
-                  <Label className="text-sm font-semibold">Conversation Strategy</Label>
-                  <p className="text-xs text-muted-foreground">The goal of the interactions.</p>
-                </div>
-                <div className="space-y-2">
-                  <Select
-                    value={config.strategyMode}
-                    onValueChange={(value) => setConfig({ strategyMode: value as ConversationStrategyMode })}
-                    disabled={isPending}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select a strategy" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STRATEGY_MODES.map((mode) => (
-                        <SelectItem key={mode.value} value={mode.value} className="font-medium">
-                          {mode.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground font-medium">
-                    {CONVERSATION_STRATEGY_MODES[config.strategyMode].description}
-                  </p>
-                </div>
-
-                <div className="space-y-1">
-                  <Label className="text-sm font-semibold">Agent Name</Label>
-                  <p className="text-xs text-muted-foreground">Shown in chat headers and intro copy.</p>
-                </div>
-                <Input
-                  value={config.displayName}
-                  onChange={(e) => setConfig({ displayName: e.target.value })}
-                  placeholder="e.g. Alex from Acme"
-                  maxLength={80}
-                  disabled={isPending}
-                />
-
-                <div className="space-y-1">
-                  <Label className="text-sm font-semibold">Role Label</Label>
-                  <p className="text-xs text-muted-foreground">Optional short descriptor like Sales Advisor.</p>
-                </div>
-                <Input
-                  value={config.roleLabel}
-                  onChange={(e) => setConfig({ roleLabel: e.target.value })}
-                  placeholder="e.g. Solutions Consultant"
-                  maxLength={60}
-                  disabled={isPending}
-                />
-
-                <div className="space-y-1">
-                  <Label className="text-sm font-semibold">Avatar URL</Label>
-                  <p className="text-xs text-muted-foreground">Optional image URL for embed/public chat identity.</p>
-                </div>
-                <Input
-                  value={config.avatarUrl}
-                  onChange={(e) => setConfig({ avatarUrl: e.target.value })}
-                  placeholder="https://..."
-                  disabled={isPending}
-                />
-
-                <div className="space-y-1">
-                  <Label className="text-sm font-semibold">Intro Message</Label>
-                  <p className="text-xs text-muted-foreground">Short intro shown when the chat starts.</p>
-                </div>
-                <Textarea
-                  value={config.intro}
-                  onChange={(e) => setConfig({ intro: e.target.value })}
-                  placeholder="Hi! I'm here to help you evaluate if we're a fit."
-                  maxLength={280}
-                  className="min-h-[90px]"
-                  disabled={isPending}
-                />
-
-                      {/* Optional Custom Prompt */}
-                      {config.behaviorType === "custom" && (
-                  <>
+                <CardContent
+                  className={`${config.isEnabled ? "" : "opacity-60 pointer-events-none"} transition-opacity duration-200`}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-x-8 gap-y-8">
+                    {/* Setting Row 1 */}
                     <div className="space-y-1">
-                      <Label className="text-sm font-semibold">Custom System Prompt</Label>
-                      <p className="text-xs text-muted-foreground">Define specific boundaries.</p>
+                      <Label className="text-sm font-semibold">AI Model</Label>
+                      <p className="text-xs text-muted-foreground">Select the underlying model power.</p>
                     </div>
                     <div>
-                      <Textarea
-                        placeholder="Define tone, boundaries, and response style for your agent."
-                        className="min-h-[120px] resize-y"
-                        value={config.customPrompt}
-                        onChange={(e) => setConfig({ customPrompt: e.target.value })}
+                      <Select
+                        value={config.model}
+                        onValueChange={(value) => setConfig({ model: value })}
+                        disabled={isPending}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a model" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {MODELS.map((model) => (
+                            <SelectItem key={model.value} value={model.value}>
+                              <div className="flex items-center justify-between w-full pr-4 gap-4">
+                                <span className="font-medium">{model.label}</span>
+                                <span className="text-xs text-muted-foreground">{model.description}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Setting Row 2 */}
+                    <div className="space-y-1">
+                      <Label className="text-sm font-semibold">Behavior Preset</Label>
+                      <p className="text-xs text-muted-foreground">How the assistant communicates.</p>
+                    </div>
+                    <div>
+                      <Select
+                        value={config.behaviorType}
+                        onValueChange={(value) => setConfig({ behaviorType: value })}
+                        disabled={isPending}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a preset" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {BEHAVIOR_PRESETS.map((preset) => (
+                            <SelectItem key={preset.value} value={preset.value} className="font-medium">
+                              {preset.label}
+                            </SelectItem>
+                          ))}
+                          <SelectItem value="custom" className="font-medium">
+                            Custom Instructions
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Setting Row 3 */}
+                    <div className="space-y-1">
+                      <Label className="text-sm font-semibold">Conversation Strategy</Label>
+                      <p className="text-xs text-muted-foreground">The goal of the interactions.</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Select
+                        value={config.strategyMode}
+                        onValueChange={(value) => setConfig({ strategyMode: value as ConversationStrategyMode })}
+                        disabled={isPending}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a strategy" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {STRATEGY_MODES.map((mode) => (
+                            <SelectItem key={mode.value} value={mode.value} className="font-medium">
+                              {mode.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground font-medium">
+                        {CONVERSATION_STRATEGY_MODES[config.strategyMode].description}
+                      </p>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-sm font-semibold">Agent Name</Label>
+                      <p className="text-xs text-muted-foreground">Shown in chat headers and intro copy.</p>
+                    </div>
+                    <Input
+                      value={config.displayName}
+                      onChange={(e) => setConfig({ displayName: e.target.value })}
+                      placeholder="e.g. Alex from Acme"
+                      maxLength={80}
+                      disabled={isPending}
+                    />
+
+                    <div className="space-y-1">
+                      <Label className="text-sm font-semibold">Role Label</Label>
+                      <p className="text-xs text-muted-foreground">Optional short descriptor like Sales Advisor.</p>
+                    </div>
+                    <Input
+                      value={config.roleLabel}
+                      onChange={(e) => setConfig({ roleLabel: e.target.value })}
+                      placeholder="e.g. Solutions Consultant"
+                      maxLength={60}
+                      disabled={isPending}
+                    />
+
+                    <div className="space-y-1">
+                      <Label className="text-sm font-semibold">Avatar URL</Label>
+                      <p className="text-xs text-muted-foreground">Optional image URL for embed/public chat identity.</p>
+                    </div>
+                    <Input
+                      value={config.avatarUrl}
+                      onChange={(e) => setConfig({ avatarUrl: e.target.value })}
+                      placeholder="https://..."
+                      disabled={isPending}
+                    />
+
+                    <div className="space-y-1">
+                      <Label className="text-sm font-semibold">Intro Message</Label>
+                      <p className="text-xs text-muted-foreground">Short intro shown when the chat starts.</p>
+                    </div>
+                    <Textarea
+                      value={config.intro}
+                      onChange={(e) => setConfig({ intro: e.target.value })}
+                      placeholder="Hi! I'm here to help you evaluate if we're a fit."
+                      maxLength={280}
+                      className="min-h-[90px]"
+                      disabled={isPending}
+                    />
+
+                    {/* Optional Custom Prompt */}
+                    {config.behaviorType === "custom" && (
+                      <>
+                        <div className="space-y-1">
+                          <Label className="text-sm font-semibold">Custom System Prompt</Label>
+                          <p className="text-xs text-muted-foreground">Define specific boundaries.</p>
+                        </div>
+                        <div>
+                          <Textarea
+                            placeholder="Define tone, boundaries, and response style for your agent."
+                            className="min-h-[120px] resize-y"
+                            value={config.customPrompt}
+                            onChange={(e) => setConfig({ customPrompt: e.target.value })}
+                            disabled={isPending}
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {/* Setting Row 4 */}
+                    <div className="space-y-1">
+                      <Label className="text-sm font-semibold">Creativity</Label>
+                      <p className="text-xs text-muted-foreground">Adjust the model's randomness.</p>
+                    </div>
+                    <div className="space-y-4 pt-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-medium text-muted-foreground">Focused</span>
+                        <span className="text-sm font-mono text-primary font-medium bg-primary/10 px-2 py-0.5 rounded">
+                          {config.temperature.toFixed(1)}
+                        </span>
+                        <span className="text-xs font-medium text-muted-foreground">Creative</span>
+                      </div>
+                      <Slider
+                        value={[config.temperature]}
+                        onValueChange={([value]) => setConfig({ temperature: value })}
+                        min={0.2}
+                        max={0.8}
+                        step={0.1}
                         disabled={isPending}
                       />
                     </div>
-                  </>
-                )}
-
-                      {/* Setting Row 4 */}
-                      <div className="space-y-1">
-                  <Label className="text-sm font-semibold">Creativity</Label>
-                  <p className="text-xs text-muted-foreground">Adjust the model's randomness.</p>
-                </div>
-                <div className="space-y-4 pt-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-medium text-muted-foreground">Focused</span>
-                    <span className="text-sm font-mono text-primary font-medium bg-primary/10 px-2 py-0.5 rounded">
-                      {config.temperature.toFixed(1)}
-                    </span>
-                    <span className="text-xs font-medium text-muted-foreground">Creative</span>
                   </div>
-                  <Slider
-                    value={[config.temperature]}
-                    onValueChange={([value]) => setConfig({ temperature: value })}
-                    min={0.2}
-                    max={0.8}
-                    step={0.1}
-                    disabled={isPending}
-                  />
-                </div>
-              </div>
-                  </CardContent>
+                </CardContent>
 
-                  <CardFooter className="bg-muted/50 border-t border-border justify-end">
-                    <Button onClick={handleSave} disabled={isPending}>
-                      {isPending ? <Loader2 className="size-4 animate-spin mr-2" /> : <Save className="size-4 mr-2" />}
-                      {isPending ? "Saving..." : "Save Configuration"}
-                    </Button>
-                  </CardFooter>
-                </Card>
+                <CardFooter className="bg-muted/50 border-t border-border justify-end">
+                  <Button onClick={handleSave} disabled={isPending}>
+                    {isPending ? <Loader2 className="size-4 animate-spin mr-2" /> : <Save className="size-4 mr-2" />}
+                    {isPending ? "Saving..." : "Save Configuration"}
+                  </Button>
+                </CardFooter>
+              </Card>
             );
           }
 
@@ -589,6 +624,73 @@ export function AgentClient({
                   </>
                 )}
               </Card>
+            );
+          }
+
+          if (tab.value === "integrations") {
+            return (
+              <div className="space-y-6">
+                <div className="grid gap-6 md:grid-cols-2">
+                  <Card className="flex flex-col">
+                    <CardHeader>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
+                          <Calendar className="size-6" />
+                        </div>
+                        <Badge variant={config.googleCalendarEnabled ? "default" : "secondary"}>
+                          {config.googleCalendarEnabled ? (
+                            <span className="flex items-center gap-1">
+                              <CheckCircle2 className="size-3" /> Connected
+                            </span>
+                          ) : (
+                            "Not Connected"
+                          )}
+                        </Badge>
+                      </div>
+                      <CardTitle className="text-xl">Google Calendar</CardTitle>
+                      <CardDescription>
+                        Allow your agent to see your availability and schedule meetings directly into your calendar.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-1">
+                      {config.googleCalendarEnabled && config.googleCalendarAccountEmail && (
+                        <div className="flex items-center gap-2 p-3 rounded-md bg-muted/50 border border-border text-sm font-medium">
+                          <Globe className="size-4 text-muted-foreground" />
+                          <span className="truncate">{config.googleCalendarAccountEmail}</span>
+                        </div>
+                      )}
+                      {!config.googleCalendarEnabled && (
+                        <p className="text-sm text-muted-foreground">
+                          Connect your Google account to sync your calendar with your AI assistant.
+                        </p>
+                      )}
+                    </CardContent>
+                    <CardFooter className="bg-muted/30 border-t border-border mt-auto">
+                      {config.googleCalendarEnabled ? (
+                        <Button
+                          variant="outline"
+                          className="w-full text-destructive hover:text-destructive"
+                          onClick={handleCalendarDisconnect}
+                          disabled={isDisconnectingCalendar}
+                        >
+                          {isDisconnectingCalendar ? (
+                            <Loader2 className="size-4 animate-spin mr-2" />
+                          ) : (
+                            <XCircle className="size-4 mr-2" />
+                          )}
+                          Disconnect Calendar
+                        </Button>
+                      ) : (
+                        <Button className="w-full" asChild>
+                          <a href="/api/integrations/google-calendar/connect">
+                            Connect Google Calendar
+                          </a>
+                        </Button>
+                      )}
+                    </CardFooter>
+                  </Card>
+                </div>
+              </div>
             );
           }
 
