@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { saveLead, getLeads } from "@/lib/db";
+import { saveLead, getLeads, getProfileById } from "@/lib/db";
 import { parseJsonBody, requireUserId } from "@/lib/api/route-helpers";
 import { extractLeadFromText } from "@/lib/lead-extract";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { sendLeadNotificationEmail } from "@/lib/mail";
 
 interface LeadRequestBody {
   text?: unknown;
@@ -45,5 +46,22 @@ export async function POST(request: Request) {
   }
 
   await saveLead({ ...lead, email: lead.email }, authResult.userId);
+
+  // Send an email notification to the portfolio owner, asynchronously
+  Promise.resolve().then(async () => {
+    try {
+      const ownerProfile = await getProfileById(authResult.userId);
+      if (ownerProfile?.email) {
+        await sendLeadNotificationEmail(ownerProfile.email, {
+          name: lead.name,
+          email: lead.email,
+          projectDetails: lead.company, // using company field as extra info if available
+        });
+      }
+    } catch (e) {
+      console.error("Error sending lead email notification:", e);
+    }
+  });
+
   return NextResponse.json({ lead }, { status: 201 });
 }

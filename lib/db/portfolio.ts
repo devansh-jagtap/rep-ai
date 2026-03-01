@@ -154,6 +154,7 @@ export async function getPublishedPortfolioWithAgentByHandle(handle: string) {
       .select({
         id: portfolios.id,
         userId: portfolios.userId,
+        name: portfolios.name,
         handle: portfolios.handle,
         template: portfolios.template,
         content: portfolios.content,
@@ -169,6 +170,7 @@ export async function getPublishedPortfolioWithAgentByHandle(handle: string) {
         agentAvatarUrl: agents.avatarUrl,
         agentIntro: agents.intro,
         agentRoleLabel: agents.roleLabel,
+        agentNotificationEmail: agents.notificationEmail,
         agentWorkingHours: agents.workingHours,
         agentOffDays: agents.offDays,
       })
@@ -189,6 +191,7 @@ export async function getPortfolioWithAgentByHandle(handle: string) {
       .select({
         id: portfolios.id,
         userId: portfolios.userId,
+        name: portfolios.name,
         handle: portfolios.handle,
         template: portfolios.template,
         content: portfolios.content,
@@ -204,6 +207,7 @@ export async function getPortfolioWithAgentByHandle(handle: string) {
         agentAvatarUrl: agents.avatarUrl,
         agentIntro: agents.intro,
         agentRoleLabel: agents.roleLabel,
+        agentNotificationEmail: agents.notificationEmail,
         agentWorkingHours: agents.workingHours,
         agentOffDays: agents.offDays,
       })
@@ -224,6 +228,7 @@ export async function getPublishedPortfolioWithAgentByAgentId(agentId: string) {
       .select({
         id: portfolios.id,
         userId: portfolios.userId,
+        name: portfolios.name,
         handle: portfolios.handle,
         template: portfolios.template,
         content: portfolios.content,
@@ -239,6 +244,7 @@ export async function getPublishedPortfolioWithAgentByAgentId(agentId: string) {
         agentAvatarUrl: agents.avatarUrl,
         agentIntro: agents.intro,
         agentRoleLabel: agents.roleLabel,
+        agentNotificationEmail: agents.notificationEmail,
         agentWorkingHours: agents.workingHours,
         agentOffDays: agents.offDays,
       })
@@ -259,6 +265,7 @@ export async function getPortfolioWithAgentByAgentId(agentId: string) {
       .select({
         id: portfolios.id,
         userId: portfolios.userId,
+        name: portfolios.name,
         handle: portfolios.handle,
         template: portfolios.template,
         content: portfolios.content,
@@ -274,6 +281,7 @@ export async function getPortfolioWithAgentByAgentId(agentId: string) {
         agentAvatarUrl: agents.avatarUrl,
         agentIntro: agents.intro,
         agentRoleLabel: agents.roleLabel,
+        agentNotificationEmail: agents.notificationEmail,
         agentWorkingHours: agents.workingHours,
         agentOffDays: agents.offDays,
       })

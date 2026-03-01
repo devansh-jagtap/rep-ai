@@ -14,6 +14,7 @@ interface AgentConfig {
   roleLabel: string;
   workingHours: { dayOfWeek: number; startTime: string; endTime: string; enabled: boolean }[];
   offDays: string[];
+  notificationEmail: string | null;
   googleCalendarEnabled: boolean;
   googleCalendarAccountEmail: string | null;
 }
@@ -61,6 +62,7 @@ const defaultConfig: AgentConfig = {
   offDays: [],
   googleCalendarEnabled: false,
   googleCalendarAccountEmail: null,
+  notificationEmail: null,
 };
 
 export const useAgentStore = create<AgentState>((set) => ({

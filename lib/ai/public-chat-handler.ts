@@ -290,6 +290,38 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
             captureTurn: input.history.length + 1,
           });
 
+          if (dedupeResult === "inserted") {
+            const ownerId = (portfolio as any)?.userId ?? (standaloneAgent as any)?.userId;
+            const customNotificationEmail = (portfolio as any)?.agentNotificationEmail ?? (standaloneAgent as any)?.notificationEmail;
+            const sourceName = (portfolio as any)?.name ?? (standaloneAgent as any)?.displayName ?? "Standalone Agent";
+
+            if (ownerId || customNotificationEmail) {
+              try {
+                const { getProfileById } = await import("@/lib/db");
+                const { sendLeadNotificationEmail } = await import("@/lib/mail");
+
+                let emailToUse = customNotificationEmail;
+                if (!emailToUse && ownerId) {
+                  const ownerProfile = await getProfileById(ownerId);
+                  emailToUse = ownerProfile?.email;
+                }
+
+                if (emailToUse) {
+                  await sendLeadNotificationEmail(emailToUse, {
+                    name: result.lead.lead_data?.name?.trim() || null,
+                    email: leadFields.email,
+                    phone: leadFields.phone,
+                    budget: leadFields.budget,
+                    projectDetails: leadFields.projectDetails,
+                    meetingTime: result.lead.lead_data?.meeting_time?.trim() || null,
+                  }, sourceName);
+                }
+              } catch (e) {
+                console.error("Failed to notify portfolio owner about new lead", e);
+              }
+            }
+          }
+
           if (dedupeResult === "updated") {
             console.info(
               JSON.stringify({
