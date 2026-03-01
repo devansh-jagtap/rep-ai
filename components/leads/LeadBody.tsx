@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { LeadDetailData } from "./types"
+import { WarmIntroCard } from "./WarmIntroCard"
 
 function cleanText(input: string) {
   return input.replace(/\s+/g, " ").trim()
@@ -13,6 +14,8 @@ export function LeadBody({ lead }: { lead: LeadDetailData }) {
 
   return (
     <div className="space-y-4">
+      <WarmIntroCard lead={lead} />
+
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm">Project Summary</CardTitle>
@@ -59,4 +62,3 @@ export function LeadBody({ lead }: { lead: LeadDetailData }) {
     </div>
   )
 }
-
