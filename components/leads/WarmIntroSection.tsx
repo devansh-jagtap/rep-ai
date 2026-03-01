@@ -65,7 +65,7 @@ export function WarmIntroSection({ lead }: { lead: LeadDetailData }) {
   return (
     <section className="border rounded-lg p-3.5">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Warm intro</h3>
+        <h3 className="text-sm font-sans font-medium uppercase tracking-wider text-muted-foreground">Warm intro</h3>
         <Button type="button" size="sm" variant="outline" onClick={handleGenerate} disabled={isLoading}>
           {isLoading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <MailPlus className="mr-2 size-4" />}
           {draft ? "Regenerate" : "Generate draft"}

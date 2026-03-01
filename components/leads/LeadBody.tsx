@@ -1,5 +1,5 @@
 import type { LeadDetailData } from "./types"
-import { WarmIntroSection } from "./WarmIntroSection"
+import { WarmIntroSection } from "@/components/leads/WarmIntroSection"
 
 function cleanText(input: string) {
   return input.replace(/\s+/g, " ").trim()

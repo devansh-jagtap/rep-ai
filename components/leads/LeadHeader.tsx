@@ -40,7 +40,7 @@ export function LeadHeader({
     <div className="space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-lg font-semibold tracking-tight truncate">{lead.name || "Anonymous"}</h2>
+          <h2 className="text-3xl -tracking-wide truncate">{lead.name || "Anonymous"}</h2>
           <div className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
             {lead.email ? (
               <>
