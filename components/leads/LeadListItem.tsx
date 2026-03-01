@@ -3,6 +3,12 @@ import { cn } from "@/lib/utils"
 import { getLeadConfidenceBadgeClass, getLeadConfidenceLabel } from "./lead-confidence"
 import type { LeadListItemData } from "./types"
 
+const STATUS_LABEL: Record<NonNullable<LeadListItemData["status"]>, string> = {
+  new: "New",
+  contacted: "Contacted",
+  closed: "Closed",
+}
+
 function formatShortDate(iso: string) {
   const date = new Date(iso)
   if (Number.isNaN(date.getTime())) return "—"
@@ -20,6 +26,7 @@ export function LeadListItem({
   onSelect: () => void
 }) {
   const isUnread = lead.isRead === false
+  const status = lead.status ?? "new"
 
   return (
     <button
@@ -51,14 +58,18 @@ export function LeadListItem({
           </p>
         </div>
 
-        {/* <p
+        <p
           className="mt-0.5 truncate text-sm text-muted-foreground"
           title={lead.subject || "No subject"}
         >
           {lead.subject || "No subject"}
-        </p> */}
+        </p>
 
         <div className="mt-2 flex flex-wrap items-center gap-2">
+          <Badge variant="outline" className="rounded-full">
+            {STATUS_LABEL[status]}
+          </Badge>
+
           {lead.budget ? (
             <Badge variant="secondary" className="rounded-full">
               {lead.budget}
@@ -76,4 +87,3 @@ export function LeadListItem({
     </button>
   )
 }
-
