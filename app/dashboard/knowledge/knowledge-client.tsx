@@ -43,7 +43,9 @@ export function KnowledgeClient() {
   const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [inputMode, setInputMode] = useState<"text" | "file">("text");
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [isScraping, setIsScraping] = useState(false);
+  const [inputMode, setInputMode] = useState<"text" | "file" | "website">("text");
   const [editing, setEditing] = useState<KnowledgeSource | null>(null);
   const [uploadedFile, setUploadedFile] = useState<{
     fileUrl: string;
@@ -69,6 +71,7 @@ export function KnowledgeClient() {
       queryClient.invalidateQueries({ queryKey: ["knowledge"] });
       setTitle("");
       setContent("");
+      setWebsiteUrl("");
       setUploadedFile(null);
       setInputMode("text");
     },
@@ -113,6 +116,32 @@ export function KnowledgeClient() {
       fileSize: uploadedFile.fileSize,
       type: "pdf",
     });
+  };
+
+  const handleScrapeWebsite = async () => {
+    if (!websiteUrl.trim()) return;
+    setIsScraping(true);
+    try {
+      const resp = await fetch("/api/scrape", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: websiteUrl }),
+      });
+      const data = await resp.json();
+      if (!data.success) throw new Error(data.error || "Scrape failed");
+
+      const finalTitle = title.trim() || `Website: ${websiteUrl.replace(/^https?:\/\//, "")}`;
+      addMutation.mutate({
+        title: finalTitle,
+        content: data.text,
+        type: "text",
+      });
+    } catch (err) {
+      console.error("Scrape error:", err);
+      // toast or alert would be good here
+    } finally {
+      setIsScraping(false);
+    }
   };
 
   const sources = data?.sources ?? [];
@@ -176,23 +205,30 @@ export function KnowledgeClient() {
           <div className="flex gap-2 border-b">
             <button
               onClick={() => setInputMode("text")}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                inputMode === "text"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${inputMode === "text"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
             >
               Text
             </button>
             <button
               onClick={() => setInputMode("file")}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                inputMode === "file"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${inputMode === "file"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
             >
               Upload PDF
+            </button>
+            <button
+              onClick={() => setInputMode("website")}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${inputMode === "website"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+            >
+              Website
             </button>
           </div>
 
@@ -215,7 +251,7 @@ export function KnowledgeClient() {
                 </Button>
               </div>
             </div>
-          ) : (
+          ) : inputMode === "file" ? (
             <div className="space-y-3">
               <FileUpload
                 onUploadComplete={(result) => {
@@ -243,6 +279,25 @@ export function KnowledgeClient() {
                   </p>
                 </div>
               )}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <Input
+                value={websiteUrl}
+                onChange={(event) => setWebsiteUrl(event.target.value)}
+                placeholder="https://example.com"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Enter a URL to scrape text content from the website.
+              </p>
+              <div className="flex justify-end">
+                <Button
+                  onClick={handleScrapeWebsite}
+                  disabled={isScraping || addMutation.isPending || !websiteUrl.trim()}
+                >
+                  {isScraping || addMutation.isPending ? "Scraping..." : "Add Website"}
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>

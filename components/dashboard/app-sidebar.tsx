@@ -23,6 +23,7 @@ import {
   Coins,
   User,
   CreditCard,
+  BrainCircuit,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -43,6 +44,7 @@ const navigation = [
   { title: "Agent", url: "/dashboard/agent", icon: Bot },
   { title: "Leads", url: "/dashboard/leads", icon: Users },
   { title: "Analytics", url: "/dashboard/analytics", icon: BarChart3 },
+  { title: "Insights", url: "/dashboard/insights", icon: BrainCircuit },
   { title: "Knowledge", url: "/dashboard/knowledge", icon: BookText },
   { title: "Pricing", url: "/dashboard/pricing", icon: CreditCard },
 ];

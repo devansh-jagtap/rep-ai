@@ -10,11 +10,12 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ExternalLink, Sparkles, Loader2, Globe, FileText, Briefcase, Megaphone, Pencil, Save, X, Plus, Trash2, Share2 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ExternalLink, Sparkles, Loader2, Globe, FileText, Briefcase, Megaphone, Pencil, Save, X, Plus, Trash2, Share2, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { usePortfolioActions } from "./_hooks/use-portfolio-actions";
 import { usePortfolioEditorStore } from "./_hooks/use-portfolio-editor-store";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import type { PortfolioContent } from "../actions";
 import type { SocialLink, SocialPlatform } from "@/lib/validation/portfolio-schema";
@@ -50,6 +51,9 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
   } = usePortfolioActions(Boolean(content), portfolio.isPublished);
 
   const { editMode, editedContent, setEditMode, setEditedContent, resetFromServer } = usePortfolioEditorStore();
+  const [syncUrl, setSyncUrl] = useState("");
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [showSyncDialog, setShowSyncDialog] = useState(false);
 
   const saveMutation = useMutation({
     mutationFn: async (nextContent: PortfolioContent) => {
@@ -284,6 +288,47 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
     setEditedContent(newContent);
   };
 
+  const handleSyncFromWebsite = async () => {
+    if (!syncUrl.trim()) return;
+    setIsSyncing(true);
+    try {
+      // 1. Scrape
+      const scrapeResp = await fetch("/api/scrape", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: syncUrl }),
+      });
+      const scrapeData = await scrapeResp.json();
+      if (!scrapeData.success) throw new Error(scrapeData.error || "Scrape failed");
+
+      // 2. Extract
+      const extractResp = await fetch("/api/ai/extract-portfolio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: scrapeData.text }),
+      });
+      const extractData = await extractResp.json();
+      if (!extractData.success) throw new Error(extractData.error || "Extraction failed");
+
+      // 3. Apply to editedContent
+      if (editedContent) {
+        setEditedContent({
+          ...editedContent,
+          ...extractData.data,
+          hero: { ...editedContent.hero, ...extractData.data.hero },
+          about: { ...editedContent.about, ...extractData.data.about },
+        });
+        setEditMode(true);
+        setShowSyncDialog(false);
+        setSyncUrl("");
+      }
+    } catch (err) {
+      console.error("Sync error:", err);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const getSocialLink = (platform: SocialPlatform): SocialLink | undefined => {
     return displayContent?.socialLinks?.find((l) => l.platform === platform);
   };
@@ -316,10 +361,46 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
           </p>
         </div>
         {content && !editMode && (
-          <Button variant="outline" onClick={() => setEditMode(true)}>
-            <Pencil className="size-4 mr-2" />
-            Edit Content
-          </Button>
+          <div className="flex gap-2">
+            <Dialog open={showSyncDialog} onOpenChange={setShowSyncDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <RefreshCw className="size-4 mr-2" />
+                  Sync from Website
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Sync from Website</DialogTitle>
+                  <DialogDescription>
+                    Enter a URL to extract your details (Bio, Services, etc.) using AI.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="url">Website URL</Label>
+                    <Input
+                      id="url"
+                      placeholder="https://your-old-site.com"
+                      value={syncUrl}
+                      onChange={(e) => setSyncUrl(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setShowSyncDialog(false)}>Cancel</Button>
+                  <Button onClick={handleSyncFromWebsite} disabled={isSyncing || !syncUrl.trim()}>
+                    {isSyncing ? <Loader2 className="size-4 mr-2 animate-spin" /> : <Sparkles className="size-4 mr-2" />}
+                    Start Sync
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            <Button variant="outline" onClick={() => setEditMode(true)}>
+              <Pencil className="size-4 mr-2" />
+              Edit Content
+            </Button>
+          </div>
         )}
         {editMode && (
           <div className="flex gap-2">

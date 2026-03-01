@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, AlertCircle, Sparkles, Globe, Activity, Users, TrendingUp } from "lucide-react";
+import { ArrowRight, AlertCircle, Sparkles, Globe, Activity, Users, TrendingUp, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { CopyButton } from "@/components/dashboard/copy-button";
 import { redirect } from "next/navigation";
@@ -249,6 +249,12 @@ export default async function OverviewPage() {
                 <Link href="/dashboard/agent">
                   <span className="font-medium">Configure Agent</span>
                   <ArrowRight className="size-4 text-muted-foreground group-hover:text-foreground transition-colors group-hover:translate-x-1" />
+                </Link>
+              </Button>
+              <Button variant="outline" className="justify-between h-12 bg-background hover:bg-muted/50 transition-colors group" asChild>
+                <Link href="/dashboard/portfolio">
+                  <span className="font-medium">Sync from Website</span>
+                  <RefreshCw className="size-4 text-muted-foreground group-hover:text-foreground transition-colors group-hover:translate-x-1" />
                 </Link>
               </Button>
               <Button variant="outline" className="justify-between h-12 bg-background hover:bg-muted/50 transition-colors group" asChild>

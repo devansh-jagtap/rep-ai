@@ -339,3 +339,41 @@ export const aiTelemetryEvents = pgTable(
     index("ai_telemetry_events_model_mode_idx").on(table.model, table.mode),
   ]
 );
+
+export const chatSessions = pgTable("chat_sessions", {
+  id: uuid("id").primaryKey(),
+  portfolioId: uuid("portfolio_id")
+    .notNull()
+    .references(() => portfolios.id, { onDelete: "cascade" }),
+  visitorId: text("visitor_id"),
+  leadScore: integer("lead_score"),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+}, (table) => [
+  index("chat_sessions_portfolio_id_idx").on(table.portfolioId),
+]);
+
+export const chatMessages = pgTable("chat_messages", {
+  id: uuid("id").primaryKey(),
+  sessionId: uuid("session_id")
+    .notNull()
+    .references(() => chatSessions.id, { onDelete: "cascade" }),
+  role: varchar("role", { length: 20 }).$type<"user" | "assistant">().notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+}, (table) => [
+  index("chat_messages_session_id_idx").on(table.sessionId),
+  index("chat_messages_created_at_idx").on(table.createdAt),
+]);
+
+export const conversionInsights = pgTable("conversion_insights", {
+  id: uuid("id").primaryKey(),
+  portfolioId: uuid("portfolio_id")
+    .notNull()
+    .references(() => portfolios.id, { onDelete: "cascade" }),
+  generatedAt: timestamp("generated_at", { mode: "date" }).notNull().defaultNow(),
+  insightJson: jsonb("insight_json").notNull(),
+  summaryText: text("summary_text"),
+}, (table) => [
+  index("conversion_insights_portfolio_id_idx").on(table.portfolioId),
+  index("conversion_insights_generated_at_idx").on(table.generatedAt),
+]);
