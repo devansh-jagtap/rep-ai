@@ -48,6 +48,25 @@ ${resumeText}
 `
     : "";
 
+  const siteUrlBlock = `
+**WEBSITE PROVIDED — EXTRACT AND SAVE IMMEDIATELY:**
+If the user chooses "I already have a website" (existing-site), they will be asked for their website URL (\`siteUrl\`) immediately after.
+When they provide a URL, you MUST:
+1. Call the \`scrape_website_for_info\` tool immediately with that URL.
+2. Using the scraped text, extract and save ALL of the remaining existing-site fields:
+   - \`name\`
+   - \`title\`
+   - \`bio\`
+   - \`services\` (if they offer specific ones)
+   - \`targetAudience\`
+   - \`contactPreferences\`
+   - \`faqs\` (if any or generate based on site content)
+   - \`tone\` (infer from their copy)
+3. Call \`save_step\` for all of these fields IMMEDIATELY in the same turn.
+4. DO NOT ask the user for any of the above manually — your extraction handles it.
+5. After saving all accessible fields, summarize what you found and ask if it looks right. Then proceed to ask for \`selectedSections\` or \`handle\`.
+`;
+
   return `You are a friendly, chill onboarding assistant for ref, a portfolio platform. Your job is to collect the following information from the user in this exact order.
 
 **Tone & boundaries:**
@@ -55,16 +74,17 @@ ${resumeText}
 - Stay focused on onboarding only. If the user asks random questions, jokes around, or goes off-topic, gently redirect: "Haha, I'd love to chat about that later! For now let's get your portfolio set up—[current question]." Never answer unrelated questions.
 - Keep responses SHORT. 1–2 sentences max. Never repeat or summarize content the user just gave—they can see it. No fluff.
 ${resumeBlock}
+${siteUrlBlock}
 1. **setupPath** - Ask this first with human-friendly labels${resumeText ? ' (auto-set to "build-new" for resume uploads)' : ""}:
    - "I already have a website" (agent only)
    - "Build me a portfolio + agent" (from scratch)
-2. **name** - Full name for their portfolio (2-80 chars)
-3. **selectedSections** - Ask user which sections they want enabled: About, Services, Projects, CTA, Socials. Hero is always enabled and cannot be turned off
-4. **title** - Professional title (2-100 chars)
-5. **bio** - Elevator pitch / short bio, at least 20 characters, max 400
-6. **services** - ONLY if Services section is enabled
-7. **projects** - ONLY if Projects section is enabled and setupPath is build-new
-8. **siteUrl** - ONLY for existing-site path: website URL to ingest
+2. **siteUrl** - ONLY for existing-site path: website URL to ingest
+3. **name** - Full name for their portfolio (2-80 chars)
+4. **selectedSections** - Ask user which sections they want enabled: About, Services, Projects, CTA, Socials. Hero is always enabled and cannot be turned off
+5. **title** - Professional title (2-100 chars)
+6. **bio** - Elevator pitch / short bio, at least 20 characters, max 400
+7. **services** - ONLY if Services section is enabled
+8. **projects** - ONLY if Projects section is enabled and setupPath is build-new
 9. **targetAudience** - ONLY for existing-site path
 10. **contactPreferences** - ONLY if CTA section is enabled and setupPath is existing-site
 11. **faqs** - ONLY if Socials section is enabled and setupPath is existing-site
@@ -279,6 +299,31 @@ export async function streamOnboardingChat({
           }
           console.log("[request_preview] success!");
           return { preview: true, data: finalState };
+        },
+      }),
+      scrape_website_for_info: tool({
+        description:
+          "Fetch and extract the readable text from a URL. Call this immediately when the user provides their website URL for the existing-site path.",
+        inputSchema: z.object({
+          url: z.string().url(),
+        }),
+        execute: async ({ url }) => {
+          let text = "";
+          try {
+            console.log("[scrape_website_for_info] fetching:", url);
+            const res = await fetch(`https://r.jina.ai/${url}`);
+            if (!res.ok) {
+              const fb = await fetch(url);
+              const html = await fb.text();
+              text = html.replace(/<[^>]*>?/gm, " ").replace(/\s+/g, " ").substring(0, 15000);
+            } else {
+              text = await res.text();
+            }
+          } catch (error) {
+            console.error("[scrape_website_for_info] error:", error);
+            return { success: false, error: String(error) };
+          }
+          return { success: true, text: text.substring(0, 15000) };
         },
       }),
     },

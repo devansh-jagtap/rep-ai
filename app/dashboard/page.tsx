@@ -217,7 +217,7 @@ export default async function OverviewPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2 p-1.5 bg-muted/50 rounded-lg border border-muted">
-                <div className="flex-1 px-3 py-2 rounded-md text-sm truncate font-mono bg-background border shadow-sm select-all">
+                <div className="flex-1 min-w-0 px-3 py-2 rounded-md text-sm truncate font-mono bg-background border shadow-sm select-all">
                   {process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}
                   {portfolioLink}
                 </div>

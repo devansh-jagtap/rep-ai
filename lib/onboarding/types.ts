@@ -5,6 +5,7 @@ export type OnboardingSetupPath = "existing-site" | "build-new";
 
 export const ONBOARDING_STEPS = [
   "setupPath",
+  "siteUrl",
   "name",
   "selectedSections",
   "title",
@@ -12,7 +13,6 @@ export const ONBOARDING_STEPS = [
   "sections",
   "services",
   "projects",
-  "siteUrl",
   "targetAudience",
   "contactPreferences",
   "faqs",

@@ -191,9 +191,13 @@ export function validateStepInput(step: OnboardingStep, answer: string): Validat
   }
 
   if (step === "siteUrl") {
-    const isValid = /^https?:\/\/.+/i.test(cleaned);
+    let urlToValidate = cleaned;
+    if (!/^https?:\/\//i.test(urlToValidate)) {
+      urlToValidate = `https://${urlToValidate}`;
+    }
+    const isValid = /^https?:\/\/.+/i.test(urlToValidate);
     if (!isValid) return { ok: false, message: "Please provide a valid URL starting with http:// or https://." };
-    return { ok: true, value: cleaned };
+    return { ok: true, value: urlToValidate };
   }
 
   if (step === "targetAudience" || step === "contactPreferences") {
