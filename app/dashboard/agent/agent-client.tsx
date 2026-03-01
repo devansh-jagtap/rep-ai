@@ -35,12 +35,8 @@ import {
 } from "@/lib/agent/strategy-modes";
 import { useAgentStore } from "@/lib/stores/agent-store";
 import { useAgentActions } from "./_hooks/use-agent-actions";
-<<<<<<< Updated upstream
 import { AnimatedTabs } from "@/components/ui/animated-tabs";
 import { ResumeUpload } from "./resume-upload";
-=======
-import { ResumeUpload } from "./resume-upload";
->>>>>>> Stashed changes
 
 const MODELS = [
   { value: "moonshotai/Kimi-K2.5", label: "Kimi K2.5", description: "Fast & accurate" },
@@ -73,71 +69,65 @@ const AGENT_TABS = [
 
 interface AgentClientProps {
   agent: {
-                {canGenerateWidget && (
-                  <>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="widget-label">Button Label</Label>
-                        <input
-                          id="widget-label"
-                          value={widgetLabel}
-                          maxLength={24}
-                          onChange={(event) => setWidgetLabel(event.target.value)}
-                          className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Position</Label>
-                        <Select value={widgetPosition} onValueChange={(value) => setWidgetPosition(value as "bottom-right" | "bottom-left")}> 
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="bottom-right">Bottom right</SelectItem>
-                            <SelectItem value="bottom-left">Bottom left</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="widget-width">Widget Width</Label>
-                        <input
-                          id="widget-width"
-                          type="number"
-                          min={280}
-                          max={480}
-                          value={widgetWidth}
-                          onChange={(event) => setWidgetWidth(Math.max(280, Math.min(480, Number(event.target.value) || 360)))}
-                          className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="widget-height">Widget Height</Label>
-                        <input
-                          id="widget-height"
-                          type="number"
-                          min={420}
-                          max={720}
-                          value={widgetHeight}
-                          onChange={(event) => setWidgetHeight(Math.max(420, Math.min(720, Number(event.target.value) || 520)))}
-                          className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-                        />
-                      </div>
+    isEnabled: boolean;
+    model: string;
+    behaviorType: string | null;
+    strategyMode: string;
+    customPrompt: string | null;
+    temperature: number;
+    displayName: string | null;
+    avatarUrl: string | null;
+    intro: string | null;
+    roleLabel: string | null;
+    googleCalendarEnabled: boolean;
+    googleCalendarAccountEmail: string | null;
+    workingHours?: { dayOfWeek: number; startTime: string; endTime: string; enabled: boolean }[] | null;
+    offDays?: string[] | null;
+  } | null;
+  agentId: string | null;
+  portfolioHandle: string;
+  hasContent: boolean;
+  isPortfolioPublished: boolean;
+}
+
+export function AgentClient({
+  agent,
+  agentId,
+  portfolioHandle,
+  hasContent,
+  isPortfolioPublished,
+}: AgentClientProps) {
+  const [isPending, startTransition] = useTransition();
+
+  const {
+    config,
+    chatMessages,
+    chatInput,
+    isChatLoading,
+    setConfig,
+    addChatMessage,
+    clearChatMessages,
+    setChatInput,
+    setIsChatLoading,
+    resetConfig,
+  } = useAgentStore();
+
+  useEffect(() => {
+    if (agent) {
+      resetConfig({
+        isEnabled: agent.isEnabled,
+        model: agent.model,
+        behaviorType: agent.behaviorType || "friendly",
+        strategyMode: (agent.strategyMode && isConversationStrategyMode(agent.strategyMode)) ? agent.strategyMode : "consultative",
+        customPrompt: agent.customPrompt || "",
+        temperature: agent.temperature,
+        displayName: agent.displayName || "",
+        avatarUrl: agent.avatarUrl || "",
+        intro: agent.intro || "",
+        roleLabel: agent.roleLabel || "",
+        googleCalendarEnabled: agent.googleCalendarEnabled,
+        googleCalendarAccountEmail: agent.googleCalendarAccountEmail,
         workingHours: agent.workingHours || [
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Label>Script Install Snippet</Label>
-                          <Badge variant="secondary" className="text-xs">Recommended</Badge>
-                        </div>
-                      </div>
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <Label className="font-semibold">Script Install Snippet</Label>
-                          <Badge variant="secondary" className="text-xs font-medium">Recommended</Badge>
-                        </div>
-                        <CodeBlock code={scriptSnippet} language="html" />
-                      </div>
-                    </div>
           { dayOfWeek: 0, startTime: "09:00", endTime: "17:00", enabled: false },
           { dayOfWeek: 1, startTime: "09:00", endTime: "17:00", enabled: true },
           { dayOfWeek: 2, startTime: "09:00", endTime: "17:00", enabled: true },
@@ -611,6 +601,17 @@ interface AgentClientProps {
                     </Button>
                   </CardFooter>
                 </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Resume</CardTitle>
+                    <CardDescription>Upload a resume PDF to add to your agent's knowledge base.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <ResumeUpload agentId={agentId} />
+                    <p className="text-xs text-muted-foreground">Added resumes appear in the Knowledge Base tab.</p>
+                  </CardContent>
+                </Card>
               </div>
             );
           }
@@ -629,7 +630,6 @@ interface AgentClientProps {
                   </div>
                 )}
 
-<<<<<<< Updated upstream
                 {canGenerateWidget && (
                   <>
                     <div className="grid gap-6 md:grid-cols-2">
@@ -688,113 +688,6 @@ interface AgentClientProps {
                           }
                           className="shadow-sm"
                         />
-=======
-                <div className="space-y-4 pt-2">
-                  <div className="flex justify-between">
-                    <Label>Creativity (Temperature)</Label>
-                    <span className="text-sm font-mono text-muted-foreground">{config.temperature.toFixed(1)}</span>
-                  </div>
-                  <Slider
-                    value={[config.temperature]}
-                    onValueChange={([value]) => setConfig({ temperature: value })}
-                    min={0.2}
-                    max={0.8}
-                    step={0.1}
-                    disabled={isPending}
-                  />
-                </div>
-              </div>
-            </CardContent>
-<CardFooter className="bg-muted/50 py-4 justify-end border-t">
-              <Button onClick={handleSave} disabled={isPending}>
-                <Save className="size-4 mr-2" />
-                {isPending ? "Saving..." : "Save Configuration"}
-              </Button>
-            </CardFooter>
-          </Card>
-
-          <Card className="mt-4">
-            <CardHeader>
-              <CardTitle>Resume</CardTitle>
-              <CardDescription>Upload a resume PDF to add to your agent's knowledge base.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <ResumeUpload agentId={agentId} />
-              <p className="text-xs text-muted-foreground">Added resumes appear in the Knowledge Base tab.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="widget" className="mt-0">
-          <Card>
-            <CardHeader>
-              <CardTitle>Get Agent Widget</CardTitle>
-              <CardDescription>Copy-paste this widget into any website and start chatting.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              {!canGenerateWidget && (
-                <div className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
-                  Save your configuration first so your account gets an `agentId` for the widget.
-                </div>
-              )}
-
-              {canGenerateWidget && (
-                <>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="widget-label">Button Label</Label>
-                      <input
-                        id="widget-label"
-                        value={widgetLabel}
-                        maxLength={24}
-                        onChange={(event) => setWidgetLabel(event.target.value)}
-                        className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Position</Label>
-                      <Select value={widgetPosition} onValueChange={(value) => setWidgetPosition(value as "bottom-right" | "bottom-left")}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="bottom-right">Bottom right</SelectItem>
-                          <SelectItem value="bottom-left">Bottom left</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="widget-width">Widget Width</Label>
-                      <input
-                        id="widget-width"
-                        type="number"
-                        min={280}
-                        max={480}
-                        value={widgetWidth}
-                        onChange={(event) => setWidgetWidth(Math.max(280, Math.min(480, Number(event.target.value) || 360)))}
-                        className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="widget-height">Widget Height</Label>
-                      <input
-                        id="widget-height"
-                        type="number"
-                        min={420}
-                        max={720}
-                        value={widgetHeight}
-                        onChange={(event) => setWidgetHeight(Math.max(420, Math.min(720, Number(event.target.value) || 520)))}
-                        className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Label>Script Install Snippet</Label>
-                        <Badge variant="secondary" className="text-xs">Recommended</Badge>
->>>>>>> Stashed changes
                       </div>
                     </div>
 
