@@ -38,7 +38,7 @@ export default function Footer() {
 
                     <ThemeSwitcher />
 
-                    <p className="text-muted-foreground mt-2 border-t pt-6 text-sm">&copy; {new Date().getFullYear()} ref. </p>
+                    <p className="text-muted-foreground mt-2 border-t pt-6 text-sm">&copy; {new Date().getFullYear()} Envoy. </p>
                 </div>
             </div>
         </footer>

@@ -61,7 +61,7 @@ export function ClippedAreaChart({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className="overflow-hidden">
-        <div ref={chartRef} className="relative w-full min-w-0 overflow-hidden">
+        <div Envoy={chartRef} className="relative w-full min-w-0 overflow-hidden">
           <ChartContainer
             className="h-[220px] w-full min-w-0"
             config={PAGE_VIEWS_CHART_CONFIG}

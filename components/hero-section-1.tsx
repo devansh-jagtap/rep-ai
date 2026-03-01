@@ -49,7 +49,7 @@ export default function HeroSection() {
                                     transition={{ duration: 0.5, delay: 0.1 }}
                                     className="text-muted-foreground mt-4 text-balance"
                                 >
-                                    Ref helps you build personal AI agents that generate leads and showcase your skills, even when you’re offline.
+                                    Envoy helps you build personal AI agents that generate leads and showcase your skills, even when you’re offline.
                                 </motion.p>
 
                                 <motion.div

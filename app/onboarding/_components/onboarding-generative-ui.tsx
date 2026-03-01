@@ -538,7 +538,7 @@ interface HandleInputWithValidationProps {
   baseUrl?: string;
 }
 
-export function HandleInputWithValidation({ onChange, onSubmit, disabled, baseUrl = "ref.io" }: HandleInputWithValidationProps) {
+export function HandleInputWithValidation({ onChange, onSubmit, disabled, baseUrl = "Envoy.io" }: HandleInputWithValidationProps) {
   const [value, setValue] = useState("");
   const [status, setStatus] = useState<"idle" | "checking" | "available" | "unavailable">("idle");
   const [error, setError] = useState<string | null>(null);

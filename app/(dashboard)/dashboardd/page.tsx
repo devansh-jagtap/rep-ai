@@ -68,7 +68,7 @@ export default async function DashboardPage() {
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-muted-foreground w-16">Handle:</span>
-                <span className="font-mono bg-muted px-1.5 py-0.5 rounded-sm text-xs">ref.io/{portfolio.handle}</span>
+                <span className="font-mono bg-muted px-1.5 py-0.5 rounded-sm text-xs">Envoy.io/{portfolio.handle}</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-muted-foreground w-16">Theme:</span>

@@ -128,7 +128,7 @@ export function FileUpload({ onUploadComplete, disabled }: FileUploadProps) {
         )}
       >
         <input
-          ref={inputRef}
+          Envoy={inputRef}
           type="file"
           accept="application/pdf"
           onChange={handleFileSelect}

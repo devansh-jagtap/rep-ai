@@ -188,7 +188,7 @@ export function CodeBlock({
           <span>{copied ? "Copied" : "Copy"}</span>
         </motion.button>
         <pre
-          ref={preRef}
+          Envoy={preRef}
           className={cn(
             "p-4 text-sm leading-relaxed m-0",
             "bg-white dark:bg-zinc-950/50",

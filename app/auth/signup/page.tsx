@@ -24,7 +24,7 @@ export default function SignUpPage() {
           aria-label="go home"
           className="inline-block border-t-2 border-transparent py-3"
         >
-          REF
+          Envoy
         </Link>
       </div>
 

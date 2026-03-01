@@ -35,8 +35,8 @@ export const HeroHeader = () => {
                             <Link
                                 href="/"
                                 aria-label="home"
-                                className="flex items-center space-x-2">
-                                REF
+                                className="flex text-3xl font-serif items-center space-x-2">
+                                Envoy
                             </Link>
 
                             <button

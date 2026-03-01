@@ -100,7 +100,7 @@ export function AppSidebar({ credits, plan, userName, userEmail, userImage }: Ap
 
       {/* ── Footer: credits + user menu ── */}
       <SidebarFooter className="border-t border-border/50 p-2 space-y-2">
-        <div className="flex items-center justify-between px-4 py-1.5">
+        {/* <div className="flex items-center justify-between px-4 py-1.5">
           <div className="flex items-center gap-2">
             <Coins className="size-4 text-indigo-600 dark:text-indigo-400" />
             <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 group-data-[collapsible=icon]:hidden">
@@ -118,9 +118,9 @@ export function AppSidebar({ credits, plan, userName, userEmail, userImage }: Ap
               {plan}
             </span>
           </div>
-        )}
+        )} */}
 
-        <div className="flex items-center gap-3 px-2 py-1.5 group-data-[collapsible=icon]:justify-center">
+        {/* <div className="flex items-center gap-3 px-2 py-1.5 group-data-[collapsible=icon]:justify-center">
           {userImage ? (
             <img src={userImage} alt={userName} className="size-7 rounded-full border border-zinc-200 shadow-sm" />
           ) : (
@@ -132,7 +132,7 @@ export function AppSidebar({ credits, plan, userName, userEmail, userImage }: Ap
             <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">{userName}</span>
             <span className="text-xs text-zinc-500 truncate">{userEmail}</span>
           </div>
-        </div>
+        </div> */}
       </SidebarFooter>
 
       <SidebarRail />

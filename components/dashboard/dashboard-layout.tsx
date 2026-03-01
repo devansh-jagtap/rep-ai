@@ -11,6 +11,8 @@ import { db } from "@/lib/db";
 import { agentLeads } from "@/lib/schema";
 import { eq, desc } from "drizzle-orm";
 import { NotificationSheet } from "@/components/leads/NotificationSheet";
+import { Coins } from "lucide-react";
+import { Badge } from "../ui/badge";
 
 function subjectFromLead(input: { conversationSummary?: string | null; projectDetails?: string | null }) {
   const source = (input.conversationSummary ?? input.projectDetails ?? "").trim();
@@ -61,6 +63,7 @@ export async function DashboardLayout({ children }: DashboardLayoutProps) {
     : [];
 
   const formattedLeads = fetchedLeads.map((lead) => ({
+    credits: profile?.credits ?? 0,
     id: lead.id,
     name: lead.name,
     email: lead.email,
@@ -98,6 +101,14 @@ export async function DashboardLayout({ children }: DashboardLayoutProps) {
             <Separator orientation="vertical" className="mr-2 h-4" />
             <div className="flex flex-1 items-center justify-end">
               <div className="flex items-center gap-4">
+                <Badge variant="outline" className="flex p-4 items-center gap-2">
+                  <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 group-data-[collapsible=icon]:hidden">
+                    {profile?.credits ?? 0}
+                  </span>
+                  <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 group-data-[collapsible=icon]:hidden">
+                    Credits
+                  </span>
+                </Badge>
                 <NotificationSheet leads={formattedLeads} />
                 <TopNavUserMenu
                   userName={profile?.name ?? "User"}
@@ -112,6 +123,6 @@ export async function DashboardLayout({ children }: DashboardLayoutProps) {
           </main>
         </SidebarInset>
       </PortfolioProvider>
-    </SidebarProvider >
+    </SidebarProvider>
   );
 }

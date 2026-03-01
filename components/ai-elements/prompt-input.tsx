@@ -121,7 +121,7 @@ export interface PromptInputControllerProps {
   attachments: AttachmentsContext;
   /** INTERNAL: Allows PromptInput to register its file textInput + "open" callback */
   __registerFileInput: (
-    ref: RefObject<HTMLInputElement | null>,
+    Envoy: RefObject<HTMLInputElement | null>,
     open: () => void
   ) => void;
 }
@@ -223,7 +223,7 @@ export const PromptInputProvider = ({
     });
   }, []);
 
-  // Keep a ref to attachments for cleanup on unmount (avoids stale closure)
+  // Keep a Envoy to attachments for cleanup on unmount (avoids stale closure)
   const attachmentsRef = useRef(attachmentFiles);
 
   useEffect(() => {
@@ -259,8 +259,8 @@ export const PromptInputProvider = ({
   );
 
   const __registerFileInput = useCallback(
-    (ref: RefObject<HTMLInputElement | null>, open: () => void) => {
-      fileInputRef.current = ref.current;
+    (Envoy: RefObject<HTMLInputElement | null>, open: () => void) => {
+      fileInputRef.current = Envoy.current;
       openRef.current = open;
     },
     []
@@ -418,7 +418,7 @@ export const PromptInput = ({
     (SourceDocumentUIPart & { id: string })[]
   >([]);
 
-  // Keep a ref to files for cleanup on unmount (avoids stale closure)
+  // Keep a Envoy to files for cleanup on unmount (avoids stale closure)
   const filesRef = useRef(files);
 
   useEffect(() => {
@@ -789,14 +789,14 @@ export const PromptInput = ({
         className="hidden"
         multiple={multiple}
         onChange={handleChange}
-        ref={inputRef}
+        Envoy={inputRef}
         title="Upload files"
         type="file"
       />
       <form
         className={cn("w-full", className)}
         onSubmit={handleSubmit}
-        ref={formRef}
+        Envoy={formRef}
         {...props}
       >
         <InputGroup className="overflow-hidden">{children}</InputGroup>
