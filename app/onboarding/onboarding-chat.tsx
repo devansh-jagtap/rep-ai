@@ -452,7 +452,7 @@ export function OnboardingChat() {
                     </div>
                   )}
                   <input
-                    Envoy={fileInputRef}
+                    ref={fileInputRef}
                     type="file"
                     accept="application/pdf"
                     className="hidden"

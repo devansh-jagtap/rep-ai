@@ -100,7 +100,7 @@ export function FileUpload({ onUploadComplete, disabled }: FileUploadProps) {
         mimeType: file.type,
         fileSize: file.size,
       });
-      
+
       setUploadProgress(0);
       if (inputRef.current) {
         inputRef.current.value = "";
@@ -128,7 +128,7 @@ export function FileUpload({ onUploadComplete, disabled }: FileUploadProps) {
         )}
       >
         <input
-          Envoy={inputRef}
+          ref={inputRef}
           type="file"
           accept="application/pdf"
           onChange={handleFileSelect}

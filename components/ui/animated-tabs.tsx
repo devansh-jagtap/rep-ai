@@ -56,7 +56,7 @@ const Tabs = ({
 
   return (
     <nav
-      Envoy={navRef}
+      ref={navRef}
       className="flex flex-shrink-0 justify-center items-center relative z-0 py-2"
       onPointerLeave={() => setHoveredTabIndex(null)}>
       {tabs.map((item, i) => {
@@ -70,7 +70,7 @@ const Tabs = ({
             onFocus={() => setHoveredTabIndex(i)}
             onClick={() => setSelectedTab([i, i > selectedTabIndex ? 1 : -1])}>
             <motion.span
-              Envoy={(el) => {
+              ref={(el) => {
                 buttonRefs[i] = el as HTMLButtonElement;
               }}
               className={cn('block', {
