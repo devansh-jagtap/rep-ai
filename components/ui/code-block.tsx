@@ -188,7 +188,7 @@ export function CodeBlock({
           <span>{copied ? "Copied" : "Copy"}</span>
         </motion.button>
         <pre
-          Envoy={preRef}
+          ref={preRef}
           className={cn(
             "p-4 text-sm leading-relaxed m-0",
             "bg-white dark:bg-zinc-950/50",
@@ -196,16 +196,16 @@ export function CodeBlock({
             hasOverflow ? "overflow-x-auto" : "overflow-x-hidden",
             hasOverflow && "scrollbar-thin scrollbar-thumb-rounded",
             hasOverflow &&
-              "scrollbar-thumb-black/15 hover:scrollbar-thumb-black/20",
+            "scrollbar-thumb-black/15 hover:scrollbar-thumb-black/20",
             hasOverflow &&
-              "dark:scrollbar-thumb-white/20 dark:hover:scrollbar-thumb-white/25",
+            "dark:scrollbar-thumb-white/20 dark:hover:scrollbar-thumb-white/25",
             hasOverflow && "[&::-webkit-scrollbar]:h-2",
             hasOverflow && "[&::-webkit-scrollbar-thumb]:rounded-full",
             hasOverflow && "[&::-webkit-scrollbar-thumb]:bg-black/15",
             hasOverflow && "[&::-webkit-scrollbar-thumb]:dark:bg-white/20",
             hasOverflow && "[&::-webkit-scrollbar-thumb:hover]:bg-black/20",
             hasOverflow &&
-              "[&::-webkit-scrollbar-thumb:hover]:dark:bg-white/25",
+            "[&::-webkit-scrollbar-thumb:hover]:dark:bg-white/25",
             hasOverflow && "[&::-webkit-scrollbar-track]:bg-transparent"
           )}
         >

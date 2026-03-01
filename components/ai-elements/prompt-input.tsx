@@ -121,7 +121,7 @@ export interface PromptInputControllerProps {
   attachments: AttachmentsContext;
   /** INTERNAL: Allows PromptInput to register its file textInput + "open" callback */
   __registerFileInput: (
-    Envoy: RefObject<HTMLInputElement | null>,
+    ref: RefObject<HTMLInputElement | null>,
     open: () => void
   ) => void;
 }
@@ -182,7 +182,7 @@ export const PromptInputProvider = ({
   >([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   // oxlint-disable-next-line eslint(no-empty-function)
-  const openRef = useRef<() => void>(() => {});
+  const openRef = useRef<() => void>(() => { });
 
   const add = useCallback((files: File[] | FileList) => {
     const incoming = [...files];
@@ -223,7 +223,7 @@ export const PromptInputProvider = ({
     });
   }, []);
 
-  // Keep a Envoy to attachments for cleanup on unmount (avoids stale closure)
+  // Keep a ref to attachments for cleanup on unmount (avoids stale closure)
   const attachmentsRef = useRef(attachmentFiles);
 
   useEffect(() => {
@@ -259,8 +259,8 @@ export const PromptInputProvider = ({
   );
 
   const __registerFileInput = useCallback(
-    (Envoy: RefObject<HTMLInputElement | null>, open: () => void) => {
-      fileInputRef.current = Envoy.current;
+    (ref: RefObject<HTMLInputElement | null>, open: () => void) => {
+      fileInputRef.current = ref.current;
       openRef.current = open;
     },
     []
@@ -418,7 +418,7 @@ export const PromptInput = ({
     (SourceDocumentUIPart & { id: string })[]
   >([]);
 
-  // Keep a Envoy to files for cleanup on unmount (avoids stale closure)
+  // Keep a ref to files for cleanup on unmount (avoids stale closure)
   const filesRef = useRef(files);
 
   useEffect(() => {
@@ -564,13 +564,13 @@ export const PromptInput = ({
       usingProvider
         ? controller?.attachments.clear()
         : setItems((prev) => {
-            for (const file of prev) {
-              if (file.url) {
-                URL.revokeObjectURL(file.url);
-              }
+          for (const file of prev) {
+            if (file.url) {
+              URL.revokeObjectURL(file.url);
             }
-            return [];
-          }),
+          }
+          return [];
+        }),
     [usingProvider, controller]
   );
 
@@ -727,9 +727,9 @@ export const PromptInput = ({
       const text = usingProvider
         ? controller.textInput.value
         : (() => {
-            const formData = new FormData(form);
-            return (formData.get("message") as string) || "";
-          })();
+          const formData = new FormData(form);
+          return (formData.get("message") as string) || "";
+        })();
 
       // Reset form immediately after capturing text to avoid race condition
       // where user input during async blob conversion would be lost
@@ -789,14 +789,14 @@ export const PromptInput = ({
         className="hidden"
         multiple={multiple}
         onChange={handleChange}
-        Envoy={inputRef}
+        ref={inputRef}
         title="Upload files"
         type="file"
       />
       <form
         className={cn("w-full", className)}
         onSubmit={handleSubmit}
-        Envoy={formRef}
+        ref={formRef}
         {...props}
       >
         <InputGroup className="overflow-hidden">{children}</InputGroup>
@@ -921,15 +921,15 @@ export const PromptInputTextarea = ({
 
   const controlledProps = controller
     ? {
-        onChange: (e: ChangeEvent<HTMLTextAreaElement>) => {
-          controller.textInput.setInput(e.currentTarget.value);
-          onChange?.(e);
-        },
-        value: controller.textInput.value,
-      }
+      onChange: (e: ChangeEvent<HTMLTextAreaElement>) => {
+        controller.textInput.setInput(e.currentTarget.value);
+        onChange?.(e);
+      },
+      value: controller.textInput.value,
+    }
     : {
-        onChange,
-      };
+      onChange,
+    };
 
   return (
     <InputGroupTextarea
@@ -993,10 +993,10 @@ export const PromptInputTools = ({
 export type PromptInputButtonTooltip =
   | string
   | {
-      content: ReactNode;
-      shortcut?: string;
-      side?: ComponentProps<typeof TooltipContent>["side"];
-    };
+    content: ReactNode;
+    shortcut?: string;
+    side?: ComponentProps<typeof TooltipContent>["side"];
+  };
 
 export type PromptInputButtonProps = ComponentProps<typeof InputGroupButton> & {
   tooltip?: PromptInputButtonTooltip;
