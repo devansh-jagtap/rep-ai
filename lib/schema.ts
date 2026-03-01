@@ -180,6 +180,7 @@ export const agents = pgTable(
     avatarUrl: text("avatar_url"),
     intro: text("intro"),
     roleLabel: varchar("role_label", { length: 60 }),
+    notificationEmail: varchar("notification_email", { length: 255 }),
     googleCalendarEnabled: boolean("google_calendar_enabled").notNull().default(false),
     googleCalendarAccessToken: text("google_calendar_access_token"),
     googleCalendarRefreshToken: text("google_calendar_refresh_token"),

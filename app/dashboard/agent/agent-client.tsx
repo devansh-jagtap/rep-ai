@@ -81,6 +81,7 @@ interface AgentClientProps {
     roleLabel: string | null;
     googleCalendarEnabled: boolean;
     googleCalendarAccountEmail: string | null;
+    notificationEmail: string | null;
     workingHours?: { dayOfWeek: number; startTime: string; endTime: string; enabled: boolean }[] | null;
     offDays?: string[] | null;
   } | null;
@@ -127,6 +128,7 @@ export function AgentClient({
         roleLabel: agent.roleLabel || "",
         googleCalendarEnabled: agent.googleCalendarEnabled,
         googleCalendarAccountEmail: agent.googleCalendarAccountEmail,
+        notificationEmail: agent.notificationEmail || null,
         workingHours: agent.workingHours || [
           { dayOfWeek: 0, startTime: "09:00", endTime: "17:00", enabled: false },
           { dayOfWeek: 1, startTime: "09:00", endTime: "17:00", enabled: true },
@@ -182,6 +184,7 @@ export function AgentClient({
           avatarUrl: config.avatarUrl,
           intro: config.intro,
           roleLabel: config.roleLabel,
+          notificationEmail: config.notificationEmail,
           workingHours: config.workingHours,
           offDays: config.offDays,
         });
@@ -462,6 +465,18 @@ export function AgentClient({
                         placeholder="Hi! I'm here to help you evaluate if we're a fit."
                         maxLength={280}
                         className="min-h-[90px]"
+                        disabled={isPending}
+                      />
+
+                      <div className="space-y-1">
+                        <Label className="text-sm font-semibold">Lead Notification Email</Label>
+                        <p className="text-xs text-muted-foreground">Override the default account email for leads captured by this agent.</p>
+                      </div>
+                      <Input
+                        type="email"
+                        value={config.notificationEmail || ""}
+                        onChange={(e) => setConfig({ notificationEmail: e.target.value })}
+                        placeholder="leads@myportfolio.com"
                         disabled={isPending}
                       />
 
