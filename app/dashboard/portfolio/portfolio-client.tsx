@@ -347,19 +347,54 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
 
   const displayContent = editMode ? editedContent : content;
   const visibleSections = mergeVisibleSections(displayContent?.visibleSections);
+  const visibleSectionCount = PORTFOLIO_SECTION_REGISTRY.filter((section) =>
+    isSectionVisible(visibleSections, section.key)
+  ).length;
 
   const isContentSectionVisible = (section: PortfolioSectionKey) =>
     isSectionVisible(visibleSections, section);
 
   return (
-    <div className="flex flex-col gap-6 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl tracking-tight">Portfolio Management</h1>
-          <p className="text-muted-foreground">
-            Control your public profile, content, and visibility.
-          </p>
-        </div>
+    <div className="mx-auto flex max-w-6xl flex-col gap-6 pb-8">
+      <Card className="border-primary/20 bg-gradient-to-br from-primary/10 via-background to-background">
+        <CardHeader className="space-y-5">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Dashboard / Portfolio</p>
+              <h1 className="mt-2 text-3xl font-semibold tracking-tight">Portfolio Command Center</h1>
+              <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+                Redesign, edit, and publish your public portfolio from one place.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {isPublished ? (
+                <Badge className="bg-green-500 hover:bg-green-600">Live</Badge>
+              ) : (
+                <Badge variant="secondary">Draft</Badge>
+              )}
+              <Badge variant="outline">{visibleSectionCount} sections active</Badge>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border bg-background/70 p-4">
+              <p className="text-xs text-muted-foreground">Public URL</p>
+              <p className="mt-1 truncate font-medium">/{portfolio.handle}</p>
+            </div>
+            <div className="rounded-xl border bg-background/70 p-4">
+              <p className="text-xs text-muted-foreground">Template</p>
+              <p className="mt-1 capitalize font-medium">{portfolio.template}</p>
+            </div>
+            <div className="rounded-xl border bg-background/70 p-4">
+              <p className="text-xs text-muted-foreground">Last updated</p>
+              <p className="mt-1 font-medium">{new Date(portfolio.updatedAt).toLocaleDateString()}</p>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="text-sm text-muted-foreground">Manage publishing, content and section visibility.</div>
         {content && !editMode && (
           <div className="flex gap-2">
             <Dialog open={showSyncDialog} onOpenChange={setShowSyncDialog}>
@@ -416,7 +451,7 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
         )}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-3">
         {/* Visibility */}
         <Card>
           <CardHeader className="pb-3">
@@ -425,11 +460,7 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
                 <CardTitle className="text-base">Visibility</CardTitle>
                 <CardDescription>Control whether your portfolio is publicly accessible.</CardDescription>
               </div>
-              {isPublished ? (
-                <Badge className="bg-green-500 hover:bg-green-600">Live</Badge>
-              ) : (
-                <Badge variant="secondary">Draft</Badge>
-              )}
+              <Globe className="size-4 text-muted-foreground" />
             </div>
           </CardHeader>
           <CardContent className="flex items-center justify-between py-2">
@@ -445,10 +476,7 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
               disabled={isPending}
             />
           </CardContent>
-          <CardFooter className="bg-muted/50 border-t py-3 justify-between">
-            <p className="text-sm text-muted-foreground">
-              {new Date(portfolio.updatedAt).toLocaleDateString()}
-            </p>
+          <CardFooter className="justify-end border-t bg-muted/50 py-3">
             {isPublished && (
               <Button variant="outline" size="sm" asChild>
                 <Link href={portfolioLink} target="_blank">
@@ -500,6 +528,25 @@ export function PortfolioClient({ portfolio, content }: PortfolioClientProps) {
                   <Sparkles className="size-4" />
                 )}
               </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Editing Mode</CardTitle>
+            <CardDescription>Toggle advanced editing to manually curate every section.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-lg border p-3">
+              <p className="text-sm font-medium">Current mode</p>
+              <p className="mt-1 text-sm text-muted-foreground">{editMode ? "Manual editing enabled" : "Preview mode"}</p>
+            </div>
+            <div className="rounded-lg border p-3">
+              <p className="text-sm font-medium">Sections visible</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {visibleSectionCount} of {PORTFOLIO_SECTION_REGISTRY.length}
+              </p>
             </div>
           </CardContent>
         </Card>
