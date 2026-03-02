@@ -7,7 +7,7 @@ import { ArrowRight, Sparkles } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Explore Portfolios",
-  description: "Discover portfolios built with Envoy. Browse creators, designers, developers, and more.",
+  description: "Discover portfolios built with Mimick.me. Browse creators, designers, developers, and more.",
 };
 
 export default async function ExplorePage() {

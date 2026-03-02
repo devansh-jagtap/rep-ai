@@ -26,7 +26,7 @@ export default function SignIn() {
           aria-label="go home"
           className="inline-block border-t-2 border-transparent py-3"
         >
-          Envoy
+          Mimick.me
         </Link>
       </div>
 

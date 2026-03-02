@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { Logo } from '@/components/logo'
+import { Logo, LogoIcon } from '@/components/logo'
 import { Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import React from 'react'
@@ -35,8 +35,9 @@ export const HeroHeader = () => {
                             <Link
                                 href="/"
                                 aria-label="home"
-                                className="flex text-3xl font-serif items-center space-x-2">
-                                Envoy
+                                className="flex text-3xl font-serif items-center space-x-3">
+                                <LogoIcon className="h-10 w-auto" />
+                                <span>Mimick.me</span>
                             </Link>
 
                             <button

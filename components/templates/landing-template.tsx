@@ -58,7 +58,7 @@ export function LandingTemplate({ content }: { content: PortfolioContent }) {
       <header className="sticky top-0 z-20 border-b bg-background/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-5">
           <a href="#" aria-label="Back to top" className="flex items-center gap-2">
-            <LogoIcon uniColor className="size-5" />
+            <LogoIcon uniColor className="h-auto w-auto" />
             <span className="text-sm font-medium tracking-wide">Portfolio</span>
           </a>
           <DesktopNav visibleSections={visibleSections} />

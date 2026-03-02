@@ -11,6 +11,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
+import { LogoIcon } from "@/components/logo";
 import { Check, ChevronsUpDown, Plus, Briefcase, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePortfolioStore, type PortfolioSummary } from "@/lib/stores/portfolio-store";
@@ -47,16 +48,16 @@ export function PortfolioSwitcher() {
                     size="lg"
                     className="w-full data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
-                    {/* Portfolio icon badge */}
-                    {/* <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shrink-0">
+                    {/* Logo Icon visible in both states */}
+                    <div className="flex size-12 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground shrink-0 overflow-hidden">
                         {isLoading ? (
                             <Loader2 className="size-4 animate-spin" />
                         ) : (
-                            <></>
+                            <LogoIcon className="h-auto w-auto" />
                         )}
-                    </div> */}
+                    </div>
 
-                    {/* Name + handle */}
+                    {/* Name + handle hidden when collapsed */}
                     <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                         <span className="truncate font-semibold">{active.name}</span>
                         <span className="truncate text-xs text-muted-foreground">/{active.handle}</span>

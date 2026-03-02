@@ -1,29 +1,29 @@
-# Envoy — Product Overview for Marketing
+# Mimick.me — Product Overview for Marketing
 
-A detailed overview of Envoy for marketing, sales, and partner materials.
+A detailed overview of Mimick.me for marketing, sales, and partner materials.
 
 ---
 
 ## Executive Summary
 
-**Envoy** is an AI-powered SaaS platform that lets professionals and businesses create **personal AI representatives** that work 24/7. Users get:
+**Mimick.me** is an AI-powered SaaS platform that lets professionals and businesses create **personal AI representatives** that work 24/7. Users get:
 
 - **AI portfolio sites** — Publish a portfolio (or connect an existing site) and attach a conversational AI agent that represents them.
 - **Lead generation & CRM** — The agent qualifies visitors, captures leads, and stores them in a simple CRM with conversation history.
 - **Conversion insights** — AI-generated insights on visitor behavior and conversion patterns.
 - **Embeddable chat** — Deploy the same agent on a portfolio page or as a standalone embed.
 
-Envoy turns a static portfolio or website into a **conversational front door** that answers questions, matches the owner’s tone, and captures qualified leads automatically.
+Mimick.me turns a static portfolio or website into a **conversational front door** that answers questions, matches the owner’s tone, and captures qualified leads automatically.
 
 ---
 
 ## Product Name & Positioning
 
-- **Product name:** Envoy  
+- **Product name:** Mimick.me  
 - **Tagline (current):** *Your 24/7 AI representative.*  
-- **One-liner:** Envoy helps you build personal AI agents that generate leads and showcase your skills, even when you’re offline.
+- **One-liner:** Mimick.me helps you build personal AI agents that generate leads and showcase your skills, even when you’re offline.
 
-**Positioning:** Envoy is for individuals and small teams (freelancers, consultants, agencies) who want a professional presence that works around the clock—without hiring a sales or support team. The AI agent acts as a representative: it speaks in the user’s voice, uses their knowledge, and qualifies/captures leads for follow-up.
+**Positioning:** Mimick.me is for individuals and small teams (freelancers, consultants, agencies) who want a professional presence that works around the clock—without hiring a sales or support team. The AI agent acts as a representative: it speaks in the user’s voice, uses their knowledge, and qualifies/captures leads for follow-up.
 
 ---
 
@@ -51,7 +51,7 @@ Envoy turns a static portfolio or website into a **conversational front door** t
 
 ### 2. Public portfolio and chat
 
-- **Portfolio URL:** `/{handle}` (e.g. `Envoy.com/jane-doe`).
+- **Portfolio URL:** `/{handle}` (e.g. `Mimick.me.com/jane-doe`).
 - **Templates:** Multiple portfolio themes (e.g. Modern, Veil, Bold, Editorial, Landing, Gallery, Minimal, Interactive).
 - **Sections:** Hero, About, Services, Projects, Products, History, Testimonials, FAQ, Gallery, Contact/CTA — configurable per portfolio.
 - **AI widget:** If the agent is enabled, visitors see a chat widget. The agent:
@@ -77,7 +77,7 @@ Envoy turns a static portfolio or website into a **conversational front door** t
 
 ### 5. Explore and discovery
 
-- **Explore:** `/explore` — Browse published portfolios (creators, designers, developers, etc.) built with Envoy.
+- **Explore:** `/explore` — Browse published portfolios (creators, designers, developers, etc.) built with Mimick.me.
 
 ---
 
@@ -181,7 +181,7 @@ Credits and usage are tracked per user; protected routes and APIs enforce authen
 
 - **Explore** page: “Discover portfolios built with Ref” — supports long-tail discovery and social proof.
 - **Public portfolios:** Each portfolio has metadata (title, description) and canonical URL for SEO.
-- **Handle-based URLs:** Clean, shareable links (`Envoy.com/jane-doe`).
+- **Handle-based URLs:** Clean, shareable links (`Mimick.me.com/jane-doe`).
 
 ---
 
@@ -189,7 +189,7 @@ Credits and usage are tracked per user; protected routes and APIs enforce authen
 
 | Area            | Description |
 |-----------------|------------|
-| **Product**     | Envoy — AI-powered portfolios and 24/7 AI representatives. |
+| **Product**     | Mimick.me — AI-powered portfolios and 24/7 AI representatives. |
 | **Audience**    | Freelancers, consultants, job seekers, agencies, anyone with a site. |
 | **Core value**  | Lead generation + professional presence + conversational AI that represents you. |
 | **Plans**       | Starter (free), Pro ($19/mo), Agency ($49/mo). |

@@ -19,7 +19,7 @@ export default function Footer() {
                     <Link
                         href="/"
                         aria-label="go home"
-                        className="hover:bg-foreground/5 -ml-1.5 flex size-8 rounded-lg *:m-auto">
+                        className="hover:bg-foreground/5 -ml-1.5 flex size-30 rounded-lg *:m-auto">
                         <LogoIcon
                             uniColor
                             className="w-fit"
@@ -38,7 +38,7 @@ export default function Footer() {
 
                     <ThemeSwitcher />
 
-                    <p className="text-muted-foreground mt-2 border-t pt-6 text-sm">&copy; {new Date().getFullYear()} Envoy. </p>
+                    <p className="text-muted-foreground mt-2 border-t pt-6 text-sm">&copy; {new Date().getFullYear()} Mimick.me. </p>
                 </div>
             </div>
         </footer>

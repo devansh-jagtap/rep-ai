@@ -264,7 +264,7 @@ export function OnboardingChat() {
   return (
     <div className="fixed inset-0 flex flex-col bg-background">
       <header className="flex shrink-0 items-center justify-center border-b px-4 py-3">
-        <h1 className="font-semibold text-lg">Envoy — Set up your portfolio</h1>
+        <h1 className="font-semibold text-lg">Mimick.me — Set up your portfolio</h1>
       </header>
       {error && <div className="bg-destructive/10 text-destructive px-4 py-2 text-sm">{error.message}</div>}
 

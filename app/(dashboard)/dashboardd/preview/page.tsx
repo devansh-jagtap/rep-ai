@@ -55,7 +55,7 @@ export default async function DashboardPreviewPage(props: { searchParams?: Searc
             <div className="size-3 rounded-full bg-yellow-500/80" />
             <div className="size-3 rounded-full bg-green-500/80" />
             <div className="ml-4 flex-1 text-center text-xs font-medium text-muted-foreground font-mono truncate">
-              {portfolio.handle}.Envoy.com
+              {portfolio.handle}.Mimick.me.com
             </div>
           </div>
 

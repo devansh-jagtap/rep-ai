@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import type { OnboardingSelectorOption, OnboardingSelectedSections, OnboardingProjectInput } from "@/lib/onboarding/types";
 import { DEFAULT_ONBOARDING_SECTIONS } from "@/lib/onboarding/types";
-import { 
+import {
   Bot, Globe, Briefcase, Smile, Zap, Minus, X, Plus, Trash2, Check, AlertCircle, Loader2,
   User, Info, Target, Mail, Calendar, FormInput, Phone, MessageCircle, ExternalLink,
   Sparkles, Layers, Folder, Clock
@@ -83,13 +83,12 @@ export function SetupPathSelector({ options, onSelect, disabled }: SetupPathSele
       {options.map((option) => {
         const isSelected = selected === option.id;
         const colorClass = option.color ? colorMap[option.color] || "" : "";
-        
+
         return (
           <Card
             key={option.id}
-            className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
-              isSelected ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/50"
-            } ${colorClass}`}
+            className={`cursor-pointer transition-all duration-200 hover:shadow-md ${isSelected ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/50"
+              } ${colorClass}`}
             onClick={() => !disabled && handleSelect(option)}
           >
             <CardHeader className="pb-2">
@@ -134,13 +133,13 @@ const SECTION_CONFIG: Array<{
   description: string;
   locked?: boolean;
 }> = [
-  { key: "hero", label: "Hero", icon: "user", description: "Your name & title", locked: true },
-  { key: "about", label: "About", icon: "info", description: "Your bio & story" },
-  { key: "services", label: "Services", icon: "briefcase", description: "What you offer" },
-  { key: "projects", label: "Projects", icon: "folder", description: "Your work samples" },
-  { key: "cta", label: "CTA", icon: "sparkles", description: "Call to action" },
-  { key: "socials", label: "Socials", icon: "link", description: "Links & contact" },
-];
+    { key: "hero", label: "Hero", icon: "user", description: "Your name & title", locked: true },
+    { key: "about", label: "About", icon: "info", description: "Your bio & story" },
+    { key: "services", label: "Services", icon: "briefcase", description: "What you offer" },
+    { key: "projects", label: "Projects", icon: "folder", description: "Your work samples" },
+    { key: "cta", label: "CTA", icon: "sparkles", description: "Call to action" },
+    { key: "socials", label: "Socials", icon: "link", description: "Links & contact" },
+  ];
 
 export function SectionSelectorCards({ value, onChange, onSubmit, disabled }: SectionSelectorCardsProps) {
   return (
@@ -148,15 +147,14 @@ export function SectionSelectorCards({ value, onChange, onSubmit, disabled }: Se
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {SECTION_CONFIG.map((section) => {
           const isEnabled = value[section.key];
-          
+
           return (
             <Card
               key={section.key}
-              className={`cursor-pointer transition-all duration-200 ${
-                isEnabled 
-                  ? "border-primary bg-primary/5" 
+              className={`cursor-pointer transition-all duration-200 ${isEnabled
+                  ? "border-primary bg-primary/5"
                   : "border-border hover:border-primary/30"
-              } ${section.locked ? "opacity-80" : ""}`}
+                } ${section.locked ? "opacity-80" : ""}`}
               onClick={() => {
                 if (disabled || section.locked) return;
                 onChange({ ...value, [section.key]: !isEnabled });
@@ -170,9 +168,8 @@ export function SectionSelectorCards({ value, onChange, onSubmit, disabled }: Se
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <p className="font-medium text-sm">{section.label}</p>
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                        isEnabled ? "border-primary bg-primary" : "border-muted-foreground"
-                      }`}>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isEnabled ? "border-primary bg-primary" : "border-muted-foreground"
+                        }`}>
                         {isEnabled && <Check className="w-3 h-3 text-primary-foreground" />}
                       </div>
                     </div>
@@ -215,15 +212,14 @@ export function ToneSelectorCards({ options, onSelect, disabled }: ToneSelectorC
       <div className="grid gap-3 sm:grid-cols-2">
         {options.map((option) => {
           const isSelected = selected === option.id;
-          
+
           return (
             <Card
               key={option.id}
-              className={`cursor-pointer transition-all duration-200 ${
-                isSelected 
-                  ? "border-primary ring-2 ring-primary/20" 
+              className={`cursor-pointer transition-all duration-200 ${isSelected
+                  ? "border-primary ring-2 ring-primary/20"
                   : "border-border hover:border-primary/30"
-              }`}
+                }`}
               onClick={() => !disabled && handleSelect(option)}
             >
               <CardHeader className="pb-2">
@@ -457,9 +453,9 @@ export function ProjectsCardEditor({ onChange, onSubmit, disabled, maxItems = 3 
       )}
 
       <div className="flex justify-end pt-2">
-        <Button 
-          onClick={onSubmit} 
-          disabled={disabled || validProjects.length === 0} 
+        <Button
+          onClick={onSubmit}
+          disabled={disabled || validProjects.length === 0}
           size="sm"
         >
           Continue ({validProjects.length} project{validProjects.length !== 1 ? 's' : ''})
@@ -538,7 +534,7 @@ interface HandleInputWithValidationProps {
   baseUrl?: string;
 }
 
-export function HandleInputWithValidation({ onChange, onSubmit, disabled, baseUrl = "Envoy.io" }: HandleInputWithValidationProps) {
+export function HandleInputWithValidation({ onChange, onSubmit, disabled, baseUrl = "Mimick.me.io" }: HandleInputWithValidationProps) {
   const [value, setValue] = useState("");
   const [status, setStatus] = useState<"idle" | "checking" | "available" | "unavailable">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -657,10 +653,10 @@ const DEFAULT_TITLE_SUGGESTIONS = [
   "Data Scientist",
 ];
 
-export function TitleSuggestions({ 
-  suggestions = DEFAULT_TITLE_SUGGESTIONS, 
-  onSelect, 
-  disabled 
+export function TitleSuggestions({
+  suggestions = DEFAULT_TITLE_SUGGESTIONS,
+  onSelect,
+  disabled
 }: TitleSuggestionsProps) {
   const [customValue, setCustomValue] = useState("");
 
