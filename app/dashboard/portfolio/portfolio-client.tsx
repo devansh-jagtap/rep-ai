@@ -368,7 +368,8 @@ export function PortfolioClient({ portfolio, plan = "free", content }: Portfolio
     if (hasProPlan && portfolio.subdomain && appOrigin) {
       try {
         const originUrl = new URL(appOrigin);
-        return `${originUrl.protocol}//${portfolio.subdomain}.${originUrl.host}`;
+        const host = originUrl.host.replace(/^www\./, "");
+        return `${originUrl.protocol}//${portfolio.subdomain}.${host}`;
       } catch (e) {
         return `/${portfolio.handle}`;
       }
@@ -380,7 +381,8 @@ export function PortfolioClient({ portfolio, plan = "free", content }: Portfolio
     if (hasProPlan && portfolio.subdomain && appOrigin) {
       try {
         const originUrl = new URL(appOrigin);
-        return `${portfolio.subdomain}.${originUrl.host}`;
+        const host = originUrl.host.replace(/^www\./, "");
+        return `${portfolio.subdomain}.${host}`;
       } catch (e) {
         return `/${portfolio.handle}`;
       }
