@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { User, Upload, Loader2, AlertTriangle, Globe, CheckCircle2 } from "lucide-react";
-import { useState, useEffect, RefObject } from "react";
+import { useState, RefObject } from "react";
 
 interface GeneralTabProps {
     user: {
@@ -15,6 +15,7 @@ interface GeneralTabProps {
     };
     portfolio: {
         handle: string;
+        subdomain: string;
     };
     name: string;
     setName: (name: string) => void;
@@ -23,6 +24,10 @@ interface GeneralTabProps {
     image: string;
     setImage: (image: string) => void;
     handleError: string;
+    subdomain: string;
+    handleSubdomainChange: (subdomain: string) => void;
+    subdomainError: string;
+    canUseSubdomain: boolean;
     isPending: boolean;
     isUploading: boolean;
     uploadProgress: number;
@@ -42,6 +47,10 @@ export function GeneralTab({
     image,
     setImage,
     handleError,
+    subdomain,
+    handleSubdomainChange,
+    subdomainError,
+    canUseSubdomain,
     isPending,
     isUploading,
     uploadProgress,
@@ -52,9 +61,6 @@ export function GeneralTab({
 }: GeneralTabProps) {
     const [hasError, setHasError] = useState(false);
 
-    useEffect(() => {
-        setHasError(false);
-    }, [image]);
 
     return (
         <div className="space-y-6 pt-4">
@@ -87,6 +93,7 @@ export function GeneralTab({
                                             src={image}
                                             alt="Avatar"
                                             className="size-full object-cover"
+                                            onLoad={() => setHasError(false)}
                                             onError={() => setHasError(true)}
                                         />
                                     ) : (
@@ -203,7 +210,55 @@ export function GeneralTab({
                         </div>
                     </div>
 
+
+
                     <div className="h-px bg-border/60" />
+
+                    {/* Subdomain Section */}
+                    <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-x-12 gap-y-4">
+                        <div className="space-y-1">
+                            <Label htmlFor="subdomain" className="text-sm font-semibold flex items-center gap-2">
+                                Portfolio Subdomain
+                            </Label>
+                            <p className="text-xs text-muted-foreground font-medium leading-relaxed">
+                                Use a branded subdomain like <span className="font-semibold">yourname</span>.{process.env.NEXT_PUBLIC_ROOT_DOMAIN || "yourdomain.com"}.
+                                Available on Pro and Business plans.
+                            </p>
+                        </div>
+                        <div className="max-w-md w-full space-y-2">
+                            <div className="relative">
+                                <Input
+                                    id="subdomain"
+                                    value={subdomain}
+                                    onChange={(e) => handleSubdomainChange(e.target.value)}
+                                    className={`h-10 bg-background ${subdomainError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                                    placeholder="your-subdomain"
+                                    disabled={isPending || !canUseSubdomain}
+                                />
+                            </div>
+                            {!canUseSubdomain ? (
+                                <p className="text-xs text-amber-600 font-medium flex items-center gap-1.5">
+                                    <AlertTriangle className="size-3" />
+                                    Upgrade to Pro or Business to enable portfolio subdomains.
+                                </p>
+                            ) : subdomainError ? (
+                                <p className="text-xs text-destructive font-medium flex items-center gap-1.5">
+                                    <AlertTriangle className="size-3" />
+                                    {subdomainError}
+                                </p>
+                            ) : subdomain ? (
+                                <div className="flex items-center gap-2 p-2 rounded-lg bg-primary/5 border border-primary/10">
+                                    <div className="p-1 rounded bg-primary/10 text-primary">
+                                        <CheckCircle2 className="size-3" />
+                                    </div>
+                                    <p className="text-xs text-primary/80 font-medium">
+                                        https://{subdomain}.{(process.env.NEXT_PUBLIC_ROOT_DOMAIN || process.env.NEXT_PUBLIC_APP_URL || "localhost:3000").replace(/^https?:\/\//, "")}
+                                    </p>
+                                </div>
+                            ) : null}
+                        </div>
+                    </div>
+
 
                     {/* Handle Section */}
                     <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-x-12 gap-y-4">
@@ -252,6 +307,7 @@ export function GeneralTab({
                         onClick={() => {
                             setName(user.name);
                             handleHandleChange(portfolio.handle);
+                            handleSubdomainChange(portfolio.subdomain || "");
                             setImage(user.image || "");
                         }}
                         disabled={isPending}

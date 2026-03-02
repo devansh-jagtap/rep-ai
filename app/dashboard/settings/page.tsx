@@ -3,14 +3,16 @@ import { redirect } from "next/navigation";
 import { getDashboardData } from "../_lib/get-dashboard-data";
 import { SettingsClient } from "./settings-client";
 import { getProfileById } from "@/lib/db";
+import { canUsePortfolioSubdomain } from "@/lib/billing";
 
 export default async function SettingsPage() {
   const session = await getSession();
   if (!session?.user?.id) redirect("/auth/signin");
 
-  const [data, profile] = await Promise.all([
+  const [data, profile, canUseSubdomain] = await Promise.all([
     getDashboardData(),
     getProfileById(session.user.id),
+    canUsePortfolioSubdomain(session.user.id),
   ]);
 
   if (!data?.portfolio) redirect("/onboarding");
@@ -26,7 +28,9 @@ export default async function SettingsPage() {
       }}
       portfolio={{
         handle: data.portfolio.handle,
+        subdomain: data.portfolio.subdomain || "",
       }}
+      canUseSubdomain={canUseSubdomain}
     />
   );
 }

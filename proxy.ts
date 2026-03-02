@@ -17,38 +17,39 @@ const authRoutes = [
   "/auth/error",
 ];
 
+function normalizeHost(hostname: string) {
+  return hostname.split(":")[0].toLowerCase();
+}
+
+function normalizeBaseDomain(input: string) {
+  return input
+    .replace(/^https?:\/\//, "")
+    .split("/")[0]
+    .replace(/"/g, "")
+    .replace(/'/g, "")
+    .toLowerCase();
+}
+
 export async function proxy(request: NextRequest) {
   const url = request.nextUrl.clone();
   const { pathname } = url;
 
-  // 1. Subdomain Routing Logic
-  const hostname = request.headers.get("host") || "";
-  let baseDomain = process.env.NEXT_PUBLIC_APP_URL || "localhost:3000";
-  baseDomain = baseDomain.replace(/^https?:\/\//, "").replace(/"/g, "").replace(/'/g, "");
+  const rawHost = request.headers.get("host") || "";
+  const hostname = normalizeHost(rawHost);
+  const baseDomain = normalizeBaseDomain(process.env.NEXT_PUBLIC_ROOT_DOMAIN || process.env.NEXT_PUBLIC_APP_URL || "localhost");
 
-  // Check if it's a subdomain 
-  // - It must end with the base domain
-  // - It must not be EXACTLY the base domain or www.base domain
-  // - We also ignore base localhost unless there's a clear subdomain
   const isSubdomain =
     hostname.endsWith(`.${baseDomain}`) &&
     hostname !== baseDomain &&
-    hostname !== `www.${baseDomain}` &&
-    !hostname.startsWith("localhost:") && // Ignore direct localhost:port access
-    hostname !== "localhost";
+    hostname !== `www.${baseDomain}`;
 
   if (isSubdomain) {
-    // Determine handle by removing the base domain suffix
-    // e.g. "anam.rep-ai-nine.vercel.app" -> replace ".rep-ai-nine.vercel.app" -> "anam"
-    const handle = hostname.replace(`.${baseDomain}`, "");
-
-    if (handle && !pathname.startsWith(`/${handle}`)) {
-      // Rewrite to /[handle]
-      return NextResponse.rewrite(new URL(`/${handle}${pathname === "/" ? "" : pathname}`, request.url));
+    const subdomain = hostname.replace(`.${baseDomain}`, "");
+    if (subdomain && !pathname.startsWith("/subdomain/")) {
+      return NextResponse.rewrite(new URL(`/subdomain/${subdomain}`, request.url));
     }
   }
 
-  // 2. Authentication Logic
   const session = await authInstance.api.getSession({ headers: request.headers });
   const isAuthenticated = !!session?.user?.id;
 
@@ -78,7 +79,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // We need to match everything except static files/api for subdomain routing
     "/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
   ],
 };

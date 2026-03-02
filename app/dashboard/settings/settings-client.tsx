@@ -2,7 +2,7 @@
 
 import { useTheme } from "next-themes";
 import { useState, useEffect, useTransition, useSyncExternalStore, useRef } from "react";
-import { updateHandle, deleteActivePortfolio, regeneratePortfolio, updateProfile } from "../actions";
+import { updateHandle, updateSubdomain, deleteActivePortfolio, regeneratePortfolio, updateProfile } from "../actions";
 import { toast } from "sonner";
 import { AnimatedTabs } from "@/components/ui/animated-tabs";
 
@@ -21,10 +21,12 @@ interface SettingsClientProps {
   };
   portfolio: {
     handle: string;
+    subdomain: string;
   };
+  canUseSubdomain: boolean;
 }
 
-export function SettingsClient({ user, portfolio }: SettingsClientProps) {
+export function SettingsClient({ user, portfolio, canUseSubdomain }: SettingsClientProps) {
   const { theme, setTheme } = useTheme();
   const mounted = useSyncExternalStore(
     () => () => { },
@@ -33,9 +35,11 @@ export function SettingsClient({ user, portfolio }: SettingsClientProps) {
   );
   const [isPending, startTransition] = useTransition();
   const [handle, setHandle] = useState(portfolio.handle);
+  const [subdomain, setSubdomain] = useState(portfolio.subdomain);
   const [name, setName] = useState(user.name);
   const [image, setImage] = useState(user.image || "");
   const [handleError, setHandleError] = useState("");
+  const [subdomainError, setSubdomainError] = useState("");
   const [isDeletingPortfolio, setIsDeletingPortfolio] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -84,12 +88,40 @@ export function SettingsClient({ user, portfolio }: SettingsClientProps) {
     else setHandleError("");
   };
 
+
+  const validateSubdomainFormat = (value: string) => {
+    if (!value) {
+      setSubdomainError("");
+      return true;
+    }
+    if (value.length < 3) {
+      setSubdomainError("Must be at least 3 characters");
+      return false;
+    }
+    if (value.length > 30) {
+      setSubdomainError("Must be 30 characters or fewer");
+      return false;
+    }
+    if (!/^[a-z0-9-]+$/.test(value)) {
+      setSubdomainError("Only lowercase letters, numbers, and hyphens");
+      return false;
+    }
+    setSubdomainError("");
+    return true;
+  };
+
+  const handleSubdomainChange = (value: string) => {
+    const normalized = value.toLowerCase().trim();
+    setSubdomain(normalized);
+    validateSubdomainFormat(normalized);
+  };
+
   const handleSaveProfile = () => {
-    if (!validateHandleFormat(handle)) return;
+    if (!validateHandleFormat(handle) || !validateSubdomainFormat(subdomain)) return;
 
     startTransition(async () => {
       try {
-        const promises: Promise<any>[] = [];
+        const promises: Promise<unknown>[] = [];
 
         if (handle !== portfolio.handle) {
           promises.push(updateHandle(handle));
@@ -99,12 +131,17 @@ export function SettingsClient({ user, portfolio }: SettingsClientProps) {
           promises.push(updateProfile({ name, image }));
         }
 
+        if (canUseSubdomain && subdomain !== portfolio.subdomain) {
+          promises.push(updateSubdomain(subdomain));
+        }
+
         await Promise.all(promises);
         toast.success("Profile updated successfully");
       } catch (error) {
         const msg = error instanceof Error ? error.message : "Failed to save";
         toast.error(msg);
         setHandleError(msg);
+        setSubdomainError(msg);
       }
     });
   };
@@ -176,7 +213,7 @@ export function SettingsClient({ user, portfolio }: SettingsClientProps) {
 
       setImage(publicUrl);
       toast.success("Avatar uploaded! Remember to save changes.");
-    } catch (err) {
+    } catch {
       toast.error("Upload failed");
     } finally {
       setIsUploading(false);
@@ -186,8 +223,9 @@ export function SettingsClient({ user, portfolio }: SettingsClientProps) {
   };
 
   const hasHandleChanged = handle !== portfolio.handle;
+  const hasSubdomainChanged = canUseSubdomain && subdomain !== portfolio.subdomain;
   const hasProfileChanged = name !== user.name || image !== (user.image || "");
-  const canSave = (hasHandleChanged || hasProfileChanged) && !handleError;
+  const canSave = (hasHandleChanged || hasSubdomainChanged || hasProfileChanged) && !handleError && !subdomainError;
 
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
@@ -208,7 +246,7 @@ export function SettingsClient({ user, portfolio }: SettingsClientProps) {
       } else {
         toast.error(data.error || "Failed to start checkout");
       }
-    } catch (error) {
+    } catch {
       toast.error("An error occurred. Please try again.");
     } finally {
       setLoadingPlan(null);
@@ -246,6 +284,10 @@ export function SettingsClient({ user, portfolio }: SettingsClientProps) {
                 image={image}
                 setImage={setImage}
                 handleError={handleError}
+                subdomain={subdomain}
+                handleSubdomainChange={handleSubdomainChange}
+                subdomainError={subdomainError}
+                canUseSubdomain={canUseSubdomain}
                 isPending={isPending}
                 isUploading={isUploading}
                 uploadProgress={uploadProgress}

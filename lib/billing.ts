@@ -126,3 +126,8 @@ export async function canUseCalendar(userId: string): Promise<boolean> {
     const plan = await getUserPlan(userId);
     return PLAN_LIMITS[plan].canUseCalendar;
 }
+
+export async function canUsePortfolioSubdomain(userId: string): Promise<boolean> {
+    const plan = await getUserPlan(userId);
+    return PLAN_LIMITS[plan].canCustomDomain;
+}

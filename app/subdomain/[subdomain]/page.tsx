@@ -8,71 +8,64 @@ import { LandingTemplate } from "@/components/templates/landing-template";
 import { GalleryTemplate } from "@/components/templates/gallery-template";
 import { MinimalTemplate } from "@/components/templates/minimal-template";
 import { InteractiveTemplate } from "@/components/templates/interactive-template";
-import { getPublishedPortfolioByHandle, getPublishedPortfolioWithAgentByHandle } from "@/lib/db/portfolio";
+import { getPublishedPortfolioWithAgentBySubdomain } from "@/lib/db/portfolio";
 import { validatePortfolioContent } from "@/lib/validation/portfolio-schema";
 import { AgentWidget } from "@/components/agent-widget";
 import { AnalyticsTracker } from "@/components/analytics-tracker";
 
-const HANDLE_REGEX = /^[a-z0-9-]{3,30}$/;
+const SUBDOMAIN_REGEX = /^[a-z0-9-]{3,30}$/;
 
-function isValidHandle(handle: string) {
-  return HANDLE_REGEX.test(handle);
+interface PublicSubdomainPageProps {
+  params: Promise<{ subdomain: string }>;
 }
 
-interface PublicPortfolioPageProps {
-  params: Promise<{ handle: string }>;
-}
+export async function generateMetadata({ params }: PublicSubdomainPageProps): Promise<Metadata> {
+  const { subdomain } = await params;
 
-export async function generateMetadata({ params }: PublicPortfolioPageProps): Promise<Metadata> {
-  const { handle } = await params;
-
-  if (!isValidHandle(handle)) {
+  if (!SUBDOMAIN_REGEX.test(subdomain)) {
     return {};
   }
 
-  try {
-    const portfolio = await getPublishedPortfolioByHandle(handle);
-    if (!portfolio || !portfolio.content) {
-      return {};
-    }
+  const portfolio = await getPublishedPortfolioWithAgentBySubdomain(subdomain);
+  if (!portfolio || !portfolio.content) {
+    return {};
+  }
 
-    const content = validatePortfolioContent(portfolio.content);
-    const title = content.hero.headline;
-    const description = content.about.paragraph.slice(0, 150);
-    const baseUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
-    const canonical = `${baseUrl}/${handle}`;
+  const content = validatePortfolioContent(portfolio.content);
+  const title = content.hero.headline;
+  const description = content.about.paragraph.slice(0, 150);
+  const baseDomain = (process.env.NEXT_PUBLIC_ROOT_DOMAIN || process.env.NEXT_PUBLIC_APP_URL || "localhost:3000").replace(/^https?:\/\//, "");
+  const canonical = `https://${subdomain}.${baseDomain}`;
 
-    return {
+  return {
+    title,
+    description,
+    openGraph: {
       title,
       description,
-      openGraph: {
-        title,
-        description,
-        url: canonical,
-        type: "website",
-      },
-      twitter: {
-        card: "summary_large_image",
-        title,
-        description,
-      },
-      alternates: {
-        canonical,
-      },
-    };
-  } catch {
-    return {};
-  }
+      url: canonical,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+    alternates: {
+      canonical,
+    },
+  };
 }
 
-export default async function PublicPortfolioPage({ params }: PublicPortfolioPageProps) {
-  const { handle } = await params;
+export default async function PublicSubdomainPage({ params }: PublicSubdomainPageProps) {
+  const { subdomain } = await params;
 
-  if (!isValidHandle(handle)) {
+  if (!SUBDOMAIN_REGEX.test(subdomain)) {
     notFound();
   }
 
-  const portfolio = await getPublishedPortfolioWithAgentByHandle(handle);
+  const portfolio = await getPublishedPortfolioWithAgentBySubdomain(subdomain);
+
   if (!portfolio || !portfolio.content) {
     notFound();
   }
@@ -86,7 +79,7 @@ export default async function PublicPortfolioPage({ params }: PublicPortfolioPag
 
   return (
     <main className="min-h-screen bg-background">
-      <AnalyticsTracker handle={handle} />
+      <AnalyticsTracker handle={portfolio.handle} />
       {portfolio.template === "landing" ? (
         <LandingTemplate content={content} />
       ) : portfolio.template === "veil" ? (
@@ -106,7 +99,7 @@ export default async function PublicPortfolioPage({ params }: PublicPortfolioPag
       )}
       {portfolio.agentIsEnabled ? (
         <AgentWidget
-          handle={handle}
+          handle={portfolio.handle}
           agentName={portfolio.agentDisplayName ?? "AI Assistant"}
           avatarUrl={portfolio.agentAvatarUrl ?? null}
           roleLabel={portfolio.agentRoleLabel ?? null}

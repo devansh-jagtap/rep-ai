@@ -18,6 +18,8 @@ import { validateHandle } from "@/lib/validation/handle";
 import { handlePublicChat, type PublicChatResult } from "@/lib/ai/public-chat-handler";
 import { sanitizeHistory } from "@/lib/validation/public-chat";
 import { type PortfolioContent as ValidatedPortfolioContent } from "@/lib/validation/portfolio-schema";
+import { validateSubdomain } from "@/lib/validation/handle";
+import { canUsePortfolioSubdomain } from "@/lib/billing";
 
 import { mergeVisibleSections } from "@/lib/portfolio/section-registry";
 
@@ -147,6 +149,51 @@ export async function updateHandle(newHandle: string) {
   revalidatePath("/dashboard/settings");
 }
 
+
+export async function updateSubdomain(newSubdomain: string) {
+  const userId = await requireAuth();
+  const portfolio = await getActivePortfolio(userId);
+  if (!portfolio) throw new Error("Portfolio not found");
+
+  const allowed = await canUsePortfolioSubdomain(userId);
+  if (!allowed) {
+    throw new Error("Subdomains are available on Pro and Business plans.");
+  }
+
+  const normalizedSubdomain = newSubdomain.trim().toLowerCase();
+
+  if (!normalizedSubdomain) {
+    await db.update(portfolios).set({
+      subdomain: null,
+      updatedAt: new Date(),
+    }).where(eq(portfolios.id, portfolio.id));
+
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/settings");
+    return;
+  }
+
+  const validation = validateSubdomain(normalizedSubdomain);
+  if (!validation.ok) {
+    throw new Error(validation.message);
+  }
+
+  const { isSubdomainAvailable } = await import("@/lib/db/portfolio");
+  const available = await isSubdomainAvailable(validation.value, portfolio.id);
+
+  if (!available) {
+    throw new Error("This subdomain is already taken");
+  }
+
+  await db.update(portfolios).set({
+    subdomain: validation.value,
+    updatedAt: new Date(),
+  }).where(eq(portfolios.id, portfolio.id));
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/settings");
+}
+
 export async function updatePortfolioName(name: string) {
   const userId = await requireAuth();
   const portfolio = await getActivePortfolio(userId);
@@ -168,7 +215,7 @@ export async function updateProfile(data: { name?: string; image?: string }) {
   const userId = await requireAuth();
   const { users } = await import("@/lib/schema");
 
-  const updateData: Record<string, any> = {};
+  const updateData: { name?: string; image?: string | null } = {};
   if (data.name !== undefined) {
     const trimmedName = data.name.trim();
     if (trimmedName) updateData.name = trimmedName.slice(0, 120);

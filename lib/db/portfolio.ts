@@ -148,6 +148,44 @@ export async function getPublishedPortfolioByHandle(handle: string) {
   }
 }
 
+export async function getPublishedPortfolioWithAgentBySubdomain(subdomain: string) {
+  try {
+    const [row] = await withRetry(() => db
+      .select({
+        id: portfolios.id,
+        userId: portfolios.userId,
+        name: portfolios.name,
+        handle: portfolios.handle,
+        subdomain: portfolios.subdomain,
+        template: portfolios.template,
+        content: portfolios.content,
+        isPublished: portfolios.isPublished,
+        agentId: agents.id,
+        agentIsEnabled: agents.isEnabled,
+        agentModel: agents.model,
+        agentBehaviorType: agents.behaviorType,
+        agentStrategyMode: agents.strategyMode,
+        agentCustomPrompt: agents.customPrompt,
+        agentTemperature: agents.temperature,
+        agentDisplayName: agents.displayName,
+        agentAvatarUrl: agents.avatarUrl,
+        agentIntro: agents.intro,
+        agentRoleLabel: agents.roleLabel,
+        agentNotificationEmail: agents.notificationEmail,
+        agentWorkingHours: agents.workingHours,
+        agentOffDays: agents.offDays,
+      })
+      .from(portfolios)
+      .leftJoin(agents, eq(agents.portfolioId, portfolios.id))
+      .where(and(eq(portfolios.subdomain, subdomain), eq(portfolios.isPublished, true)))
+      .limit(1));
+    return row ?? null;
+  } catch (error) {
+    console.error("Failed to fetch published portfolio with agent by subdomain", error);
+    return null;
+  }
+}
+
 export async function getPublishedPortfolioWithAgentByHandle(handle: string) {
   try {
     const [row] = await withRetry(() => db
@@ -363,4 +401,20 @@ export async function getPortfolioBackedAgentContextByAgentId(agentId: string) {
 
 export async function getPortfolioBackedAgentContextByHandle(handle: string) {
   return getPortfolioWithAgentByHandle(handle);
+}
+
+export async function isSubdomainAvailable(subdomain: string, currentPortfolioId?: string) {
+  try {
+    const [existing] = await withRetry(() => db
+      .select({ id: portfolios.id })
+      .from(portfolios)
+      .where(eq(portfolios.subdomain, subdomain))
+      .limit(1));
+
+    if (!existing) return true;
+    return currentPortfolioId ? existing.id === currentPortfolioId : false;
+  } catch (error) {
+    console.error("Failed to check subdomain availability", error);
+    return false;
+  }
 }

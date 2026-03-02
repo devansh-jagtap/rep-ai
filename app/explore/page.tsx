@@ -8,6 +8,13 @@ import { ArrowRight, Sparkles } from "lucide-react";
 export const metadata: Metadata = {
   title: "Explore Portfolios",
   description: "Discover portfolios built with Mimick.me. Browse creators, designers, developers, and more.",
+  alternates: { canonical: "/explore" },
+  openGraph: {
+    title: "Explore Portfolios",
+    description: "Discover portfolios built with Mimick.me. Browse creators, designers, developers, and more.",
+    url: "/explore",
+    type: "website",
+  },
 };
 
 export default async function ExplorePage() {
