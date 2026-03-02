@@ -161,20 +161,20 @@ const PersonalityRangeCard = () => {
     );
 };
 
-// --- Card 03: Automated Workflows (Vertical List Style) ---
+// --- Card 03: Automated Workflows (Minimal List Style) ---
 const ResponseProtocolCard = () => {
     const [activeStep, setActiveStep] = React.useState(0);
 
     const protocols = [
-        { label: 'Lead Captured', icon: <Mail className="size-4" />, desc: 'Contact details securely saved' },
-        { label: 'Scope Gathered', icon: <FileText className="size-4" />, desc: 'Project requirements identified' },
-        { label: 'Meeting Booked', icon: <Calendar className="size-4" />, desc: 'Added to your Google Calendar' },
+        { label: 'Lead Captured', desc: 'Securely parsing contact details' },
+        { label: 'Scope Gathered', desc: 'Identifying project requirements' },
+        { label: 'Meeting Booked', desc: 'Syncing with Google Calendar' },
     ];
 
     React.useEffect(() => {
         const interval = setInterval(() => {
             setActiveStep((prev) => (prev + 1) % protocols.length);
-        }, 2000);
+        }, 3000);
         return () => clearInterval(interval);
     }, [protocols.length]);
 
@@ -188,53 +188,60 @@ const ResponseProtocolCard = () => {
                 </p>
             </div>
 
-            <div className="flex-1 flex flex-col justify-center relative">
-                {/* Connecting Line */}
-                <div className="absolute left-[34px] top-6 bottom-6 w-px bg-neutral-300/50" />
-                <div
-                    className="absolute left-[34px] w-px bg-[#D36746] transition-all duration-500 ease-out"
-                    style={{
-                        top: '24px',
-                        height: `${Math.max(0, activeStep * ((100 - 24) / (protocols.length - 1)))}%`
-                    }}
-                />
+            <div className="flex-1 flex flex-col justify-center gap-6 px-4">
+                {protocols.map((p, idx) => {
+                    const isActive = idx === activeStep;
+                    const isPast = idx < activeStep;
 
-                <div className="space-y-4 relative z-10">
-                    {protocols.map((p, idx) => {
-                        const isActive = idx === activeStep;
-                        const isPast = idx < activeStep;
-
-                        return (
-                            <div
-                                key={idx}
-                                className={cn(
-                                    "flex items-center gap-5 p-4 rounded-2xl border transition-all duration-500",
-                                    isActive
-                                        ? "bg-white border-[#D36746]/30 shadow-lg shadow-[#D36746]/10 scale-[1.02]"
-                                        : "bg-white/60 border-neutral-200/50 scale-100 opacity-70"
-                                )}
-                            >
-                                <div className={cn(
-                                    "size-10 rounded-xl flex items-center justify-center transition-colors duration-500",
-                                    isActive || isPast
-                                        ? "bg-[#D36746] text-white shadow-md shadow-[#D36746]/20"
-                                        : "bg-neutral-200 text-neutral-400"
+                    return (
+                        <div
+                            key={idx}
+                            className={cn(
+                                "flex flex-col gap-2 transition-all duration-700 font-sans",
+                                isActive ? "opacity-100" : isPast ? "opacity-40" : "opacity-20"
+                            )}
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className="relative flex items-center justify-center size-2.5">
+                                    <div className={cn(
+                                        "absolute inset-0 rounded-full transition-colors duration-700",
+                                        isActive ? "bg-[#D36746]" : isPast ? "bg-[#D36746]/40" : "bg-neutral-300"
+                                    )} />
+                                    {isActive && (
+                                        <motion.div
+                                            initial={{ scale: 0.8, opacity: 0 }}
+                                            animate={{ scale: 3, opacity: 0 }}
+                                            transition={{ repeat: Infinity, duration: 2, ease: "easeOut" }}
+                                            className="absolute inset-0 rounded-full bg-[#D36746]"
+                                        />
+                                    )}
+                                </div>
+                                <h4 className={cn(
+                                    "text-[11px] font-sans tracking-widest uppercase transition-colors duration-700",
+                                    isActive ? "text-[#D36746]" : "text-neutral-500"
                                 )}>
-                                    {p.icon}
-                                </div>
-                                <div className="flex-1 overflow-hidden">
-                                    <h4 className={cn(
-                                        "text-[10px] font-bold uppercase tracking-widest leading-none mb-1.5 transition-colors duration-500",
-                                        isActive ? "text-[#D36746]" : "text-neutral-900"
-                                    )}>
-                                        {p.label}
-                                    </h4>
-                                    <p className="text-[11px] text-neutral-500 font-light truncate">{p.desc}</p>
-                                </div>
+                                    {p.label}
+                                </h4>
                             </div>
-                        );
-                    })}
-                </div>
+
+                            <div className="overflow-hidden pl-6.5">
+                                <AnimatePresence mode="wait">
+                                    {isActive && (
+                                        <motion.p
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: "auto", opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                                            className="text-xs text-neutral-500 font-light mt-1 ml-[26px]"
+                                        >
+                                            {p.desc}
+                                        </motion.p>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );
@@ -243,7 +250,7 @@ const ResponseProtocolCard = () => {
 // --- Main Page Component ---
 export default function FeaturesInteractive() {
     return (
-        <section className="bg-white py-32 overflow-hidden border-t border-neutral-100">
+        <section className="bg-background py-32 overflow-hidden border-t border-neutral-100">
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col items-center text-center mb-24 space-y-6">
                     <motion.h2
