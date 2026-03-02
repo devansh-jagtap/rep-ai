@@ -6,6 +6,7 @@ import { Slack } from '@/components/ui/svgs/slack'
 import { Firebase } from '@/components/ui/svgs/firebase'
 import { ClerkIconDark as Clerk } from '@/components/ui/svgs/clerk'
 import { Logo } from '@/components/logo'
+import { motion } from 'motion/react'
 
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'

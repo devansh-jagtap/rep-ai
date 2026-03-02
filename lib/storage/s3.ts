@@ -33,6 +33,27 @@ export async function getUploadUrl(
     Bucket: BUCKET_NAME,
     Key: key,
     ContentType: mimeType,
+    ACL: "public-read",
+  });
+
+  const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+  const publicUrl = `${process.env.S3_PUBLIC_URL || `https://${BUCKET_NAME}.s3.${process.env.S3_REGION || 'us-east-1'}.amazonaws.com`}/${key}`;
+
+  return { uploadUrl, key, publicUrl };
+}
+
+export async function getAvatarUploadUrl(
+  fileName: string,
+  mimeType: string,
+  userId: string
+): Promise<UploadUrlResult> {
+  const key = `avatars/${userId}/${Date.now()}-${fileName}`;
+
+  const command = new PutObjectCommand({
+    Bucket: BUCKET_NAME,
+    Key: key,
+    ContentType: mimeType,
+    ACL: "public-read",
   });
 
   const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });

@@ -20,6 +20,7 @@ export default async function SettingsPage() {
       user={{
         email: session.user.email || "",
         name: profile?.name || session.user.name || "",
+        image: profile?.image || null,
         plan: profile?.plan || "free",
         credits: profile?.credits ?? 0,
       }}

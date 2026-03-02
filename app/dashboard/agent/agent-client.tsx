@@ -321,7 +321,7 @@ export function AgentClient({
         renderContent={(tab) => {
           if (tab.value === "settings") {
             return (
-              <div className="space-y-6">
+              <div className="space-y-6 pt-5">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between">
                     <div>
@@ -633,131 +633,133 @@ export function AgentClient({
 
           if (tab.value === "widget") {
             return (
-              <Card className="p-6 space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold">Get Agent Widget</h3>
-                  <p className="text-sm text-muted-foreground mt-1">Copy-paste this widget into any website and start chatting.</p>
-                </div>
-
-                {!canGenerateWidget && (
-                  <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground bg-muted/50">
-                    Save your configuration first so your account gets an `agentId` for the widget.
+              <div className="pt-5">
+                <Card className="p-6 space-y-6">
+                  <div>
+                    <h3 className="text-lg font-semibold">Get Agent Widget</h3>
+                    <p className="text-sm text-muted-foreground mt-1">Copy-paste this widget into any website and start chatting.</p>
                   </div>
-                )}
 
-                {canGenerateWidget && (
-                  <>
-                    <div className="grid gap-6 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="widget-label" className="font-semibold">
-                          Button Label
-                        </Label>
-                        <Input
-                          id="widget-label"
-                          value={widgetLabel}
-                          maxLength={24}
-                          onChange={(event) => setWidgetLabel(event.target.value)}
-                          className="shadow-sm"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="font-semibold">Position</Label>
-                        <Select value={widgetPosition} onValueChange={(value) => setWidgetPosition(value as "bottom-right" | "bottom-left")}>
-                          <SelectTrigger className="w-full shadow-sm">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="bottom-right" className="font-medium">Bottom right</SelectItem>
-                            <SelectItem value="bottom-left" className="font-medium">Bottom left</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="widget-width" className="font-semibold">
-                          Widget Width
-                        </Label>
-                        <Input
-                          id="widget-width"
-                          type="number"
-                          min={280}
-                          max={480}
-                          value={widgetWidth}
-                          onChange={(event) =>
-                            setWidgetWidth(Math.max(280, Math.min(480, Number(event.target.value) || 360)))
-                          }
-                          className="shadow-sm"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="widget-height" className="font-semibold">
-                          Widget Height
-                        </Label>
-                        <Input
-                          id="widget-height"
-                          type="number"
-                          min={420}
-                          max={720}
-                          value={widgetHeight}
-                          onChange={(event) =>
-                            setWidgetHeight(Math.max(420, Math.min(720, Number(event.target.value) || 520)))
-                          }
-                          className="shadow-sm"
-                        />
-                      </div>
+                  {!canGenerateWidget && (
+                    <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground bg-muted/50">
+                      Save your configuration first so your account gets an `agentId` for the widget.
                     </div>
+                  )}
 
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Label className="font-semibold">Script Install Snippet</Label>
-                        <Badge variant="secondary" className="text-xs font-medium">Recommended</Badge>
+                  {canGenerateWidget && (
+                    <>
+                      <div className="grid gap-6 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="widget-label" className="font-semibold">
+                            Button Label
+                          </Label>
+                          <Input
+                            id="widget-label"
+                            value={widgetLabel}
+                            maxLength={24}
+                            onChange={(event) => setWidgetLabel(event.target.value)}
+                            className="shadow-sm"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="font-semibold">Position</Label>
+                          <Select value={widgetPosition} onValueChange={(value) => setWidgetPosition(value as "bottom-right" | "bottom-left")}>
+                            <SelectTrigger className="w-full shadow-sm">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="bottom-right" className="font-medium">Bottom right</SelectItem>
+                              <SelectItem value="bottom-left" className="font-medium">Bottom left</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="widget-width" className="font-semibold">
+                            Widget Width
+                          </Label>
+                          <Input
+                            id="widget-width"
+                            type="number"
+                            min={280}
+                            max={480}
+                            value={widgetWidth}
+                            onChange={(event) =>
+                              setWidgetWidth(Math.max(280, Math.min(480, Number(event.target.value) || 360)))
+                            }
+                            className="shadow-sm"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="widget-height" className="font-semibold">
+                            Widget Height
+                          </Label>
+                          <Input
+                            id="widget-height"
+                            type="number"
+                            min={420}
+                            max={720}
+                            value={widgetHeight}
+                            onChange={(event) =>
+                              setWidgetHeight(Math.max(420, Math.min(720, Number(event.target.value) || 520)))
+                            }
+                            className="shadow-sm"
+                          />
+                        </div>
                       </div>
-                      <CodeBlock code={scriptSnippet} language="html" />
-                    </div>
 
-                    <div className="space-y-3">
-                      <Label className="font-semibold">Iframe Fallback</Label>
-                      <CodeBlock code={iframeSnippet} language="html" />
-                    </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Label className="font-semibold">Script Install Snippet</Label>
+                          <Badge variant="secondary" className="text-xs font-medium">Recommended</Badge>
+                        </div>
+                        <CodeBlock code={scriptSnippet} language="html" />
+                      </div>
 
-                    <div className="rounded-lg border bg-muted/50 p-4 text-sm space-y-2">
-                      <p className="font-semibold">Install checklist</p>
-                      <ul className="list-disc pl-5 space-y-1 text-muted-foreground font-medium">
-                        <li>Keep your portfolio published and agent enabled.</li>
-                        <li>Paste the script snippet before the closing <code className="bg-muted px-1 py-0.5 rounded text-foreground">{"</body>"}</code> tag.</li>
-                        <li>Open your website and click the widget button to test.</li>
-                      </ul>
-                    </div>
+                      <div className="space-y-3">
+                        <Label className="font-semibold">Iframe Fallback</Label>
+                        <CodeBlock code={iframeSnippet} language="html" />
+                      </div>
 
-                    <div className="flex flex-wrap gap-3 pt-2">
-                      <Button variant="outline" size="sm" asChild className="shadow-sm font-medium">
-                        <a href={scriptUrl} target="_blank" rel="noreferrer">
-                          View Generated Script
-                          <ExternalLink className="size-4 ml-2" />
-                        </a>
-                      </Button>
-                      {agentId && (
+                      <div className="rounded-lg border bg-muted/50 p-4 text-sm space-y-2">
+                        <p className="font-semibold">Install checklist</p>
+                        <ul className="list-disc pl-5 space-y-1 text-muted-foreground font-medium">
+                          <li>Keep your portfolio published and agent enabled.</li>
+                          <li>Paste the script snippet before the closing <code className="bg-muted px-1 py-0.5 rounded text-foreground">{"</body>"}</code> tag.</li>
+                          <li>Open your website and click the widget button to test.</li>
+                        </ul>
+                      </div>
+
+                      <div className="flex flex-wrap gap-3 pt-2">
                         <Button variant="outline" size="sm" asChild className="shadow-sm font-medium">
-                          <a href={`${appOrigin}/embed/${agentId}`} target="_blank" rel="noreferrer">
-                            Open Embed Preview
+                          <a href={scriptUrl} target="_blank" rel="noreferrer">
+                            View Generated Script
                             <ExternalLink className="size-4 ml-2" />
                           </a>
                         </Button>
-                      )}
-                      <div className="flex items-center">
-                        <Badge variant={isWidgetReady ? "default" : "secondary"} className="font-medium">
-                          {isWidgetReady ? "Widget ready to install" : "Publish + enable agent to go live"}
-                        </Badge>
+                        {agentId && (
+                          <Button variant="outline" size="sm" asChild className="shadow-sm font-medium">
+                            <a href={`${appOrigin}/embed/${agentId}`} target="_blank" rel="noreferrer">
+                              Open Embed Preview
+                              <ExternalLink className="size-4 ml-2" />
+                            </a>
+                          </Button>
+                        )}
+                        <div className="flex items-center">
+                          <Badge variant={isWidgetReady ? "default" : "secondary"} className="font-medium">
+                            {isWidgetReady ? "Widget ready to install" : "Publish + enable agent to go live"}
+                          </Badge>
+                        </div>
                       </div>
-                    </div>
-                  </>
-                )}
-              </Card>
+                    </>
+                  )}
+                </Card>
+              </div>
             );
           }
 
           if (tab.value === "integrations") {
             return (
-              <div className="space-y-6">
+              <div className="space-y-6 pt-5">
                 <div className="grid gap-6 md:grid-cols-2">
                   <Card className="flex flex-col">
                     <CardHeader>
@@ -824,105 +826,107 @@ export function AgentClient({
 
           if (tab.value === "test") {
             return (
-              <Card className="overflow-hidden flex flex-col h=[600px]">
-                <div className="border-b border-border px-6 py-4 flex items-center justify-between bg-muted/50 shrink-0">
-                  <div>
-                    <h3 className="text-base font-semibold">Test Agent</h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">Live preview that sends real requests to your configured agent.</p>
+              <div className="pt-5">
+                <Card className="overflow-hidden flex flex-col h-[600px]">
+                  <div className="border-b border-border px-6 py-4 flex items-center justify-between bg-muted/50 shrink-0">
+                    <div>
+                      <h3 className="text-base font-semibold">Test Agent</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">Live preview that sends real requests to your configured agent.</p>
+                    </div>
+                    {chatMessages.length > 0 && (
+                      <Button size="sm" variant="ghost" onClick={clearChatMessages} className="font-medium">
+                        Reset
+                      </Button>
+                    )}
                   </div>
-                  {chatMessages.length > 0 && (
-                    <Button size="sm" variant="ghost" onClick={clearChatMessages} className="font-medium">
-                      Reset
-                    </Button>
-                  )}
-                </div>
 
-                <Conversation className="flex-1 min-h-0 border-t-0 bg-background">
-                  <ConversationContent
-                    className="gap-4 p-6"
-                    scrollClassName="[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40 [&::-webkit-scrollbar-thumb]:rounded-full"
-                  >
-                    {!canTest ? (
-                      <ConversationEmptyState
-                        icon={<AlertCircle className="size-12 text-muted-foreground/50" />}
-                        title="Agent Unavailable"
-                        description={
-                          !config.isEnabled
-                            ? "Enable the agent to test it."
-                            : "Generate your portfolio content first to test it."
-                        }
-                      />
-                    ) : chatMessages.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center">
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Start chatting to test your agent
-                        </p>
-                      </div>
-                    ) : (
-                      chatMessages.map((message, index) => (
-                        <Message key={index} from={message.role}>
-                          <MessageContent className="text-sm max-w-[85%] break-words shadow-sm">
-                            {message.role === "assistant" ? (
-                              <MessageResponse>{message.content}</MessageResponse>
-                            ) : (
-                              <span>{message.content}</span>
-                            )}
+                  <Conversation className="flex-1 min-h-0 border-t-0 bg-background">
+                    <ConversationContent
+                      className="gap-4 p-6"
+                      scrollClassName="[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40 [&::-webkit-scrollbar-thumb]:rounded-full"
+                    >
+                      {!canTest ? (
+                        <ConversationEmptyState
+                          icon={<AlertCircle className="size-12 text-muted-foreground/50" />}
+                          title="Agent Unavailable"
+                          description={
+                            !config.isEnabled
+                              ? "Enable the agent to test it."
+                              : "Generate your portfolio content first to test it."
+                          }
+                        />
+                      ) : chatMessages.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center">
+                          <p className="text-sm font-medium text-muted-foreground">
+                            Start chatting to test your agent
+                          </p>
+                        </div>
+                      ) : (
+                        chatMessages.map((message, index) => (
+                          <Message key={index} from={message.role}>
+                            <MessageContent className="text-sm max-w-[85%] break-words shadow-sm">
+                              {message.role === "assistant" ? (
+                                <MessageResponse>{message.content}</MessageResponse>
+                              ) : (
+                                <span>{message.content}</span>
+                              )}
+                            </MessageContent>
+                          </Message>
+                        ))
+                      )}
+                      {isChatLoading && (
+                        <Message from="assistant">
+                          <MessageContent className="text-sm text-muted-foreground shadow-sm">
+                            <Shimmer>•••</Shimmer>
                           </MessageContent>
                         </Message>
-                      ))
-                    )}
-                    {isChatLoading && (
-                      <Message from="assistant">
-                        <MessageContent className="text-sm text-muted-foreground shadow-sm">
-                          <Shimmer>•••</Shimmer>
-                        </MessageContent>
-                      </Message>
-                    )}
-                  </ConversationContent>
-                  <ConversationScrollButton />
-                </Conversation>
+                      )}
+                    </ConversationContent>
+                    <ConversationScrollButton />
+                  </Conversation>
 
-                <form
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    sendTestMessage();
-                  }}
-                  className="shrink-0 border-t border-border p-4 bg-background"
-                >
-                  <InputGroup className="shadow-sm">
-                    <InputGroupTextarea
-                      placeholder={canTest ? "Ask something as a visitor..." : "Agent unavailable"}
-                      className="min-h-[48px] max-h-32 text-sm border-0 focus-visible:ring-0"
-                      rows={1}
-                      value={chatInput}
-                      onChange={(event) => setChatInput(event.target.value)}
-                      disabled={!canTest || isChatLoading}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter" && !event.shiftKey) {
-                          event.preventDefault();
-                          if (canTest && chatInput.trim() && !isChatLoading) {
-                            sendTestMessage();
+                  <form
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      sendTestMessage();
+                    }}
+                    className="shrink-0 border-t border-border p-4 bg-background"
+                  >
+                    <InputGroup className="shadow-sm">
+                      <InputGroupTextarea
+                        placeholder={canTest ? "Ask something as a visitor..." : "Agent unavailable"}
+                        className="min-h-[48px] max-h-32 text-sm border-0 focus-visible:ring-0"
+                        rows={1}
+                        value={chatInput}
+                        onChange={(event) => setChatInput(event.target.value)}
+                        disabled={!canTest || isChatLoading}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" && !event.shiftKey) {
+                            event.preventDefault();
+                            if (canTest && chatInput.trim() && !isChatLoading) {
+                              sendTestMessage();
+                            }
                           }
-                        }
-                      }}
-                    />
-                    <InputGroupAddon align="inline-end">
-                      <InputGroupButton
-                        type="submit"
-                        variant="default"
-                        size="icon-sm"
-                        disabled={!canTest || !chatInput.trim() || isChatLoading}
-                      >
-                        {isChatLoading ? (
-                          <Loader2 className="size-4 animate-spin" />
-                        ) : (
-                          <ArrowUpIcon className="size-4" />
-                        )}
-                      </InputGroupButton>
-                    </InputGroupAddon>
-                  </InputGroup>
-                </form>
-              </Card>
+                        }}
+                      />
+                      <InputGroupAddon align="inline-end">
+                        <InputGroupButton
+                          type="submit"
+                          variant="default"
+                          size="icon-sm"
+                          disabled={!canTest || !chatInput.trim() || isChatLoading}
+                        >
+                          {isChatLoading ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            <ArrowUpIcon className="size-4" />
+                          )}
+                        </InputGroupButton>
+                      </InputGroupAddon>
+                    </InputGroup>
+                  </form>
+                </Card>
+              </div>
             );
           }
 

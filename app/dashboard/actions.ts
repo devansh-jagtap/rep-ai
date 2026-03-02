@@ -164,6 +164,30 @@ export async function updatePortfolioName(name: string) {
   revalidatePath("/dashboard/settings");
 }
 
+export async function updateProfile(data: { name?: string; image?: string }) {
+  const userId = await requireAuth();
+  const { users } = await import("@/lib/schema");
+
+  const updateData: Record<string, any> = {};
+  if (data.name !== undefined) {
+    const trimmedName = data.name.trim();
+    if (trimmedName) updateData.name = trimmedName.slice(0, 120);
+  }
+  if (data.image !== undefined) {
+    updateData.image = data.image.trim() || null;
+  }
+
+  if (Object.keys(updateData).length === 0) return;
+
+  await db.update(users).set({
+    ...updateData,
+    updatedAt: new Date(),
+  }).where(eq(users.id, userId));
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/settings");
+}
+
 export async function chatWithAgent(body: {
   handle: string;
   message: string;

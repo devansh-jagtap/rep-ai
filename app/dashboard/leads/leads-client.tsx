@@ -36,8 +36,8 @@ export function LeadsClient({ leads: initialLeads }: { leads: LeadDetailData[] }
   const [leads, setLeads] = useState<LeadDetailData[]>(initialLeads);
   const [query, setQuery] = useState("");
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
-  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
-  const effectiveSelectedLeadId = searchParams.get("selected") ?? selectedLeadId;
+  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(searchParams.get("selected"));
+  const effectiveSelectedLeadId = selectedLeadId;
 
   const filteredLeads = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -85,6 +85,11 @@ export function LeadsClient({ leads: initialLeads }: { leads: LeadDetailData[] }
       router.push(`/dashboard/leads/${id}`);
       return;
     }
+
+    // Update the URL search param so it stays the single source of truth
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("selected", id);
+    router.replace(`/dashboard/leads?${params.toString()}`, { scroll: false });
 
     setSelectedLeadId(id);
   };

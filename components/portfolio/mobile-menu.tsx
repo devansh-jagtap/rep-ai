@@ -59,7 +59,7 @@ export function MobileMenu({ visibleSections }: MobileMenuProps) {
                             <MobileNavLink href="#history" onClick={handleLinkClick}>History</MobileNavLink>
                         )}
                         {isSectionVisible(visibleSections, "testimonials") && (
-                            <MobileNavLink href="#testimonials" onClick={handleLinkClick}>Feedback</MobileNavLink>
+                            <MobileNavLink href="mailto:atharva@gmail.com" onClick={handleLinkClick}>Feedback</MobileNavLink>
                         )}
                         {isSectionVisible(visibleSections, "faq") && (
                             <MobileNavLink href="#faq" onClick={handleLinkClick}>FAQ</MobileNavLink>
