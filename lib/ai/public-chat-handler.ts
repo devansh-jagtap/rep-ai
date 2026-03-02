@@ -275,9 +275,11 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
         });
 
         if (leadDetected) {
+          const ownerId = (portfolio as any)?.userId ?? (standaloneAgent as any)?.userId;
           const dedupeResult = await saveLeadWithDedup({
             agentId,
             portfolioId: portfolio?.id ?? null,
+            ownerUserId: ownerId,
             name: result.lead.lead_data?.name?.trim() || null,
             email: leadFields.email,
             phone: leadFields.phone,
@@ -291,7 +293,6 @@ export async function handlePublicChat(input: PublicChatInput): Promise<PublicCh
           });
 
           if (dedupeResult === "inserted") {
-            const ownerId = (portfolio as any)?.userId ?? (standaloneAgent as any)?.userId;
             const customNotificationEmail = (portfolio as any)?.agentNotificationEmail ?? (standaloneAgent as any)?.notificationEmail;
             const sourceName = (portfolio as any)?.name ?? (standaloneAgent as any)?.displayName ?? "Standalone Agent";
 

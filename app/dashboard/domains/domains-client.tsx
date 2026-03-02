@@ -97,7 +97,7 @@ export function DomainsClient({ portfolio, canUseSubdomain }: DomainsClientProps
                                 </Label>
                                 <p className="text-xs text-muted-foreground font-medium leading-relaxed">
                                     Use a branded subdomain like <span className="font-semibold">yourname</span>.{process.env.NEXT_PUBLIC_ROOT_DOMAIN || "yourdomain.com"}.
-                                    Available on Pro and Business plans.
+                                    Available on Pro and Agency plans.
                                 </p>
                             </div>
                             <div className="max-w-md w-full space-y-4">
@@ -116,7 +116,7 @@ export function DomainsClient({ portfolio, canUseSubdomain }: DomainsClientProps
                                             <div className="space-y-1">
                                                 <p className="text-sm font-medium text-amber-800 dark:text-amber-500">Upgrade Required</p>
                                                 <p className="text-xs text-amber-700/80 dark:text-amber-500/80">
-                                                    Custom subdomains are only available on Pro and Business plans.
+                                                    Custom subdomains are only available on Pro and Agency plans.
                                                 </p>
                                                 <Button asChild variant="link" className="h-auto p-0 text-xs text-amber-600 dark:text-amber-500 underline">
                                                     <Link href="/dashboard/pricing">View plans</Link>

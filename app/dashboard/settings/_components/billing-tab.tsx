@@ -70,16 +70,16 @@ export function BillingTab({ user, loadingPlan, handleUpgrade }: BillingTabProps
                     {
                         id: "pro",
                         name: "Pro",
-                        price: "$19",
-                        description: "Your 24/7 automated sales representative.",
-                        features: ["3 AI Portfolios", "3 AI Agents", "1,000 AI Messages / mo", "Google Calendar Integration", "Lead Capture & CRM", "Custom Domain Support"],
+                        price: "$24",
+                        description: "For freelancers and creators scaling their pipeline.",
+                        features: ["3 Portfolios", "3 AI Agents", "2,000 AI messages/month", "Unlimited lead captures", "Full CRM dashboard", "Google Calendar integration", "Custom domain", "Premium templates", "Message overage ($4/500 msgs)"],
                     },
                     {
                         id: "business",
                         name: "Agency",
-                        price: "$49",
-                        description: "Scale your portfolio business with power metrics.",
-                        features: ["10 AI Portfolios", "10 AI Agents", "10,000 AI Messages / mo", "Deep AI Analytics", "Webhook Integrations", "Priority Support"],
+                        price: "$79",
+                        description: "Built for agencies and consultants managing multiple brands.",
+                        features: ["10 Portfolios", "10 AI Agents", "15,000 AI messages/month", "Everything in Pro", "White-label branding", "Deep analytics", "Webhook integrations", "Priority support"],
                     },
                 ].map((plan) => (
                     <Card key={plan.id} className={user.plan === plan.id ? "opacity-60 pointer-events-none" : ""}>

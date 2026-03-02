@@ -2,6 +2,7 @@ import { and, desc, eq, gte, or } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { agentLeads } from "@/lib/schema";
 import { linkMessagesToLead } from "./lead-chats";
+import { checkLeadCaptureLimit } from "@/lib/billing";
 
 export interface SaveLeadInput {
   agentId: string;
@@ -16,6 +17,7 @@ export interface SaveLeadInput {
   confidence: number;
   sessionId: string;
   captureTurn?: number | null;
+  ownerUserId?: string | null;
 }
 
 export interface ExistingLead {
@@ -162,6 +164,13 @@ export async function saveLeadWithDedup(input: SaveLeadInput): Promise<"inserted
     await linkMessagesToLead(existing.id, input.sessionId);
 
     return "updated";
+  }
+
+  if (input.ownerUserId) {
+    const leadLimit = await checkLeadCaptureLimit(input.ownerUserId);
+    if (!leadLimit.allowed) {
+      return "skipped";
+    }
   }
 
   const leadId = crypto.randomUUID();

@@ -10,14 +10,15 @@ import { toast } from "sonner";
 const PLANS = [
     {
         id: "free",
-        name: "Starter",
+        name: "Free",
         price: "$0",
         description: "Perfect for students and job seekers looking to stand out.",
         features: [
             "1 AI Portfolio",
             "1 AI Agent Clone",
-            "100 AI Messages / mo",
-            "Standard Templates",
+            "150 AI messages/month",
+            "5 lead captures/month",
+            "Standard templates",
         ],
         buttonText: "Current Plan",
         active: true,
@@ -25,16 +26,18 @@ const PLANS = [
     {
         id: "pro",
         name: "Pro",
-        price: "$19",
-        description: "Your 24/7 automated sales representative.",
+        price: "$24",
+        description: "For freelancers and creators scaling their pipeline.",
         features: [
             "3 AI Portfolios",
             "3 AI Agents",
-            "1,000 AI Messages / mo",
-            "Google Calendar Integration",
-            "Lead Capture & CRM",
-            "Premium Templates",
-            "Custom Domain Support",
+            "2,000 AI messages/month",
+            "Unlimited lead captures",
+            "Full CRM dashboard",
+            "Google Calendar integration",
+            "Custom domain",
+            "Premium templates",
+            "Message overage ($4/500 msgs)",
         ],
         buttonText: "Upgrade to Pro",
         active: false,
@@ -43,15 +46,17 @@ const PLANS = [
     {
         id: "business",
         name: "Agency",
-        price: "$49",
-        description: "Scale your portfolio business with power metrics.",
+        price: "$79",
+        description: "Built for agencies and consultants managing multiple brands.",
         features: [
             "10 AI Portfolios",
             "10 AI Agents",
-            "10,000 AI Messages / mo",
-            "Deep AI Analytics",
-            "Webhook Integrations",
-            "Priority Support",
+            "15,000 AI messages/month",
+            "Everything in Pro",
+            "White-label branding",
+            "Deep analytics",
+            "Webhook integrations",
+            "Priority support",
         ],
         buttonText: "Go Agency",
         active: false,
@@ -78,7 +83,7 @@ export default function PricingPage() {
             } else {
                 toast.error(data.error || "Failed to start checkout");
             }
-        } catch (error) {
+        } catch {
             toast.error("An error occurred. Please try again.");
         } finally {
             setLoadingPlan(null);
@@ -92,7 +97,7 @@ export default function PricingPage() {
                     Simple, Transparent Pricing
                 </h1>
                 <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                    Choose the plan that's right for your career or business.
+                    Choose the plan that&apos;s right for your career or business.
                     Upgrade or downgrade at any time.
                 </p>
             </div>
@@ -162,7 +167,7 @@ export default function PricingPage() {
                         <p className="text-sm text-muted-foreground">Yes! Our Pro and Agency plans allow you to connect a custom domain to your portfolio easily.</p>
                     </div>
                     <div className="space-y-2">
-                        <h3 className="font-semibold">What counts as an "AI message"?</h3>
+                        <h3 className="font-semibold">What counts as an &quot;AI message&quot;?</h3>
                         <p className="text-sm text-muted-foreground">Any time a visitor chats with your AI agent, it counts as one message. Testing the chat in your dashboard is also included in your limits.</p>
                     </div>
                     <div className="space-y-2">

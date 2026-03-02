@@ -1,6 +1,6 @@
 import { db, getProfileById } from "./db";
-import { portfolios, agents, aiTelemetryEvents } from "./schema";
-import { eq, count, and, gte, lte } from "drizzle-orm";
+import { portfolios, agents, aiTelemetryEvents, agentLeads } from "./schema";
+import { eq, count, and, gte, lte, inArray } from "drizzle-orm";
 import { startOfMonth, endOfMonth } from "date-fns";
 
 export type PlanTier = "free" | "pro" | "business";
@@ -9,21 +9,24 @@ export const PLAN_LIMITS = {
     free: {
         portfolios: 1,
         agents: 1,
-        aiMessagesPerMonth: 100,
+        aiMessagesPerMonth: 150,
+        leadCapturesPerMonth: 5,
         canUseCalendar: false,
         canCustomDomain: false,
     },
     pro: {
         portfolios: 3,
         agents: 3,
-        aiMessagesPerMonth: 1000,
+        aiMessagesPerMonth: 2000,
+        leadCapturesPerMonth: null,
         canUseCalendar: true,
         canCustomDomain: true,
     },
     business: {
         portfolios: 10,
         agents: 10,
-        aiMessagesPerMonth: 10000,
+        aiMessagesPerMonth: 15000,
+        leadCapturesPerMonth: null,
         canUseCalendar: true,
         canCustomDomain: true,
     },
@@ -130,4 +133,43 @@ export async function canUseCalendar(userId: string): Promise<boolean> {
 export async function canUsePortfolioSubdomain(userId: string): Promise<boolean> {
     const plan = await getUserPlan(userId);
     return PLAN_LIMITS[plan].canCustomDomain;
+}
+
+export async function checkLeadCaptureLimit(userId: string): Promise<{ allowed: boolean; currentCount: number; limit: number | null }> {
+    const plan = await getUserPlan(userId);
+    const limit = PLAN_LIMITS[plan].leadCapturesPerMonth;
+
+    if (limit === null) {
+        return { allowed: true, currentCount: 0, limit: null };
+    }
+
+    const now = new Date();
+    const start = startOfMonth(now);
+    const end = endOfMonth(now);
+
+    const ownedAgents = await db
+        .select({ id: agents.id })
+        .from(agents)
+        .where(eq(agents.userId, userId));
+
+    if (ownedAgents.length === 0) {
+        return { allowed: true, currentCount: 0, limit };
+    }
+
+    const [{ value }] = await db
+        .select({ value: count() })
+        .from(agentLeads)
+        .where(
+            and(
+                inArray(agentLeads.agentId, ownedAgents.map((agent) => agent.id)),
+                gte(agentLeads.createdAt, start),
+                lte(agentLeads.createdAt, end)
+            )
+        );
+
+    return {
+        allowed: value < limit,
+        currentCount: value,
+        limit,
+    };
 }

@@ -157,7 +157,7 @@ export async function updateSubdomain(newSubdomain: string) {
 
   const allowed = await canUsePortfolioSubdomain(userId);
   if (!allowed) {
-    throw new Error("Subdomains are available on Pro and Business plans.");
+    throw new Error("Subdomains are available on Pro and Agency plans.");
   }
 
   const normalizedSubdomain = newSubdomain.trim().toLowerCase();
