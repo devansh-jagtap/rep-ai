@@ -1,16 +1,17 @@
 'use client'
 import Link from 'next/link'
-import { Logo, LogoIcon } from '@/components/logo'
-import { Menu, X } from 'lucide-react'
+import { LogoIcon } from '@/components/logo'
+import { Menu, X, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import React from 'react'
 import { cn } from '@/lib/utils'
 
 const menuItems = [
-    { name: 'Explore', href: '/explore' },
-    { name: 'Features', href: '#link' },
-    { name: 'Pricing', href: '#link' },
-    { name: 'Company', href: '#link' },
+    { name: 'How it works', href: '/how-it-works' },
+    { name: 'What we build', href: '/what-we-build' },
+    { name: 'Agents', href: '/agents' },
+    { name: 'FAQ', href: '/faq' },
+    { name: 'About', href: '/about' },
 ]
 
 export const HeroHeader = () => {
@@ -24,92 +25,99 @@ export const HeroHeader = () => {
         window.addEventListener('scroll', handleScroll)
         return () => window.removeEventListener('scroll', handleScroll)
     }, [])
+
     return (
-        <header>
+        <header className="relative z-50">
             <nav
                 data-state={menuState && 'active'}
-                className={cn('fixed z-20 w-full transition-all duration-300', isScrolled && 'bg-background/75 border-b border-black/5 backdrop-blur-lg')}>
-                <div className="mx-auto max-w-5xl px-6">
-                    <div className="relative flex flex-wrap items-center justify-between gap-6 py-6 lg:gap-0">
-                        <div className="flex w-full justify-between gap-6 lg:w-auto">
+                className={cn(
+                    'fixed top-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 rounded-full border border-white/10 shadow-2xl',
+                    isScrolled
+                        ? 'w-[95%] md:w-[75%] bg-black/80 backdrop-blur-2xl py-3 px-2 md:px-4'
+                        : 'w-[98%] md:w-[80%] bg-white/5 backdrop-blur-xl py-4 px-4 md:px-6'
+                )}>
+                <div className="mx-auto w-full">
+                    <div className="relative flex items-center justify-between gap-4">
+                        {/* Left: Logo */}
+                        <div className="flex shrink-0">
                             <Link
                                 href="/"
                                 aria-label="home"
-                                className="flex text-3xl font-serif items-center space-x-3">
-                                <LogoIcon className="h-10 w-auto" />
-                                <span>Mimick.me</span>
+                                className="flex items-center gap-2">
+                                <LogoIcon className="h-8 md:h-9 w-auto" />
+                                <span className="font-serif text-lg md:text-xl tracking-tight text-white hidden sm:inline-block">Mimick.me</span>
                             </Link>
-
-                            <button
-                                onClick={() => setMenuState(!menuState)}
-                                aria-label={menuState == true ? 'Close Menu' : 'Open Menu'}
-                                className="relative z-20 -m-2.5 -mr-4 block cursor-pointer p-2.5 lg:hidden">
-                                <Menu className="in-data-[state=active]:rotate-180 in-data-[state=active]:scale-0 in-data-[state=active]:opacity-0 m-auto size-6 duration-200" />
-                                <X className="in-data-[state=active]:rotate-0 in-data-[state=active]:scale-100 in-data-[state=active]:opacity-100 absolute inset-0 m-auto size-6 -rotate-180 scale-0 opacity-0 duration-200" />
-                            </button>
                         </div>
 
-                        <div className="absolute inset-0 m-auto hidden size-fit lg:block">
-                            <ul className="flex gap-1">
+                        {/* Center: Navigation Links */}
+                        <div className="hidden lg:flex items-center justify-center flex-1">
+                            <ul className="flex items-center gap-6 xl:gap-8">
                                 {menuItems.map((item, index) => (
                                     <li key={index}>
-                                        <Button
-                                            asChild
-                                            variant="ghost"
-                                            size="sm">
-                                            <Link
-                                                href={item.href}
-                                                className="text-base">
-                                                <span>{item.name}</span>
-                                            </Link>
-                                        </Button>
+                                        <Link
+                                            href={item.href}
+                                            className="text-[13px] font-medium text-white/60 hover:text-white transition-colors duration-200 tracking-wide uppercase">
+                                            {item.name}
+                                        </Link>
                                     </li>
                                 ))}
                             </ul>
                         </div>
 
-                        <div className="bg-background in-data-[state=active]:block lg:in-data-[state=active]:flex mb-6 hidden w-full flex-wrap items-center justify-end space-y-8 rounded-3xl border p-6 shadow-2xl shadow-zinc-300/20 md:flex-nowrap lg:m-0 lg:flex lg:w-fit lg:gap-6 lg:space-y-0 lg:border-transparent lg:bg-transparent lg:p-0 lg:shadow-none dark:shadow-none dark:lg:bg-transparent">
-                            <div className="lg:hidden">
-                                <ul className="space-y-6 text-base">
-                                    {menuItems.map((item, index) => (
-                                        <li key={index}>
-                                            <Link
-                                                href={item.href}
-                                                className="text-muted-foreground hover:text-accent-foreground block duration-150">
-                                                <span>{item.name}</span>
-                                            </Link>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                            <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit">
-                                <Button
-                                    asChild
-                                    variant="ghost"
-                                    size="sm"
-                                    className={cn(isScrolled && 'lg:hidden')}>
-                                    <Link href="/auth/signin">
-                                        <span>Login</span>
-                                    </Link>
-                                </Button>
-                                <Button
-                                    asChild
-                                    size="sm"
-                                    className={cn(isScrolled && 'lg:hidden')}>
-                                    <Link href="/auth/signup">
-                                        <span>Sign Up</span>
-                                    </Link>
-                                </Button>
-                                <Button
-                                    asChild
-                                    size="sm"
-                                    className={cn(isScrolled ? 'lg:inline-flex' : 'hidden')}>
-                                    <Link href="/auth/signup">
-                                        <span>Get Started</span>
-                                    </Link>
-                                </Button>
-                            </div>
+                        {/* Right: Actions */}
+                        <div className="flex items-center gap-3 md:gap-4 shrink-0">
+                            <button aria-label="Search" className="text-white/60 hover:text-white transition-colors hidden sm:block">
+                                <Search className="size-4 md:size-5" />
+                            </button>
+                            <Link
+                                href="/auth/signin"
+                                className="text-[13px] font-medium text-white/60 hover:text-white transition-colors hidden md:block">
+                                Log in
+                            </Link>
+                            <Button
+                                asChild
+                                size="sm"
+                                className="rounded-full bg-[#D36746] hover:bg-[#b5583c] text-white px-4 md:px-6 h-9 md:h-10 text-[13px] font-bold transition-all hover:scale-[1.02] active:scale-[0.98] border-none">
+                                <Link href="/auth/signup">
+                                    Get Started
+                                </Link>
+                            </Button>
+
+                            {/* Mobile Toggle */}
+                            <button
+                                onClick={() => setMenuState(!menuState)}
+                                aria-label={menuState ? 'Close Menu' : 'Open Menu'}
+                                className="lg:hidden text-white p-1 hover:bg-white/10 rounded-full transition-colors">
+                                {menuState ? <X className="size-5 md:size-6" /> : <Menu className="size-5 md:size-6" />}
+                            </button>
                         </div>
+                    </div>
+                </div>
+
+                {/* Mobile Menu Overlay */}
+                <div className={cn(
+                    "fixed inset-0 z-20 lg:hidden bg-black/95 backdrop-blur-2xl transition-all duration-500 flex flex-col items-center justify-center p-8 space-y-8",
+                    menuState ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-full pointer-events-none"
+                )}>
+                    <ul className="flex flex-col items-center gap-8 text-center">
+                        {menuItems.map((item, index) => (
+                            <li key={index}>
+                                <Link
+                                    href={item.href}
+                                    onClick={() => setMenuState(false)}
+                                    className="text-2xl font-serif text-white/80 hover:text-white">
+                                    {item.name}
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                    <div className="flex flex-col w-full gap-4 pt-8">
+                        <Button asChild variant="outline" className="rounded-full border-white/20 text-white hover:bg-white/10">
+                            <Link href="/auth/signin">Log in</Link>
+                        </Button>
+                        <Button asChild className="rounded-full bg-[#D36746] text-white">
+                            <Link href="/auth/signup">Get Started</Link>
+                        </Button>
                     </div>
                 </div>
             </nav>
