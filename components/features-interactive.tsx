@@ -87,19 +87,35 @@ const PersonalityRangeCard = () => {
             </div>
 
             <div className="flex-1 flex flex-col justify-center">
-                <div className="relative h-40 w-full mb-6">
+                <div className="relative h-40 w-full pl-20 mb-6">
                     {/* Range Markers */}
-                    <div className="absolute -left-12 top-0 bottom-0 flex flex-col justify-between py-2 text-[8px] font-bold text-neutral-400 tracking-[0.2em] uppercase items-end pr-4 border-r border-neutral-300/50">
-                        <span>High Intent</span>
-                        <span className="bg-[#D36746]/10 text-[#D36746] px-1 rounded">Qualified</span>
-                        <span>Low Match</span>
+                    <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between py-2 text-[8px] font-bold text-neutral-400 tracking-[0.2em] uppercase items-end pr-4 border-r border-neutral-300/50 w-20">
+                        <span className="text-right">High Intent</span>
+                        <span className="bg-[#D36746]/10 text-[#D36746] px-1.5 py-0.5 rounded text-right">Qualified</span>
+                        <span className="text-right">Low Match</span>
                     </div>
 
                     {/* Chart Structure */}
-                    <div className="absolute inset-0 ml-4 pb-2">
+                    <div className="absolute inset-0 left-20 pb-2">
                         <svg className="w-full h-full overflow-visible" viewBox="0 0 300 120" preserveAspectRatio="none">
+                            <defs>
+                                <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="#D36746" stopOpacity="0.2" />
+                                    <stop offset="100%" stopColor="#D36746" stopOpacity="0" />
+                                </linearGradient>
+                            </defs>
+
                             {/* Dotted Target Line */}
                             <line x1="0" y1="60" x2="300" y2="60" stroke="#D36746" strokeOpacity="0.1" strokeDasharray="4 4" />
+
+                            {/* Area Fill */}
+                            <motion.path
+                                initial={{ opacity: 0 }}
+                                whileInView={{ opacity: 1 }}
+                                transition={{ duration: 1.5, ease: "easeInOut" }}
+                                d="M0,80 C50,80 80,40 120,45 C160,50 180,90 220,70 C260,50 280,30 300,40 L300,120 L0,120 Z"
+                                fill="url(#chartGradient)"
+                            />
 
                             {/* The Data Path */}
                             <motion.path
@@ -147,11 +163,20 @@ const PersonalityRangeCard = () => {
 
 // --- Card 03: Automated Workflows (Vertical List Style) ---
 const ResponseProtocolCard = () => {
+    const [activeStep, setActiveStep] = React.useState(0);
+
     const protocols = [
         { label: 'Lead Captured', icon: <Mail className="size-4" />, desc: 'Contact details securely saved' },
         { label: 'Scope Gathered', icon: <FileText className="size-4" />, desc: 'Project requirements identified' },
         { label: 'Meeting Booked', icon: <Calendar className="size-4" />, desc: 'Added to your Google Calendar' },
     ];
+
+    React.useEffect(() => {
+        const interval = setInterval(() => {
+            setActiveStep((prev) => (prev + 1) % protocols.length);
+        }, 2000);
+        return () => clearInterval(interval);
+    }, [protocols.length]);
 
     return (
         <div className={cn("flex flex-col h-full p-10", CARD_BG, CARD_ROUNDED)}>
@@ -163,21 +188,53 @@ const ResponseProtocolCard = () => {
                 </p>
             </div>
 
-            <div className="flex-1 flex flex-col justify-center space-y-3">
-                {protocols.map((p, idx) => (
-                    <div
-                        key={idx}
-                        className="flex items-center gap-5 p-4 bg-white/80 rounded-2xl border border-neutral-100 shadow-sm group hover:scale-[1.02] transition-transform duration-300"
-                    >
-                        <div className="size-10 rounded-xl bg-[#D36746] text-white flex items-center justify-center shadow-lg shadow-[#D36746]/20">
-                            {p.icon}
-                        </div>
-                        <div className="flex-1 overflow-hidden">
-                            <h4 className="text-[10px] font-bold text-neutral-900 uppercase tracking-widest leading-none mb-1.5">{p.label}</h4>
-                            <p className="text-[11px] text-neutral-400 font-light truncate">{p.desc}</p>
-                        </div>
-                    </div>
-                ))}
+            <div className="flex-1 flex flex-col justify-center relative">
+                {/* Connecting Line */}
+                <div className="absolute left-[34px] top-6 bottom-6 w-px bg-neutral-300/50" />
+                <div
+                    className="absolute left-[34px] w-px bg-[#D36746] transition-all duration-500 ease-out"
+                    style={{
+                        top: '24px',
+                        height: `${Math.max(0, activeStep * ((100 - 24) / (protocols.length - 1)))}%`
+                    }}
+                />
+
+                <div className="space-y-4 relative z-10">
+                    {protocols.map((p, idx) => {
+                        const isActive = idx === activeStep;
+                        const isPast = idx < activeStep;
+
+                        return (
+                            <div
+                                key={idx}
+                                className={cn(
+                                    "flex items-center gap-5 p-4 rounded-2xl border transition-all duration-500",
+                                    isActive
+                                        ? "bg-white border-[#D36746]/30 shadow-lg shadow-[#D36746]/10 scale-[1.02]"
+                                        : "bg-white/60 border-neutral-200/50 scale-100 opacity-70"
+                                )}
+                            >
+                                <div className={cn(
+                                    "size-10 rounded-xl flex items-center justify-center transition-colors duration-500",
+                                    isActive || isPast
+                                        ? "bg-[#D36746] text-white shadow-md shadow-[#D36746]/20"
+                                        : "bg-neutral-200 text-neutral-400"
+                                )}>
+                                    {p.icon}
+                                </div>
+                                <div className="flex-1 overflow-hidden">
+                                    <h4 className={cn(
+                                        "text-[10px] font-bold uppercase tracking-widest leading-none mb-1.5 transition-colors duration-500",
+                                        isActive ? "text-[#D36746]" : "text-neutral-900"
+                                    )}>
+                                        {p.label}
+                                    </h4>
+                                    <p className="text-[11px] text-neutral-500 font-light truncate">{p.desc}</p>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );
@@ -187,19 +244,19 @@ const ResponseProtocolCard = () => {
 export default function FeaturesInteractive() {
     return (
         <section className="bg-white py-32 overflow-hidden border-t border-neutral-100">
-            <div className="max-w-[1400px] mx-auto px-6 md:px-12 lg:px-20">
+            <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col items-center text-center mb-24 space-y-6">
                     <motion.h2
                         initial={{ opacity: 0, y: 30 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-                        className="font-serif text-5xl md:text-6xl lg:text-7xl text-neutral-900 tracking-tight leading-[1.1]"
+                        className="font-serif text-2xl md:text-3xl lg:text-5xl text-neutral-900 tracking-tight leading-[1.1]"
                     >
                         Lead generation on <span className="italic font-normal">autopilot</span>
                     </motion.h2>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 max-w-6xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-8xl mx-auto">
                     <motion.div
                         initial={{ opacity: 0, y: 40 }}
                         whileInView={{ opacity: 1, y: 0 }}
