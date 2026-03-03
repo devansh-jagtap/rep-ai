@@ -23,7 +23,7 @@ export async function scheduleLeadNotification(sessionId: string) {
     try {
         // Ensure the URL is absolute and correctly formatted
         let protocol = 'https://';
-        let cleanBaseUrl = baseUrl.replace(/^https?:\/\//, '');
+        let cleanBaseUrl = baseUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
 
         // Allow local testing if user explicitly set it to localhost
         if (baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1')) {
