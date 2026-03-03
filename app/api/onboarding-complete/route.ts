@@ -8,6 +8,9 @@ import { generatePortfolio } from "@/lib/ai/generate-portfolio";
 import { ACTIVE_PORTFOLIO_COOKIE } from "@/lib/active-portfolio";
 import type { OnboardingData } from "@/lib/onboarding/types";
 import { validateFinalOnboardingState } from "@/lib/onboarding/validation";
+import { consumeCredits, getCredits } from "@/lib/credits";
+
+const CREDIT_COST = 1;
 
 export async function POST(request: Request) {
   const session = await getSession();
@@ -66,7 +69,11 @@ export async function POST(request: Request) {
     // so they don't need to manually generate—their site info becomes a minimal landing page + agent.
     if (finalState.setupPath === "existing-site" && created.portfolioId) {
       try {
-        await generatePortfolio(session.user.id, created.portfolioId);
+        const currentCredits = await getCredits(session.user.id);
+        if (currentCredits >= CREDIT_COST) {
+          await generatePortfolio(session.user.id, created.portfolioId);
+          await consumeCredits(session.user.id, CREDIT_COST);
+        }
       } catch (err) {
         console.error("[onboarding-complete] Auto-generate content failed:", err);
         // Non-blocking: user can still generate manually from Portfolio page

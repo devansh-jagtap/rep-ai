@@ -7,6 +7,9 @@ import { requireUserId } from "@/lib/api/route-helpers";
 import { getActivePortfolio } from "@/lib/active-portfolio";
 import { getChatsByLeadId } from "@/lib/db/lead-chats";
 import { generateWarmIntroDraft } from "@/lib/ai/warm-intro";
+import { consumeCredits, getCredits } from "@/lib/credits";
+
+const CREDIT_COST = 1;
 
 export async function POST(
   _request: Request,
@@ -31,6 +34,11 @@ export async function POST(
   }
 
   try {
+    const currentCredits = await getCredits(authResult.userId);
+    if (currentCredits < CREDIT_COST) {
+      return NextResponse.json({ error: "Not enough credits" }, { status: 402 });
+    }
+
     const chats = await getChatsByLeadId(id);
     const draft = await generateWarmIntroDraft({
       recipientName: lead.name,
@@ -40,6 +48,11 @@ export async function POST(
       projectDetails: lead.projectDetails,
       recentConversation: chats.map((chat) => ({ role: chat.role, content: chat.content })),
     });
+
+    const creditsConsumed = await consumeCredits(authResult.userId, CREDIT_COST);
+    if (!creditsConsumed) {
+      return NextResponse.json({ error: "Not enough credits" }, { status: 402 });
+    }
 
     return NextResponse.json({ draft });
   } catch (error) {

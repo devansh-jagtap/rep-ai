@@ -5,6 +5,9 @@ import {
   generatePortfolio,
   PortfolioGenerationError,
 } from "@/lib/ai/generate-portfolio";
+import { consumeCredits, getCredits } from "@/lib/credits";
+
+const CREDIT_COST = 1;
 
 export async function POST() {
   const session = await getSession();
@@ -19,7 +22,17 @@ export async function POST() {
       return NextResponse.json({ ok: false, error: "Portfolio not found" }, { status: 404 });
     }
 
+    const currentCredits = await getCredits(session.user.id);
+    if (currentCredits < CREDIT_COST) {
+      return NextResponse.json({ ok: false, error: "Not enough credits" }, { status: 402 });
+    }
+
     await generatePortfolio(session.user.id, portfolio.id);
+
+    const creditsConsumed = await consumeCredits(session.user.id, CREDIT_COST);
+    if (!creditsConsumed) {
+      return NextResponse.json({ ok: false, error: "Not enough credits" }, { status: 402 });
+    }
 
     return NextResponse.json({ ok: true });
   } catch (error) {
