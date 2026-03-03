@@ -5,7 +5,17 @@ const qstashClient = new Client({
     baseUrl: process.env.QSTASH_URL, // Optional: if you provided a custom URL
 });
 
-export async function scheduleLeadNotification(sessionId: string) {
+type ScheduleLeadNotificationOptions = {
+    delaySeconds?: number;
+    attempt?: number;
+};
+
+export async function scheduleLeadNotification(
+    sessionId: string,
+    options: ScheduleLeadNotificationOptions = {}
+) {
+    const delaySeconds = options.delaySeconds ?? 10;
+    const attempt = options.attempt ?? 0;
     const token = process.env.QSTASH_TOKEN;
     // Fallback to local 3000 if nothing is set (for local dev)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL;
@@ -35,11 +45,14 @@ export async function scheduleLeadNotification(sessionId: string) {
 
         await qstashClient.publishJSON({
             url: webhookUrl,
-            body: { sessionId },
-            delay: 10, // 10 seconds for rapid testing
+            body: {
+                sessionId,
+                attempt,
+            },
+            delay: delaySeconds,
         });
 
-        console.log(`[QStash] Successfully scheduled 5-min delayed notification for session ${sessionId} to ${webhookUrl}`);
+        console.log(`[QStash] Successfully scheduled delayed notification (attempt ${attempt}, delay ${delaySeconds}s) for session ${sessionId} to ${webhookUrl}`);
     } catch (error) {
         console.error("[QStash] Error scheduling notification:", error);
     }

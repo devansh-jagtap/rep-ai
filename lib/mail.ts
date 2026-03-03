@@ -15,7 +15,19 @@ export async function sendLeadNotificationEmail(
 ) {
     const { EMAIL_USER, EMAIL_PASS } = process.env;
 
+    console.log("[Mail] Preparing lead notification email", {
+        toEmail,
+        sourceName: sourceName || "N/A",
+        hasLeadName: Boolean(leadDetails.name),
+        hasLeadEmail: Boolean(leadDetails.email),
+        hasProjectDetails: Boolean(leadDetails.projectDetails),
+    });
+
     if (!EMAIL_USER || !EMAIL_PASS) {
+        console.error("[Mail] Missing SMTP configuration", {
+            hasEmailUser: Boolean(EMAIL_USER),
+            hasEmailPass: Boolean(EMAIL_PASS),
+        });
         throw new Error("SMTP credentials not configured. Set EMAIL_USER and EMAIL_PASS.");
     }
 
@@ -78,6 +90,19 @@ Log in to your dashboard to view the full conversation and manage this lead.
         html: htmlContent,
     };
 
+    console.log("[Mail] Sending email via Nodemailer", {
+        service: "gmail",
+        from: mailOptions.from,
+        to: mailOptions.to,
+        subject: mailOptions.subject,
+    });
+
     const sendResult = await transporter.sendMail(mailOptions);
-    console.log("Lead notification email sent successfully to", toEmail, "messageId:", sendResult.messageId);
+    console.log("[Mail] Lead notification email sent successfully", {
+        toEmail,
+        messageId: sendResult.messageId,
+        accepted: sendResult.accepted,
+        rejected: sendResult.rejected,
+        response: sendResult.response,
+    });
 }

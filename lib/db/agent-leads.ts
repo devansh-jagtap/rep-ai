@@ -153,9 +153,17 @@ export async function saveLeadWithDedup(input: SaveLeadInput): Promise<"inserted
       merged.captureTurn !== existing.captureTurn;
 
     if (hasChanges || existing.sessionId !== input.sessionId) {
+      const isNewSession = existing.sessionId !== input.sessionId;
       await db
         .update(agentLeads)
-        .set({ ...merged, sessionId: input.sessionId, updatedAt: new Date() })
+        .set({
+          ...merged,
+          sessionId: input.sessionId,
+          updatedAt: new Date(),
+          // Reset notification state when a lead is re-captured in a new chat session.
+          // Without this, deduped leads can remain permanently "sent" and skip future emails.
+          notificationSent: isNewSession ? false : existing.notificationSent,
+        })
         .where(eq(agentLeads.id, existing.id));
       await linkMessagesToLead(existing.id, input.sessionId);
       return "updated";
