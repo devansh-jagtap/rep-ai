@@ -24,9 +24,9 @@ export default function Integrations() {
                         size="sm"
                         asChild
                         className="gap-1 pr-1.5">
-                        <Link href="/auth/signup">
+                        <Link href="/auth/signup" title="Learn more about integrations">
                             Learn more
-                            <ChevronRight />
+                            <ChevronRight aria-hidden="true" />
                         </Link>
                     </Button>
                 </div>

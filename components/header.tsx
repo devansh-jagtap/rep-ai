@@ -30,6 +30,7 @@ export const HeroHeader = () => {
     return (
         <header className="relative z-50">
             <nav
+                aria-label="Primary"
                 data-state={menuState && 'active'}
                 className={cn(
                     'fixed top-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 rounded-full border border-white/10 shadow-2xl',
@@ -44,6 +45,7 @@ export const HeroHeader = () => {
                             <Link
                                 href="/"
                                 aria-label="home"
+                                title="Mimick.me home"
                                 className="flex items-center gap-2">
                                 <LogoIcon className="h-8 md:h-9 w-auto" />
                                 <span className="font-serif text-lg md:text-xl tracking-tight text-white hidden sm:inline-block">Mimick.me</span>
@@ -57,6 +59,7 @@ export const HeroHeader = () => {
                                     <li key={index}>
                                         <Link
                                             href={item.href}
+                                            title={item.name}
                                             className="text-[13px] font-medium text-white/60 hover:text-white transition-colors duration-200 tracking-wide uppercase">
                                             {item.name}
                                         </Link>
@@ -70,6 +73,7 @@ export const HeroHeader = () => {
                             <ThemeSwitcher />
                             <Link
                                 href="/auth/signin"
+                                title="Log in"
                                 className="text-[13px] font-medium text-white/60 hover:text-white transition-colors hidden md:block">
                                 Log in
                             </Link>
@@ -77,7 +81,7 @@ export const HeroHeader = () => {
                                 asChild
                                 size="sm"
                                 className="rounded-full bg-[#D36746] hover:bg-[#b5583c] text-white px-4 md:px-6 h-9 md:h-10 text-[13px] font-bold transition-all hover:scale-[1.02] active:scale-[0.98] border-none">
-                                <Link href="/auth/signup">
+                                <Link href="/auth/signup" title="Get started">
                                     Get Started
                                 </Link>
                             </Button>
@@ -87,7 +91,7 @@ export const HeroHeader = () => {
                                 onClick={() => setMenuState(!menuState)}
                                 aria-label={menuState ? 'Close Menu' : 'Open Menu'}
                                 className="lg:hidden text-white p-1 hover:bg-white/10 rounded-full transition-colors">
-                                {menuState ? <X className="size-5 md:size-6" /> : <Menu className="size-5 md:size-6" />}
+                                {menuState ? <X aria-hidden="true" className="size-5 md:size-6" /> : <Menu aria-hidden="true" className="size-5 md:size-6" />}
                             </button>
                         </div>
                     </div>
@@ -103,6 +107,7 @@ export const HeroHeader = () => {
                             <li key={index}>
                                 <Link
                                     href={item.href}
+                                    title={item.name}
                                     onClick={() => setMenuState(false)}
                                     className="text-2xl font-serif text-white/80 hover:text-white">
                                     {item.name}
@@ -112,10 +117,10 @@ export const HeroHeader = () => {
                     </ul>
                     <div className="flex flex-col w-full gap-4 pt-8">
                         <Button asChild variant="outline" className="rounded-full border-white/20 text-white hover:bg-white/10">
-                            <Link href="/auth/signin">Log in</Link>
+                            <Link href="/auth/signin" title="Log in">Log in</Link>
                         </Button>
                         <Button asChild className="rounded-full bg-[#D36746] text-white">
-                            <Link href="/auth/signup">Get Started</Link>
+                            <Link href="/auth/signup" title="Get started">Get Started</Link>
                         </Button>
                     </div>
                 </div>

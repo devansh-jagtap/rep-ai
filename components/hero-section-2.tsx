@@ -41,12 +41,13 @@ export default function HeroSectionV2() {
 
             <HeroHeader />
 
-            <main className="relative min-h-[100svh] w-full overflow-hidden bg-black text-white">
+            <main aria-label="Hero" className="relative min-h-[100svh] w-full overflow-hidden bg-black text-white">
                 {/* Immersive Background Image */}
                 <div className="absolute inset-0 z-0">
                     <Image
                         src="/image.png"
-                        alt="Background"
+                        alt=""
+                        aria-hidden="true"
                         fill
                         className="object-cover opacity-50 mix-blend-luminosity"
                         priority
@@ -91,7 +92,7 @@ export default function HeroSectionV2() {
                                     size="lg"
                                     className="h-12 rounded-full bg-white px-8 text-sm font-bold text-black transition-all hover:scale-[1.02] hover:bg-neutral-200 active:scale-[0.98]"
                                 >
-                                    <Link href="/auth/signup">
+                                    <Link href="/auth/signup" title="Start building your AI representative">
                                         Start building
                                     </Link>
                                 </Button>
