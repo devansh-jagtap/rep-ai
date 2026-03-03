@@ -17,6 +17,7 @@ export default async function AgentPage() {
     <AgentClient
       agent={data?.agent ?? null}
       agentId={data?.agent?.id ?? null}
+      plan={data?.plan ?? "free"}
       portfolioHandle={portfolioHandle}
       hasContent={hasContent}
       isPortfolioPublished={isPortfolioPublished}

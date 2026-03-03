@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { users, portfolios } from "@/lib/schema";
+import { users, portfolios, agents } from "@/lib/schema";
 import { and, eq, lte, sql, type SQL } from "drizzle-orm";
 
 const PAST_DUE_GRACE_DAYS = 31;
@@ -63,6 +63,27 @@ async function releaseUserSubdomains(userId: string) {
     .where(eq(portfolios.userId, userId));
 }
 
+async function disconnectUserIntegrations(userId: string) {
+  await db
+    .update(agents)
+    .set({
+      googleCalendarEnabled: false,
+      googleCalendarAccessToken: null,
+      googleCalendarRefreshToken: null,
+      googleCalendarTokenExpiry: null,
+      googleCalendarAccountEmail: null,
+      calendlyEnabled: false,
+      calendlyAccessToken: null,
+      calendlyRefreshToken: null,
+      calendlyTokenExpiry: null,
+      calendlyAccountEmail: null,
+      calendlyUserUri: null,
+      calendlySchedulingUrl: null,
+      updatedAt: new Date(),
+    })
+    .where(eq(agents.userId, userId));
+}
+
 async function downgradeIfPastDueExceeded(userId: string) {
   const threshold = new Date(Date.now() - PAST_DUE_GRACE_DAYS * 24 * 60 * 60 * 1000);
 
@@ -78,6 +99,7 @@ async function downgradeIfPastDueExceeded(userId: string) {
 
   if (downgraded?.id) {
     await releaseUserSubdomains(downgraded.id);
+    await disconnectUserIntegrations(downgraded.id);
   }
 }
 
@@ -114,6 +136,7 @@ export async function POST(request: NextRequest) {
 
         if (plan === "free") {
           await releaseUserSubdomains(userId);
+          await disconnectUserIntegrations(userId);
         }
       }
     }
@@ -166,6 +189,7 @@ export async function POST(request: NextRequest) {
 
       if (updatedUser?.id) {
         await releaseUserSubdomains(updatedUser.id);
+        await disconnectUserIntegrations(updatedUser.id);
       }
     }
 

@@ -1,10 +1,12 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, CheckCircle2, Globe, Loader2, XCircle } from "lucide-react";
-import Link from "next/link";
+import { CheckCircle2, Globe, Loader2, XCircle } from "lucide-react";
 import type { AgentConfigState } from "./types";
 import Image from "next/image";
+import { useState } from "react";
+import { UpgradeRequiredModal } from "@/components/upgrade-required-modal";
+import { useRouter } from "next/navigation";
 
 interface AgentIntegrationsTabProps {
   config: AgentConfigState;
@@ -12,6 +14,7 @@ interface AgentIntegrationsTabProps {
   handleCalendarDisconnect: () => Promise<void>;
   isDisconnectingCalendly: boolean;
   handleCalendlyDisconnect: () => Promise<void>;
+  plan: string;
 }
 
 export function AgentIntegrationsTab({
@@ -19,10 +22,29 @@ export function AgentIntegrationsTab({
   isDisconnectingCalendar,
   handleCalendarDisconnect,
   isDisconnectingCalendly,
-  handleCalendlyDisconnect
+  handleCalendlyDisconnect,
+  plan
 }: AgentIntegrationsTabProps) {
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [activeFeature, setActiveFeature] = useState("");
+  const router = useRouter();
+
+  const handleConnect = (feature: string, connectUrl: string) => {
+    if (plan === "free") {
+      setActiveFeature(feature);
+      setShowUpgradeModal(true);
+    } else {
+      router.push(connectUrl);
+    }
+  };
+
   return (
     <div className="space-y-6 pt-5">
+      <UpgradeRequiredModal
+        isOpen={showUpgradeModal}
+        onOpenChange={setShowUpgradeModal}
+        featureName={activeFeature}
+      />
       <div className="grid gap-6 md:grid-cols-2">
         {/* Google Calendar */}
         <Card className="flex flex-col">
@@ -44,7 +66,12 @@ export function AgentIntegrationsTab({
                 {isDisconnectingCalendar ? <Loader2 className="size-4 animate-spin mr-2" /> : <XCircle className="size-4 mr-2" />}Disconnect Calendar
               </Button>
             ) : (
-              <Button className="w-full" asChild><Link href="/api/integrations/google-calendar/connect">Connect Google Calendar</Link></Button>
+              <Button
+                className="w-full"
+                onClick={() => handleConnect("Google Calendar integration", "/api/integrations/google-calendar/connect")}
+              >
+                Connect Google Calendar
+              </Button>
             )}
           </CardFooter>
         </Card>
@@ -76,8 +103,11 @@ export function AgentIntegrationsTab({
                 {isDisconnectingCalendly ? <Loader2 className="size-4 animate-spin mr-2" /> : <XCircle className="size-4 mr-2" />}Disconnect Calendly
               </Button>
             ) : (
-              <Button className="w-full" asChild>
-                <Link href="/api/integrations/calendly/connect">Connect Calendly</Link>
+              <Button
+                className="w-full"
+                onClick={() => handleConnect("Calendly integration", "/api/integrations/calendly/connect")}
+              >
+                Connect Calendly
               </Button>
             )}
           </CardFooter>
