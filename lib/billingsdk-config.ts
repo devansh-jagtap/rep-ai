@@ -1,3 +1,5 @@
+import { PLAN_LIMITS } from "@/lib/plan-limits";
+
 export interface Plan {
   id: string;
   title: string;
@@ -35,10 +37,10 @@ export const plans: Plan[] = [
     yearlyPrice: "0",
     buttonText: "Upgrade to Free",
     features: [
-      { name: "1 AI Portfolio", icon: "check", iconColor: "text-green-500" },
-      { name: "1 AI Agent Clone", icon: "check", iconColor: "text-green-500" },
-      { name: "150 AI messages/month", icon: "check", iconColor: "text-green-500" },
-      { name: "5 lead captures/month", icon: "check", iconColor: "text-green-500" },
+      { name: `${PLAN_LIMITS.free.portfolios} AI Portfolio`, icon: "check", iconColor: "text-green-500" },
+      { name: `${PLAN_LIMITS.free.agents} AI Agent Clone`, icon: "check", iconColor: "text-green-500" },
+      { name: `${PLAN_LIMITS.free.aiMessagesPerMonth} AI messages/month`, icon: "check", iconColor: "text-green-500" },
+      { name: `${PLAN_LIMITS.free.leadCapturesPerMonth} lead captures/month`, icon: "check", iconColor: "text-green-500" },
       { name: "Standard templates", icon: "check", iconColor: "text-green-500" },
     ],
   },
@@ -53,9 +55,9 @@ export const plans: Plan[] = [
     badge: "Most popular",
     highlight: true,
     features: [
-      { name: "3 AI Portfolios", icon: "check", iconColor: "text-green-500" },
-      { name: "3 AI Agents", icon: "check", iconColor: "text-green-500" },
-      { name: "2,000 AI messages/month", icon: "check", iconColor: "text-green-500" },
+      { name: `${PLAN_LIMITS.pro.portfolios} AI Portfolios`, icon: "check", iconColor: "text-green-500" },
+      { name: `${PLAN_LIMITS.pro.agents} AI Agents`, icon: "check", iconColor: "text-green-500" },
+      { name: `${PLAN_LIMITS.pro.aiMessagesPerMonth.toLocaleString()} AI messages/month`, icon: "check", iconColor: "text-green-500" },
       { name: "Unlimited lead captures", icon: "check", iconColor: "text-green-500" },
       { name: "Google Calendar integration", icon: "check", iconColor: "text-green-500" },
       { name: "Custom domain", icon: "check", iconColor: "text-green-500" },
@@ -70,9 +72,9 @@ export const plans: Plan[] = [
     yearlyPrice: "790",
     buttonText: "Go Agency",
     features: [
-      { name: "10 AI Portfolios", icon: "check", iconColor: "text-green-500" },
-      { name: "10 AI Agents", icon: "check", iconColor: "text-green-500" },
-      { name: "15,000 AI messages/month", icon: "check", iconColor: "text-green-500" },
+      { name: `${PLAN_LIMITS.business.portfolios} AI Portfolios`, icon: "check", iconColor: "text-green-500" },
+      { name: `${PLAN_LIMITS.business.agents} AI Agents`, icon: "check", iconColor: "text-green-500" },
+      { name: `${PLAN_LIMITS.business.aiMessagesPerMonth.toLocaleString()} AI messages/month`, icon: "check", iconColor: "text-green-500" },
       { name: "Everything in Pro", icon: "check", iconColor: "text-green-500" },
       { name: "Priority support", icon: "check", iconColor: "text-green-500" },
     ],

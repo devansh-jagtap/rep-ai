@@ -2,35 +2,7 @@ import { db, getProfileById } from "./db";
 import { portfolios, agents, aiTelemetryEvents, agentLeads } from "./schema";
 import { eq, count, and, gte, lte, inArray } from "drizzle-orm";
 import { startOfMonth, endOfMonth } from "date-fns";
-
-export type PlanTier = "free" | "pro" | "business";
-
-export const PLAN_LIMITS = {
-    free: {
-        portfolios: 1,
-        agents: 1,
-        aiMessagesPerMonth: 150,
-        leadCapturesPerMonth: 5,
-        canUseCalendar: false,
-        canCustomDomain: false,
-    },
-    pro: {
-        portfolios: 3,
-        agents: 3,
-        aiMessagesPerMonth: 2000,
-        leadCapturesPerMonth: null,
-        canUseCalendar: true,
-        canCustomDomain: true,
-    },
-    business: {
-        portfolios: 10,
-        agents: 10,
-        aiMessagesPerMonth: 15000,
-        leadCapturesPerMonth: null,
-        canUseCalendar: true,
-        canCustomDomain: true,
-    },
-} as const;
+import { PLAN_LIMITS, type PlanTier } from "@/lib/plan-limits";
 
 export async function getUserPlan(userId: string): Promise<PlanTier> {
     const profile = await getProfileById(userId);

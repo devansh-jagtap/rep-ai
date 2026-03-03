@@ -50,6 +50,7 @@ export const users = pgTable("users", {
   plan: varchar("plan", { length: 20 }).notNull().default("free"),
   billingCustomerId: text("billing_customer_id"),
   billingSubscriptionId: text("billing_subscription_id"),
+  billingPastDueSince: timestamp("billing_past_due_since", { mode: "date" }),
   credits: integer("credits").notNull().default(500),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
