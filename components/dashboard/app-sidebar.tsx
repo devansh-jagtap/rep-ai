@@ -128,7 +128,7 @@ export function AppSidebar({ credits, plan, userName, userEmail, userImage }: Ap
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <PortfolioSwitcher />
+            <PortfolioSwitcher plan={plan} />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>

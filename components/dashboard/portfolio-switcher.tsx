@@ -1,7 +1,8 @@
 "use client";
-
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { UpgradeRequiredModal } from "@/components/upgrade-required-modal";
+import { PLAN_LIMITS, type PlanTier } from "@/lib/plan-limits";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -19,8 +20,9 @@ import { usePortfolioStore, type PortfolioSummary } from "@/lib/stores/portfolio
 // Re-export so DashboardLayout can import the type from one place
 export type { PortfolioSummary };
 
-export function PortfolioSwitcher() {
+export function PortfolioSwitcher({ plan = "free" }: { plan?: string }) {
     const router = useRouter();
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [isPending, startTransition] = useTransition();
 
     const portfolios = usePortfolioStore((s) => s.portfolios);
@@ -36,6 +38,15 @@ export function PortfolioSwitcher() {
         // Refresh server components so pages re-fetch data for the new active portfolio
         startTransition(() => router.refresh());
     }
+
+    const handleCreateNew = () => {
+        const limit = PLAN_LIMITS[plan as PlanTier]?.portfolios ?? 1;
+        if (portfolios.length >= limit) {
+            setShowUpgradeModal(true);
+        } else {
+            router.push("/onboarding");
+        }
+    };
 
     if (!active) return null;
 
@@ -130,7 +141,7 @@ export function PortfolioSwitcher() {
 
                 <DropdownMenuItem
                     className="flex items-center gap-3 cursor-pointer text-muted-foreground hover:text-foreground"
-                    onClick={() => router.push("/onboarding")}
+                    onClick={handleCreateNew}
                 >
                     <div className="flex size-7 items-center justify-center rounded-md border border-dashed bg-background shrink-0">
                         <Plus className="size-3.5" />
@@ -138,6 +149,11 @@ export function PortfolioSwitcher() {
                     <span className="text-sm">Add New Portfolio</span>
                 </DropdownMenuItem>
             </DropdownMenuContent>
+            <UpgradeRequiredModal
+                isOpen={showUpgradeModal}
+                onOpenChange={setShowUpgradeModal}
+                featureName="creating additional portfolios"
+            />
         </DropdownMenu >
     );
 }
