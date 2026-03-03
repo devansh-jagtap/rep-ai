@@ -90,9 +90,10 @@ export async function POST(req: NextRequest) {
         });
 
         if (!lead || lead.notificationSent) {
+            const skipReason = !lead ? "lead_missing" : "already_sent";
             console.log("[QStash Webhook] Skipping notification send", {
                 sessionId,
-                reason: !lead ? "lead_missing" : "already_sent",
+                reason: skipReason,
                 leadId: lead?.id,
                 notificationSent: lead?.notificationSent ?? false,
                 updatedAt: lead?.updatedAt?.toISOString?.(),
