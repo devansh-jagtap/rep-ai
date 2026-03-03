@@ -152,22 +152,22 @@ export function PricingClient({ currentPlan }: { currentPlan: string }) {
             </div>
 
             <div className="mt-16 text-center space-y-4">
-                <h2 className="text-2xl font-bold">Frequently Asked Questions</h2>
+                <h2 className="text-2xl">Frequently Asked Questions</h2>
                 <div className="grid gap-8 md:grid-cols-2 text-left max-w-4xl mx-auto py-8">
                     <div className="space-y-2">
-                        <h3 className="font-semibold">Can I use my own domain?</h3>
+                        <h3 className="">Can I use my own domain?</h3>
                         <p className="text-sm text-muted-foreground">Yes! Our Pro and Agency plans allow you to connect a custom domain to your portfolio easily.</p>
                     </div>
                     <div className="space-y-2">
-                        <h3 className="font-semibold">What counts as an &quot;AI message&quot;?</h3>
+                        <h3 className="">What counts as an &quot;AI message&quot;?</h3>
                         <p className="text-sm text-muted-foreground">Any time a visitor chats with your AI agent, it counts as one message. Testing the chat in your dashboard is also included in your limits.</p>
                     </div>
                     <div className="space-y-2">
-                        <h3 className="font-semibold">Is there a long-term commitment?</h3>
+                        <h3 className="">Is there a long-term commitment?</h3>
                         <p className="text-sm text-muted-foreground">No, all plans are month-to-month and you can cancel anytime from your settings.</p>
                     </div>
                     <div className="space-y-2">
-                        <h3 className="font-semibold">Does the AI collect secure payment info?</h3>
+                        <h3 className="">Does the AI collect secure payment info?</h3>
                         <p className="text-sm text-muted-foreground">No, our AI is trained to handle conversation and scheduling. Payments for your services should be handled via traditional links you provide or integrate.</p>
                     </div>
                 </div>

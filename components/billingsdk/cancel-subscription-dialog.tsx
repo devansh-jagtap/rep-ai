@@ -221,7 +221,7 @@ export function CancelSubscriptionDialog({
           {!showConfirmation && (warningTitle || warningText) && (
             <div className="bg-muted/30 border-border rounded-lg border p-4">
               {warningTitle && (
-                <h3 className="text-foreground mb-2 font-semibold">
+                <h3 className="text-foreground mb-2">
                   {warningTitle}
                 </h3>
               )}
@@ -254,7 +254,7 @@ export function CancelSubscriptionDialog({
           ) : (
             <div className="mt-auto flex flex-col gap-4">
               <div className="bg-muted/50 rounded-lg p-4 text-center">
-                <h3 className="text-foreground mb-2 font-semibold">
+                <h3 className="text-foreground mb-2">
                   {finalTitle || "Final Confirmation"}
                 </h3>
                 <p className="text-muted-foreground mb-2 text-sm">

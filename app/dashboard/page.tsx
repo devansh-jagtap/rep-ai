@@ -16,7 +16,7 @@ export default async function OverviewPage() {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <AlertCircle className="size-12 text-muted-foreground" />
-        <h2 className="text-xl font-semibold">No Portfolio Found</h2>
+        <h2 className="text-xl">No Portfolio Found</h2>
         <p className="text-muted-foreground text-center max-w-sm">
           You need to complete onboarding first to set up your portfolio and AI agent.
         </p>

@@ -48,7 +48,7 @@ export function AgentWidgetTab(props: AgentWidgetTabProps) {
     <div className="pt-5">
       <Card className="p-6 space-y-6">
         <div>
-          <h3 className="text-lg font-semibold">Get Agent Widget</h3>
+          <h3 className="text-lg">Get Agent Widget</h3>
           <p className="text-sm text-muted-foreground mt-1">Copy-paste this widget into any website and start chatting.</p>
         </div>
 

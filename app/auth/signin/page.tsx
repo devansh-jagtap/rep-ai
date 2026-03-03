@@ -32,7 +32,7 @@ export default function SignIn() {
 
       <div className="m-auto w-full max-w-sm">
         <div className="text-center">
-          <h1 className="font-serif text-4xl font-medium">Welcome back</h1>
+          <h1 className="font-serif text-4xl">Welcome back</h1>
           <p className="text-muted-foreground mt-2 text-sm">
             Sign in to your account to continue
           </p>

@@ -332,7 +332,7 @@ export function KnowledgeClient() {
                           <File className="h-5 w-5 text-muted-foreground mt-0.5" />
                         )}
                         <div>
-                          <h3 className="font-medium">{source.title}</h3>
+                          <h3 className="">{source.title}</h3>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             {source.type === "pdf" ? (
                               <>

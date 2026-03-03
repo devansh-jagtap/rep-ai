@@ -398,7 +398,7 @@ export function PortfolioClient({ portfolio, plan = "free", content }: Portfolio
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <h2 className="text-2xl font-normal tracking-tight capitalize">{activeTab}</h2>
+                        <h2 className="text-2xl tracking-tight capitalize">{activeTab}</h2>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -550,7 +550,7 @@ export function PortfolioClient({ portfolio, plan = "free", content }: Portfolio
               <div className="size-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-primary/5">
                 <Sparkles className="size-10 text-primary animate-pulse" />
               </div>
-              <h3 className="text-2xl font-bold tracking-tight mb-2">No Content Yet</h3>
+              <h3 className="text-2xl tracking-tight mb-2">No Content Yet</h3>
               <p className="text-muted-foreground max-w-sm mx-auto mb-8">
                 Your portfolio is a blank canvas. Let our AI help you generate a professional presence in seconds.
               </p>

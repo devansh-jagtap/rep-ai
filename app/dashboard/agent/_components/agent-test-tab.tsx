@@ -23,7 +23,7 @@ export function AgentTestTab({ canTest, chatMessages, chatInput, isChatLoading, 
     <div className="pt-5">
       <Card className="overflow-hidden flex flex-col h-[600px]">
         <div className="border-b border-border px-6 py-4 flex items-center justify-between bg-muted/50 shrink-0">
-          <div><h3 className="text-base font-semibold">Test Agent</h3><p className="text-xs text-muted-foreground mt-0.5">Live preview that sends real requests to your configured agent.</p></div>
+          <div><h3 className="text-base">Test Agent</h3><p className="text-xs text-muted-foreground mt-0.5">Live preview that sends real requests to your configured agent.</p></div>
           {chatMessages.length > 0 && <Button size="sm" variant="ghost" onClick={clearChatMessages} className="font-medium">Reset</Button>}
         </div>
 
