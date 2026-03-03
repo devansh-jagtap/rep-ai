@@ -15,7 +15,8 @@ import { resolveChatModel } from "./model-provider";
 
 function buildSystemPrompt(
   collected: Partial<OnboardingData>,
-  resumeText?: string
+  resumeText?: string,
+  resumeFailed?: boolean
 ): string {
   const steps = ONBOARDING_STEPS;
   const collectedWithDefaults = withDefaultSelectedSections(collected) ?? collected;
