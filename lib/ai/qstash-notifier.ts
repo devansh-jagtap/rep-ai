@@ -21,6 +21,7 @@ export async function scheduleLeadNotification(sessionId: string) {
     }
 
     try {
+        console.log(`[QStash] 🚀 scheduleLeadNotification called for session: ${sessionId}`);
         // Ensure the URL is absolute and correctly formatted
         let protocol = 'https://';
         let cleanBaseUrl = baseUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');

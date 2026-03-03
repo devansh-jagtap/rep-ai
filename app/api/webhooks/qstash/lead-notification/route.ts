@@ -81,10 +81,10 @@ export async function POST(req: NextRequest) {
         const fourMinutesThirtySeconds = 4.5 * 60 * 1000; // 4.5 minutes threshold
 
         if (diffMs < fourMinutesThirtySeconds) {
-            // User has spoken after this QStash job was scheduled.
-            // Another QStash job will have been scheduled by that newer message.
+            console.log(`[QStash Webhook] 🕒 Conversation still active. Updated ${Math.round(diffMs / 1000)}s ago. Threshold is 270s.`);
             return NextResponse.json({ ok: true, status: "conversation_still_active" });
         }
+        console.log(`[QStash Webhook] ✅ 5-minute inactivity window reached. Proceeding to send email.`);
 
         // 5. Build and send the email
         const [agentData] = await db
@@ -121,7 +121,8 @@ export async function POST(req: NextRequest) {
         }
 
         if (emailToUse) {
-            console.log(`[QStash Webhook] Sending lead notification email to: ${emailToUse}`);
+            console.log(`[QStash Webhook] Found recipient email: ${emailToUse}`);
+            console.log(`[QStash Webhook] Calling sendLeadNotificationEmail...`);
             await sendLeadNotificationEmail(
                 emailToUse,
                 {
