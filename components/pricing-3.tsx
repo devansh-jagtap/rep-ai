@@ -1,11 +1,11 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Check, ArrowRight, Minus } from 'lucide-react'
+import { Check, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { publicPricingTiers } from '@/lib/structured-data'
 
-const allFeatures = Array.from(new Set(publicPricingTiers.flatMap((plan) => plan.features)))
+
 
 export default function Pricing() {
     return (
@@ -64,19 +64,12 @@ export default function Pricing() {
                                     </Button>
 
                                     <ul role="list" className={cn("mt-8 space-y-3 text-sm leading-6", isHighlighted ? "text-primary-foreground/90" : "text-muted-foreground")}>
-                                        {allFeatures.map((feature) => {
-                                            const isIncluded = (plan.features as readonly string[]).includes(feature);
-                                            return (
-                                                <li key={feature} className={cn("flex gap-x-3", !isIncluded && "opacity-50")}>
-                                                    {isIncluded ? (
-                                                        <Check aria-hidden="true" className={cn("h-5 w-5 flex-none", isHighlighted ? "text-primary-foreground" : "text-primary")} />
-                                                    ) : (
-                                                        <Minus aria-hidden="true" className={cn("h-5 w-5 flex-none", isHighlighted ? "text-primary-foreground/50" : "text-muted-foreground")} />
-                                                    )}
-                                                    {feature}
-                                                </li>
-                                            )
-                                        })}
+                                        {plan.features.map((feature) => (
+                                            <li key={feature} className="flex gap-x-3">
+                                                <Check aria-hidden="true" className={cn("h-5 w-5 flex-none", isHighlighted ? "text-primary-foreground" : "text-primary")} />
+                                                {feature}
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
                             </Card>
