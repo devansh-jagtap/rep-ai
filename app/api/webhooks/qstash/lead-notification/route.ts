@@ -4,6 +4,11 @@ import { db } from "@/lib/db";
 import { agentLeads, agents, portfolios, users } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { sendLeadNotificationEmail } from "@/lib/mail";
+import { scheduleLeadNotification } from "@/lib/ai/qstash-notifier";
+
+const INACTIVITY_WINDOW_MS = 5 * 1000; // 5 seconds for rapid testing
+const RETRY_DELAY_SECONDS = 10;
+const MAX_RETRY_ATTEMPTS = 6;
 
 const receiver = new Receiver({
     currentSigningKey: process.env.QSTASH_CURRENT_SIGNING_KEY!,
@@ -54,9 +59,11 @@ export async function POST(req: NextRequest) {
 
     // 2. Parse Body
     let sessionId: string;
+    let attempt = 0;
     try {
         const body = JSON.parse(rawBody);
         sessionId = body.sessionId;
+        attempt = Number(body.attempt ?? 0);
     } catch (e) {
         return NextResponse.json({ error: "Invalid body" }, { status: 400 });
     }
@@ -82,13 +89,24 @@ export async function POST(req: NextRequest) {
         const now = new Date();
         const lastUpdate = lead.updatedAt || lead.createdAt;
         const diffMs = now.getTime() - lastUpdate.getTime();
-        const fourMinutesThirtySeconds = 5 * 1000; // 5 seconds for testing
+        const withinInactivityWindow = diffMs < INACTIVITY_WINDOW_MS;
 
-        if (diffMs < fourMinutesThirtySeconds) {
-            console.log(`[QStash Webhook] 🕒 Conversation still active. Updated ${Math.round(diffMs / 1000)}s ago. Threshold is 270s.`);
-            return NextResponse.json({ ok: true, status: "conversation_still_active" });
+        if (withinInactivityWindow) {
+            console.log(`[QStash Webhook] 🕒 Conversation still active. Updated ${Math.round(diffMs / 1000)}s ago. Threshold is ${Math.round(INACTIVITY_WINDOW_MS / 1000)}s. Attempt ${attempt}/${MAX_RETRY_ATTEMPTS}.`);
+
+            if (attempt >= MAX_RETRY_ATTEMPTS) {
+                console.warn(`[QStash Webhook] Reached max retry attempts for session ${sessionId}. Skipping requeue.`);
+                return NextResponse.json({ ok: true, status: "max_attempts_reached" });
+            }
+
+            await scheduleLeadNotification(sessionId, {
+                delaySeconds: RETRY_DELAY_SECONDS,
+                attempt: attempt + 1,
+            });
+
+            return NextResponse.json({ ok: true, status: "conversation_still_active_requeued", attempt: attempt + 1 });
         }
-        console.log(`[QStash Webhook] ✅ 5-minute inactivity window reached. Proceeding to send email.`);
+        console.log(`[QStash Webhook] ✅ Inactivity window reached. Proceeding to send email.`);
 
         // 5. Build and send the email
         const [agentData] = await db
