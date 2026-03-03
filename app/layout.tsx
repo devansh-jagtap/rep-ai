@@ -23,25 +23,8 @@ const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://mimick.me";
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
   title: {
-    default: "MimicK — AI Portfolio Builder",
+    default: "MimicK",
     template: "%s | MimicK",
-  },
-  description:
-    "Create an AI-powered portfolio with lead capture, chat, analytics, and conversion tools in minutes.",
-  keywords: ["portfolio", "ai portfolio", "lead capture", "freelancer", "creator website"],
-  openGraph: {
-    title: "MimicK — AI Portfolio Builder",
-    description:
-      "Create an AI-powered portfolio with lead capture, chat, analytics, and conversion tools in minutes.",
-    url: appUrl,
-    siteName: "MimicK",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "MimicK — AI Portfolio Builder",
-    description:
-      "Create an AI-powered portfolio with lead capture, chat, analytics, and conversion tools in minutes.",
   },
   icons: {
     icon: [
