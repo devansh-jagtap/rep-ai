@@ -1,21 +1,60 @@
+import { Target, Brain, Workflow, Zap } from "lucide-react"
+import { Card } from "@/components/ui/card"
+
 export default function WhyMimick() {
+  const points = [
+    {
+      title: "Stop losing qualified leads",
+      description: "Most freelancers and boutique agencies lose work before a real conversation starts. Visitors skim project thumbnails and bounce because they don't know if you're available, if your offer fits, or what the next step is. Contact forms are slow, and static pages can't answer follow-up questions.",
+      icon: Target
+    },
+    {
+      title: "Grounded in your actual expertise",
+      description: "Upload your own materials (project history, offer details, FAQs), and our assistant uses retrieval-augmented generation (RAG) to fetch relevant facts. Answers stay grounded in your real expertise instead of drifting into generic chatbot filler.",
+      icon: Brain
+    },
+    {
+      title: "A complete conversion system",
+      description: "Mimick.me is not just another chatbot or portfolio builder. It combines brand-aligned conversational UX, factual knowledge retrieval, and conversion workflows (like Calendar scheduling) into one seamless experience.",
+      icon: Workflow
+    },
+    {
+      title: "Focus only on serious prospects",
+      description: "Instead of answering the same pre-sale questions repeatedly, let your agent handle first-line discovery 24/7. Focus your time on high-confidence leads that are already qualified. Give yourself a measurable advantage.",
+      icon: Zap
+    }
+  ]
+
   return (
-    <section className="bg-background py-24">
-      <div className="mx-auto max-w-4xl px-6">
-        <h2 className="font-serif text-4xl font-medium text-balance">Why Mimick.me</h2>
-        <div className="text-muted-foreground mt-6 space-y-5 leading-7">
-          <p>
-            Most freelancers, creators, and boutique agencies lose qualified work before a real conversation ever starts. A prospect lands on a portfolio, skims a few project thumbnails, and bounces because they still do not know if you are available, whether your offer is a fit, or what a next step should look like. Contact forms are slow, static pages cannot answer follow-up questions, and generic chatbots often feel off-brand or inaccurate. Mimick.me solves this by turning your portfolio into a responsive, always-on conversion surface that can explain your work, qualify intent, and move serious buyers toward a booked call in one flow.
-          </p>
-          <p>
-            The platform is designed for independent professionals and small teams whose reputation depends on clear communication: consultants, designers, developers, coaches, creators, and service agencies. If your pipeline depends on inbound interest but your time is limited, Mimick.me helps you capture demand without sounding robotic. You can upload your own materials (portfolio context, project history, offer details, FAQs), and the assistant uses retrieval-augmented generation (RAG) to fetch relevant facts before composing responses. That means answers stay grounded in your real expertise instead of drifting into generic filler. At the same time, the system captures lead details, scores confidence based on conversation signals, and keeps context organized so you know whom to follow up with first.
-          </p>
-          <p>
-            Mimick.me is not "just another chatbot" and it is not "just another portfolio builder." Generic chatbots are usually detached from your business context; they can chat, but they do not understand your positioning, your delivery model, or your qualification criteria. Traditional portfolio tools look polished, but they rely on visitors taking manual next steps and they rarely provide structured insight into lead quality. Mimick.me combines both layers into one operating system: brand-aligned conversational UX, factual knowledge retrieval from your sources, and conversion workflows that include scheduling via Calendly or Google Calendar when a lead is ready. The result is a portfolio that does more than present work—it actively helps you convert the right visitors into real opportunities.
-          </p>
-          <p>
-            In practical terms, this changes how you grow. Instead of answering the same pre-sale questions repeatedly, you let your agent handle first-line discovery 24/7. Instead of chasing every inquiry equally, you focus on high-confidence leads. Instead of stitching together multiple tools with inconsistent messaging, you run a coherent experience from first visit to booked conversation. For service businesses where trust, speed, and clarity win deals, Mimick.me gives you a measurable advantage over static sites and one-size-fits-all AI widgets.
-          </p>
+    <section className="bg-muted/30 py-24 sm:py-32">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-start">
+          <div className="lg:sticky lg:top-32">
+            <h2 className="font-serif text-3xl font-medium tracking-tight text-foreground sm:text-4xl text-balance">
+              Why Mimick.me
+            </h2>
+            <p className="mt-6 text-lg text-muted-foreground max-w-xl text-balance">
+              Turning static portfolios into intelligent conversion surfaces that work while you sleep. Give your visitors a responsive, always-on agent that explains your work and qualifies intent.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-8">
+            {points.map((point, i) => (
+              <Card key={i} className="p-8 border-border/50 bg-card shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex flex-col sm:flex-row gap-6">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                    <point.icon className="size-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-medium text-foreground mb-3">{point.title}</h3>
+                    <p className="text-muted-foreground leading-relaxed">
+                      {point.description}
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     </section>
