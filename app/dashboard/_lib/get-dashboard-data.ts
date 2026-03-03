@@ -18,6 +18,22 @@ export async function getDashboardData() {
     where: eq(users.id, userId),
   });
 
+  if (profile?.billingPastDueSince) {
+    const { checkAndHandlePastDueDowngrade } = await import("@/lib/billing-utils");
+    const didDowngrade = await checkAndHandlePastDueDowngrade(userId, profile.billingPastDueSince);
+    if (didDowngrade) {
+      // Re-fetch profile if downgraded
+      const updatedProfile = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+      });
+      return {
+        portfolio: await getActivePortfolio(userId),
+        agent: await getAgentByUserId(userId),
+        plan: updatedProfile?.plan ?? "free"
+      };
+    }
+  }
+
   const portfolio = await getActivePortfolio(userId);
 
   if (!portfolio) {

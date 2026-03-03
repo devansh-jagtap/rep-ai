@@ -34,12 +34,12 @@ export function UpgradeRequiredModal({
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden border-none shadow-2xl">
-                <div className="relative pt-12 pb-8 px-6 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
-                    <div className="flex flex-col items-center text-center text-white">
-                        <DialogTitle className="text-2xl tracking-tight mb-2 text-white">
+                <div className="relative pt-12 pb-8 px-6 bg-accent">
+                    <div className="flex flex-col items-center text-center text-foreground">
+                        <DialogTitle className="text-2xl tracking-tight mb-2 text-foreground">
                             Upgrade to Pro
                         </DialogTitle>
-                        <DialogDescription className="text-white/80 text-sm max-w-[280px]">
+                        <DialogDescription className="text-foreground/80 text-sm max-w-[280px]">
                             {featureName.charAt(0).toUpperCase() + featureName.slice(1)} is a Pro feature. Level up your portfolio today!
                         </DialogDescription>
                     </div>
@@ -69,8 +69,8 @@ export function UpgradeRequiredModal({
                             Maybe later
                         </Button>
                         <Button
-                            className="flex-1 h-11 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/25 border-none transition-all duration-300 font-semibold active:scale-[0.98]"
-                            asChild
+                                className="flex-1 h-11 "
+                                asChild
                         >
                             <Link href="/dashboard/pricing">
                                 Upgrade Now — $24/mo

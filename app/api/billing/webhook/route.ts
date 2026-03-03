@@ -4,7 +4,11 @@ import { db } from "@/lib/db";
 import { users, portfolios, agents } from "@/lib/schema";
 import { and, eq, lte, sql, type SQL } from "drizzle-orm";
 
-const PAST_DUE_GRACE_DAYS = 31;
+import {
+  releaseUserSubdomains,
+  disconnectUserIntegrations,
+  PAST_DUE_GRACE_DAYS
+} from "@/lib/billing-utils";
 
 function normalizePlan(plan: string | null | undefined): "free" | "pro" | "business" | null {
   if (!plan) return null;
@@ -54,34 +58,6 @@ function verifyDodoSignature(body: string, signatureHeader: string | null): bool
   }
 
   return crypto.timingSafeEqual(expectedBuffer, receivedBuffer);
-}
-
-async function releaseUserSubdomains(userId: string) {
-  await db
-    .update(portfolios)
-    .set({ subdomain: null })
-    .where(eq(portfolios.userId, userId));
-}
-
-async function disconnectUserIntegrations(userId: string) {
-  await db
-    .update(agents)
-    .set({
-      googleCalendarEnabled: false,
-      googleCalendarAccessToken: null,
-      googleCalendarRefreshToken: null,
-      googleCalendarTokenExpiry: null,
-      googleCalendarAccountEmail: null,
-      calendlyEnabled: false,
-      calendlyAccessToken: null,
-      calendlyRefreshToken: null,
-      calendlyTokenExpiry: null,
-      calendlyAccountEmail: null,
-      calendlyUserUri: null,
-      calendlySchedulingUrl: null,
-      updatedAt: new Date(),
-    })
-    .where(eq(agents.userId, userId));
 }
 
 async function downgradeIfPastDueExceeded(userId: string) {

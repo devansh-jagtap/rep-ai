@@ -99,7 +99,20 @@ export async function regeneratePortfolio() {
   const portfolio = await getActivePortfolio(userId);
   if (!portfolio) throw new Error("Portfolio not found");
 
+  const { consumeCredits, getCredits } = await import("@/lib/credits");
+  const CREDIT_COST = 1;
+
+  const currentCredits = await getCredits(userId);
+  if (currentCredits < CREDIT_COST) {
+    throw new Error("Not enough credits to regenerate portfolio.");
+  }
+
   await generatePortfolio(userId, portfolio.id);
+
+  const creditsConsumed = await consumeCredits(userId, CREDIT_COST);
+  if (!creditsConsumed) {
+    throw new Error("Not enough credits to regenerate portfolio.");
+  }
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/portfolio");
