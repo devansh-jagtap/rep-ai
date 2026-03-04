@@ -102,7 +102,7 @@ Bio:          ${enrichment?.bio || "—"}
       <li><strong>Meeting Time:</strong> ${leadDetails.meetingTime || "N/A"}</li>
     </ul>
     <h3>Project Details:</h3>
-    <p>${leadDetails.projectDetails || "N/A"}</p>
+    <div style="white-space: pre-wrap; line-height: 1.5; padding: 12px; background: #fafafa; border: 1px solid #eaeaea; border-radius: 6px;">${leadDetails.projectDetails || "N/A"}</div>
     ${hasEnrichment ? `
       <div style="background: #f0f4ff; border-left: 4px solid #4f46e5; padding: 12px; margin-top: 16px; border-radius: 6px;">
         <h3 style="margin-top: 0;">🕵️ Spy Insights</h3>
