@@ -74,9 +74,11 @@ async function requestReply(input: GenerateAgentReplyInput): Promise<{ text: str
   const calendlyEnabled = !!input.calendlyEnabled && !!input.calendlySchedulingUrl;
 
   try {
-    y
-    const messages: any[] = [
-      ...preparedContext.history,
+    const messages: ModelMessage[] = [
+      ...preparedContext.history.map(m => ({
+        role: m.role as "user" | "assistant",
+        content: m.content
+      })),
       { role: "user", content: input.message },
     ];
 
