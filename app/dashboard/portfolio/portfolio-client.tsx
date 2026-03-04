@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -8,32 +8,25 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Save, X, RefreshCw, Eye, Undo2, ArrowLeft, Send } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, Save, X, RefreshCw, Eye, ArrowLeft, Send } from "lucide-react";
 import { SectionRegenerateButton } from "@/components/portfolio/section-regenerate-button";
 import { PromptInput, PromptInputSubmit, PromptInputTextarea, PromptInputBody, PromptInputFooter } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
-import { HeroSection } from "./components/HeroSection";
-import { AboutSection } from "./components/AboutSection";
-import { ServicesSection } from "./components/ServicesSection";
-import { ProjectsSection } from "./components/ProjectsSection";
-import { ProductsSection } from "./components/ProductsSection";
-import { HistorySection } from "./components/HistorySection";
-import { TestimonialsSection } from "./components/TestimonialsSection";
-import { FAQSection } from "./components/FAQSection";
-import { GallerySection } from "./components/GallerySection";
-import { CTASection } from "./components/CTASection";
-import { SocialLinksSection } from "./components/SocialLinksSection";
 import Link from "next/link";
 import { usePortfolioActions } from "./_hooks/use-portfolio-actions";
 import { usePortfolioEditorStore } from "./_hooks/use-portfolio-editor-store";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { useMutation } from "@tanstack/react-query";
 import type { PortfolioContent } from "../actions";
 import type { SocialLink, SocialPlatform } from "@/lib/validation/portfolio-schema";
-import { AVAILABLE_SOCIAL_PLATFORMS, PORTFOLIO_EDITOR_TABS } from "./_constants/portfolio-editor";
+import { PORTFOLIO_EDITOR_TABS } from "./_constants/portfolio-editor";
 import { usePortfolioContentEditors } from "./_hooks/use-portfolio-content-editors";
+import { useSavePortfolioContent } from "./_hooks/use-save-portfolio-content";
+import { useWebsiteSync } from "./_hooks/use-website-sync";
+import { useSectionRegeneration } from "./_hooks/use-section-regeneration";
+import { useUndoWindow } from "./_hooks/use-undo-window";
+import { PortfolioTabSections } from "./_components/portfolio-tab-sections";
 import {
   isSectionVisible,
   mergeVisibleSections,
@@ -65,28 +58,40 @@ export function PortfolioClient({ portfolio, plan = "free", content }: Portfolio
   } = usePortfolioActions(Boolean(content), portfolio.isPublished);
 
   const { editedContent, setEditedContent, resetFromServer } = usePortfolioEditorStore();
-  const [syncUrl, setSyncUrl] = useState("");
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [showSyncDialog, setShowSyncDialog] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("hero");
-  const [isSectionRegenerating, setIsSectionRegenerating] = useState(false);
-  const [promptingSection, setPromptingSection] = useState<string | null>(null);
-  const [showUndo, setShowUndo] = useState(false);
-  const [undoSnapshot, setUndoSnapshot] = useState<any>(null);
-  const [undoTimeLeft, setUndoTimeLeft] = useState(10);
-  const undoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [undoSnapshot, setUndoSnapshot] = useState<unknown>(null);
 
-  useEffect(() => {
-    return () => {
-      if (undoTimerRef.current) clearInterval(undoTimerRef.current);
-    };
-  }, []);
+  const saveMutation = useSavePortfolioContent();
+  const {
+    syncUrl,
+    setSyncUrl,
+    isSyncing,
+    showSyncDialog,
+    setShowSyncDialog,
+    closeSyncDialog,
+    syncFromWebsite,
+  } = useWebsiteSync({
+    editedContent,
+    setEditedContent,
+  });
+  const { showUndo, undoTimeLeft, startUndoCountdown, dismissUndo } = useUndoWindow();
 
-  const saveMutation = useMutation({
-    mutationFn: async (nextContent: PortfolioContent) => {
-      const { updatePortfolioContent } = await import("@/app/dashboard/actions");
-      await updatePortfolioContent(nextContent);
+  const handleSectionRegenerated = useCallback(
+    (data: Record<string, unknown>) => {
+      if (!editedContent) return;
+      setEditedContent({ ...editedContent, ...data } as PortfolioContent);
     },
+    [editedContent, setEditedContent]
+  );
+
+  const {
+    isSectionRegenerating,
+    promptingSection,
+    setPromptingSection,
+    regenerateSection,
+  } = useSectionRegeneration({
+    onSectionRegenerated: handleSectionRegenerated,
+    onAfterRegeneration: startUndoCountdown,
   });
 
   useEffect(() => {
@@ -106,135 +111,22 @@ export function PortfolioClient({ portfolio, plan = "free", content }: Portfolio
     setEditedContent(content ? { ...content, visibleSections: mergeVisibleSections(content.visibleSections) } : content);
   };
 
-  /**
-   * Merges regenerated section data into editedContent.
-   * Handles both scalar sections (hero, about, cta) and array sections.
-   */
-  const handleSectionRegenerated = useCallback(
-    (data: Record<string, unknown>) => {
-      if (!editedContent) return;
-      setEditedContent({ ...editedContent, ...data } as PortfolioContent);
-      setPromptingSection(null);
-    },
-    [editedContent, setEditedContent]
-  );
-
-  const startUndoCountdown = useCallback(() => {
-    setUndoTimeLeft(10);
-    setShowUndo(true);
-    if (undoTimerRef.current) clearInterval(undoTimerRef.current);
-    undoTimerRef.current = setInterval(() => {
-      setUndoTimeLeft((prev) => {
-        if (prev <= 1) {
-          if (undoTimerRef.current) clearInterval(undoTimerRef.current);
-          undoTimerRef.current = null;
-          setShowUndo(false);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  }, []);
-
   const handleSectionRegeneration = async (direction: string) => {
-    if (!activeTab) return;
-    setIsSectionRegenerating(true);
-    setUndoSnapshot((editedContent as any)[activeTab]);
-
-    try {
-      const res = await fetch("/api/generate-portfolio/section", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ section: activeTab, direction: direction.trim() }),
-      });
-      const json = await res.json();
-      if (!json.ok) throw new Error(json.error ?? "Failed to regenerate");
-      handleSectionRegenerated(json.data);
-      startUndoCountdown();
-    } catch (err) {
-      console.error("[section-regenerate]", err);
-    } finally {
-      setIsSectionRegenerating(false);
-    }
+    if (!activeTab || !editedContent) return;
+    setUndoSnapshot((editedContent as Record<string, unknown>)[activeTab]);
+    await regenerateSection(activeTab, direction);
   };
 
   const handleUndo = useCallback(() => {
     if (undoSnapshot !== null && activeTab) {
       handleSectionRegenerated({ [activeTab]: undoSnapshot });
     }
-    if (undoTimerRef.current) clearInterval(undoTimerRef.current);
-    setShowUndo(false);
+    dismissUndo();
     setUndoSnapshot(null);
-  }, [undoSnapshot, activeTab, handleSectionRegenerated]);
+  }, [undoSnapshot, activeTab, handleSectionRegenerated, dismissUndo]);
 
-  const {
-    updateHero,
-    updateAbout,
-    updateCta,
-    updateService,
-    addService,
-    removeService,
-    updateProject,
-    addProject,
-    removeProject,
-    updateProduct,
-    addProduct,
-    removeProduct,
-    updateHistory,
-    addHistory,
-    removeHistory,
-    updateTestimonial,
-    addTestimonial,
-    removeTestimonial,
-    updateFaq,
-    addFaq,
-    removeFaq,
-    updateGallery,
-    addGalleryImage,
-    removeGalleryImage,
-    updateVisibleSection,
-    updateSocialLink,
-  } = usePortfolioContentEditors({ editedContent, setEditedContent });
-
-  const handleSyncFromWebsite = async () => {
-    if (!syncUrl.trim()) return;
-    setIsSyncing(true);
-    try {
-      // 1. Scrape
-      const scrapeResp = await fetch("/api/scrape", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: syncUrl }),
-      });
-      const scrapeData = await scrapeResp.json();
-      if (!scrapeData.success) throw new Error(scrapeData.error || "Scrape failed");
-
-      // 2. Extract
-      const extractResp = await fetch("/api/ai/extract-portfolio", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: scrapeData.text }),
-      });
-      const extractData = await extractResp.json();
-      if (!extractData.success) throw new Error(extractData.error || "Extraction failed");
-
-      // 3. Apply to editedContent
-      if (editedContent) {
-        setEditedContent({
-          ...editedContent,
-          ...extractData.data,
-          hero: { ...editedContent.hero, ...extractData.data.hero },
-          about: { ...editedContent.about, ...extractData.data.about },
-        });
-        setShowSyncDialog(false);
-        setSyncUrl("");
-      }
-    } catch (err) {
-      console.error("Sync error:", err);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
+  const editors = usePortfolioContentEditors({ editedContent, setEditedContent });
+  const { updateVisibleSection } = editors;
 
   const displayContent = editedContent || content;
 
@@ -391,8 +283,8 @@ export function PortfolioClient({ portfolio, plan = "free", content }: Portfolio
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setShowSyncDialog(false)}>Cancel</Button>
-                  <Button onClick={handleSyncFromWebsite} disabled={isSyncing || !syncUrl.trim()}>
+                  <Button variant="outline" onClick={closeSyncDialog}>Cancel</Button>
+                  <Button onClick={syncFromWebsite} disabled={isSyncing || !syncUrl.trim()}>
                     {isSyncing ? <Loader2 className="size-4 mr-2 animate-spin" /> : null}
                     Start Sync
                   </Button>
@@ -622,120 +514,12 @@ export function PortfolioClient({ portfolio, plan = "free", content }: Portfolio
                       exit={{ opacity: 0 }}
                       className="h-full flex-1"
                     >
-
-                      <TabsContent value="hero" className="mt-0 focus-visible:outline-none focus-visible:ring-0 h-full">
-                        <HeroSection
-                          editMode={true}
-                          content={displayContent?.hero || null}
-                          onUpdate={updateHero}
-                          isVisible={isContentSectionVisible("hero")}
-                          onVisibilityChange={(checked) => updateVisibleSection("hero", checked)}
-                        />
-                      </TabsContent>
-                      <TabsContent value="about" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-                        <AboutSection
-                          editMode={true}
-                          content={displayContent?.about || null}
-                          onUpdate={updateAbout}
-                          isVisible={isContentSectionVisible("about")}
-                          onVisibilityChange={(checked) => updateVisibleSection("about", checked)}
-                        />
-                      </TabsContent>
-                      <TabsContent value="services" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-                        <ServicesSection
-                          editMode={true}
-                          content={displayContent?.services || null}
-                          onUpdate={updateService}
-                          onAdd={addService}
-                          onRemove={removeService}
-                          isVisible={isContentSectionVisible("services")}
-                          onVisibilityChange={(checked) => updateVisibleSection("services", checked)}
-                        />
-                      </TabsContent>
-                      <TabsContent value="projects" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-                        <ProjectsSection
-                          editMode={true}
-                          content={displayContent?.projects || null}
-                          onUpdate={updateProject}
-                          onAdd={addProject}
-                          onRemove={removeProject}
-                          isVisible={isContentSectionVisible("projects")}
-                          onVisibilityChange={(checked) => updateVisibleSection("projects", checked)}
-                        />
-                      </TabsContent>
-                      <TabsContent value="products" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-                        <ProductsSection
-                          editMode={true}
-                          content={displayContent?.products || null}
-                          onUpdate={updateProduct}
-                          onAdd={addProduct}
-                          onRemove={removeProduct}
-                          isVisible={isContentSectionVisible("products")}
-                          onVisibilityChange={(checked) => updateVisibleSection("products", checked)}
-                        />
-                      </TabsContent>
-                      <TabsContent value="history" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-                        <HistorySection
-                          editMode={true}
-                          content={displayContent?.history || null}
-                          onUpdate={updateHistory}
-                          onAdd={addHistory}
-                          onRemove={removeHistory}
-                          isVisible={isContentSectionVisible("history")}
-                          onVisibilityChange={(checked) => updateVisibleSection("history", checked)}
-                        />
-                      </TabsContent>
-                      <TabsContent value="testimonials" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-                        <TestimonialsSection
-                          editMode={true}
-                          content={displayContent?.testimonials || null}
-                          onUpdate={updateTestimonial}
-                          onAdd={addTestimonial}
-                          onRemove={removeTestimonial}
-                          isVisible={isContentSectionVisible("testimonials")}
-                          onVisibilityChange={(checked) => updateVisibleSection("testimonials", checked)}
-                        />
-                      </TabsContent>
-                      <TabsContent value="faq" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-                        <FAQSection
-                          editMode={true}
-                          content={displayContent?.faq || null}
-                          onUpdate={updateFaq}
-                          onAdd={addFaq}
-                          onRemove={removeFaq}
-                          isVisible={isContentSectionVisible("faq")}
-                          onVisibilityChange={(checked) => updateVisibleSection("faq", checked)}
-                        />
-                      </TabsContent>
-                      <TabsContent value="gallery" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-                        <GallerySection
-                          editMode={true}
-                          content={displayContent?.gallery || null}
-                          onUpdate={updateGallery}
-                          onAdd={addGalleryImage}
-                          onRemove={removeGalleryImage}
-                          isVisible={isContentSectionVisible("gallery")}
-                          onVisibilityChange={(checked) => updateVisibleSection("gallery", checked)}
-                        />
-                      </TabsContent>
-                      <TabsContent value="cta" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-                        <CTASection
-                          editMode={true}
-                          content={displayContent?.cta || null}
-                          onUpdate={updateCta}
-                          isVisible={isContentSectionVisible("cta")}
-                          onVisibilityChange={(checked) => updateVisibleSection("cta", checked)}
-                        />
-                      </TabsContent>
-                      <TabsContent value="socials" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-                        <SocialLinksSection
-                          editMode={true}
-                          availablePlatforms={AVAILABLE_SOCIAL_PLATFORMS}
-                          getSocialLink={getSocialLink}
-                          onUpdate={updateSocialLink}
-                          isVisible={true}
-                        />
-                      </TabsContent>
+                      <PortfolioTabSections
+                        displayContent={displayContent}
+                        editors={editors}
+                        isContentSectionVisible={isContentSectionVisible}
+                        getSocialLink={getSocialLink}
+                      />
                     </motion.div>
                   )}
                 </AnimatePresence>
