@@ -17,26 +17,13 @@ import { generatePortfolio } from "@/lib/ai/generate-portfolio";
 import { validateHandle } from "@/lib/validation/handle";
 import { handlePublicChat, type PublicChatResult } from "@/lib/ai/public-chat-handler";
 import { sanitizeHistory } from "@/lib/validation/public-chat";
-import { type PortfolioContent as ValidatedPortfolioContent } from "@/lib/validation/portfolio-schema";
+import { validatePortfolioContent, type PortfolioContent as ValidatedPortfolioContent } from "@/lib/validation/portfolio-schema";
 import { validateSubdomain } from "@/lib/validation/handle";
 import { canUsePortfolioSubdomain } from "@/lib/billing";
 
 import { mergeVisibleSections } from "@/lib/portfolio/section-registry";
 
-export type PortfolioContent = {
-  visibleSections?: ValidatedPortfolioContent["visibleSections"];
-  hero?: { headline?: string; subheadline?: string; ctaText?: string };
-  about?: { paragraph?: string };
-  services?: { title: string; description: string }[];
-  projects?: { title: string; description: string; result: string }[];
-  products?: { title: string; description: string; price: string; url: string; image: string }[];
-  history?: { role: string; company: string; period: string; description: string }[];
-  testimonials?: { quote: string; author: string; role: string }[];
-  faq?: { question: string; answer: string }[];
-  gallery?: { url: string; caption: string }[];
-  cta?: { headline?: string; subtext?: string };
-  socialLinks?: { platform: "twitter" | "linkedin" | "github" | "instagram" | "youtube" | "facebook" | "website"; enabled: boolean; url: string }[];
-};
+export type PortfolioContent = ValidatedPortfolioContent;
 
 async function requireAuth() {
   const session = await getSession();
@@ -289,10 +276,7 @@ export async function updatePortfolioContent(content: PortfolioContent) {
   const portfolio = await getActivePortfolio(userId);
   if (!portfolio) throw new Error("Portfolio not found");
 
-  const normalizedContent: PortfolioContent = {
-    ...content,
-    visibleSections: mergeVisibleSections(content.visibleSections),
-  };
+  const normalizedContent = validatePortfolioContent(content);
 
   await db.update(portfolios).set({
     content: normalizedContent,
