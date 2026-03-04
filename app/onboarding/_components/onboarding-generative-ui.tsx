@@ -1,4 +1,5 @@
 export { SetupPathSelector } from "./selectors/setup-path-selector";
+export { ToneSelectorCards } from "./selectors/tone-selector-cards";
 export { SectionSelectorCards } from "./selectors/section-selector-cards";
 export { ServicesTagSelector } from "./selectors/services-tag-selector";
 export { ProjectsCardEditor } from "./selectors/projects-card-editor";
