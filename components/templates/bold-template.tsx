@@ -53,12 +53,12 @@ export function BoldTemplate({ content }: { content: PortfolioContent }) {
     <div className="bg-white dark:bg-zinc-950 text-zinc-950 dark:text-zinc-50 min-h-screen selection:bg-amber-400 selection:text-zinc-950 font-sans">
       <header className="sticky top-0 z-20 border-b border-zinc-200 dark:border-zinc-900 bg-zinc-950/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-5">
-          <a href="#" className="flex items-center gap-3">
-            <span className="inline-flex size-6 items-center justify-center bg-zinc-950 dark:bg-zinc-50 text-zinc-50 dark:text-zinc-950 font-bold text-xs">
-              B
-            </span>
-            <span className="text-sm font-bold tracking-widest uppercase">Bold</span>
-          </a>
+            <a href="#" className="flex items-center gap-3">
+              <span className="inline-flex size-6 items-center justify-center bg-zinc-950 dark:bg-zinc-50 text-zinc-50 dark:text-zinc-950 font-bold text-xs">
+              {(content.name || content.hero.headline)?.charAt(0).toUpperCase()}
+              </span>
+              <span className="text-sm font-bold tracking-widest uppercase">{content.name || content.hero.headline}</span>
+            </a>
           <DesktopNav visibleSections={visibleSections} />
           <div className="flex items-center gap-2">
             <ThemeSwitcher />

@@ -15,6 +15,7 @@ export type SocialLink = {
 };
 
 export type PortfolioContent = {
+  name?: string;
   hero: {
     headline: string;
     subheadline: string;
@@ -149,6 +150,7 @@ const socialLinkSchema = z
 
 const portfolioContentSchema = z
   .object({
+    name: z.string().optional(),
     hero: z
       .object({
         headline: z.string().min(1),
