@@ -18,6 +18,7 @@ export interface AgentConfigState {
   googleCalendarAccountEmail: string | null;
   calendlyEnabled: boolean;
   calendlyAccountEmail: string | null;
+  leadEnrichmentEnabled: boolean;
 }
 
 export interface ChatMessage {

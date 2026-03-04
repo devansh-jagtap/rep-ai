@@ -14,7 +14,7 @@ export async function scheduleLeadNotification(
     sessionId: string,
     options: ScheduleLeadNotificationOptions = {}
 ) {
-    const delaySeconds = options.delaySeconds ?? 10;
+    const delaySeconds = options.delaySeconds ?? 120;
     const attempt = options.attempt ?? 0;
     const token = process.env.QSTASH_TOKEN;
     // Fallback to local 3000 if nothing is set (for local dev)

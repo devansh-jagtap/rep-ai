@@ -6,8 +6,8 @@ import { eq } from "drizzle-orm";
 import { sendLeadNotificationEmail } from "@/lib/mail";
 import { scheduleLeadNotification } from "@/lib/ai/qstash-notifier";
 
-const INACTIVITY_WINDOW_MS = 5 * 1000; // 5 seconds for rapid testing
-const RETRY_DELAY_SECONDS = 10;
+const INACTIVITY_WINDOW_MS = 120 * 1000; // 2 minutes
+const RETRY_DELAY_SECONDS = 120;
 const MAX_RETRY_ATTEMPTS = 6;
 
 const receiver = new Receiver({
@@ -175,6 +175,19 @@ export async function POST(req: NextRequest) {
                 hasProjectDetails: Boolean(lead.projectDetails),
                 hasMeetingTime: Boolean(lead.meetingTime),
             });
+            let enrichment = null;
+            if (agentData.leadEnrichmentEnabled && lead.email) {
+                const { getUserPlan } = await import("@/lib/billing");
+                const planLevel = await getUserPlan(agentData.userId);
+                if (planLevel !== "free") {
+                    const { enrichLeadData } = await import("@/lib/ai/enrichment");
+                    enrichment = await enrichLeadData(
+                        lead.email,
+                        lead.name ?? undefined
+                    ).catch(() => null);
+                }
+            }
+
             console.log(`[QStash Webhook] Calling sendLeadNotificationEmail...`);
             await sendLeadNotificationEmail(
                 emailToUse,
@@ -187,13 +200,14 @@ export async function POST(req: NextRequest) {
                     projectDetails: lead.projectDetails,
                     meetingTime: lead.meetingTime,
                 },
-                sourceName
+                sourceName,
+                enrichment
             );
 
             // 6. Mark as sent
             await db
                 .update(agentLeads)
-                .set({ notificationSent: true })
+                .set({ notificationSent: true, enrichment })
                 .where(eq(agentLeads.id, lead.id));
 
             console.log("[QStash Webhook] Lead notificationSent flag updated", {

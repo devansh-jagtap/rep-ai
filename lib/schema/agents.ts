@@ -49,6 +49,7 @@ export const agents = pgTable(
     calendlyAccountEmail: varchar("calendly_account_email", { length: 255 }),
     calendlyUserUri: varchar("calendly_user_uri", { length: 255 }),
     calendlySchedulingUrl: text("calendly_scheduling_url"),
+    leadEnrichmentEnabled: boolean("lead_enrichment_enabled").notNull().default(false),
     workingHours: jsonb("working_hours").$type<
       { dayOfWeek: number; startTime: string; endTime: string; enabled: boolean }[]
     >(),

@@ -20,6 +20,7 @@ export interface ConfigureAgentInput {
   workingHours?: { dayOfWeek: number; startTime: string; endTime: string; enabled: boolean }[] | null;
   offDays?: string[] | null;
   notificationEmail?: string | null;
+  leadEnrichmentEnabled: boolean;
 }
 
 export function validateConfigureAgentInput(input: ConfigureAgentInput) {
@@ -70,6 +71,7 @@ export function validateConfigureAgentInput(input: ConfigureAgentInput) {
       notificationEmail: normalizedNotificationEmail,
       workingHours: input.workingHours ?? null,
       offDays: input.offDays ?? null,
+      leadEnrichmentEnabled: input.leadEnrichmentEnabled ?? false,
     },
   };
 }
@@ -139,6 +141,7 @@ export async function configureAgentForPortfolio(userId: string, portfolioId: st
       notificationEmail: validation.value.notificationEmail,
       workingHours: validation.value.workingHours,
       offDays: validation.value.offDays,
+      leadEnrichmentEnabled: validation.value.leadEnrichmentEnabled,
       updatedAt: new Date(),
     })
     .onConflictDoUpdate({
@@ -158,6 +161,7 @@ export async function configureAgentForPortfolio(userId: string, portfolioId: st
         notificationEmail: validation.value.notificationEmail,
         workingHours: validation.value.workingHours,
         offDays: validation.value.offDays,
+        leadEnrichmentEnabled: validation.value.leadEnrichmentEnabled,
         updatedAt: new Date(),
       },
     });
@@ -190,6 +194,7 @@ export async function configureAgentForUser(userId: string, input: ConfigureAgen
         notificationEmail: validation.value.notificationEmail,
         workingHours: validation.value.workingHours,
         offDays: validation.value.offDays,
+        leadEnrichmentEnabled: validation.value.leadEnrichmentEnabled,
         updatedAt: new Date(),
       })
       .where(eq(agents.id, existingAgent.id));
@@ -219,6 +224,7 @@ export async function configureAgentForUser(userId: string, input: ConfigureAgen
     notificationEmail: validation.value.notificationEmail,
     workingHours: validation.value.workingHours,
     offDays: validation.value.offDays,
+    leadEnrichmentEnabled: validation.value.leadEnrichmentEnabled,
     updatedAt: new Date(),
   });
 

@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { CheckCircle2, Globe, Loader2, XCircle, Search } from "lucide-react";
 import type { AgentConfigState } from "./types";
 import Image from "next/image";
@@ -15,6 +16,7 @@ interface AgentIntegrationsTabProps {
   isDisconnectingCalendly: boolean;
   handleCalendlyDisconnect: () => Promise<void>;
   plan: string;
+  handleToggleSpy: (checked: boolean) => void;
 }
 
 export function AgentIntegrationsTab({
@@ -23,7 +25,8 @@ export function AgentIntegrationsTab({
   handleCalendarDisconnect,
   isDisconnectingCalendly,
   handleCalendlyDisconnect,
-  plan
+  plan,
+  handleToggleSpy
 }: AgentIntegrationsTabProps) {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [activeFeature, setActiveFeature] = useState("");
@@ -36,6 +39,15 @@ export function AgentIntegrationsTab({
     } else {
       window.location.href = connectUrl;
     }
+  };
+
+  const handleSpyChange = (checked: boolean) => {
+    if (plan === "free") {
+      setActiveFeature("The Spy (Lead Enrichment)");
+      setShowUpgradeModal(true);
+      return;
+    }
+    handleToggleSpy(checked);
   };
 
   return (
@@ -120,8 +132,8 @@ export function AgentIntegrationsTab({
               <div className="flex h-[70px] w-[70px] items-center justify-center rounded-md bg-primary/10">
                 <Search className="size-8 text-primary" />
               </div>
-              <Badge variant="default">
-                <span className="flex items-center gap-1"><CheckCircle2 className="size-3" /> Active</span>
+              <Badge variant={config.leadEnrichmentEnabled ? "default" : "secondary"}>
+                {config.leadEnrichmentEnabled ? <span className="flex items-center gap-1"><CheckCircle2 className="size-3" /> Active</span> : "Disabled"}
               </Badge>
             </div>
             <CardTitle className="text-xl">The Spy (Lead Enrichment)</CardTitle>
@@ -129,13 +141,12 @@ export function AgentIntegrationsTab({
           </CardHeader>
           <CardContent className="flex-1">
             <p className="text-sm text-muted-foreground">
-              This feature is active and runs automatically whenever a new lead is detected. Wait for the magic to happen in your inbox!
+              {config.leadEnrichmentEnabled ? "This feature is active and runs automatically whenever a new lead is detected. Wait for the magic to happen in your inbox!" : "Enable this feature to research leads in the background."}
             </p>
           </CardContent>
-          <CardFooter className="bg-muted/30 border-t border-border mt-auto">
-            <Button variant="outline" className="w-full" disabled>
-              Running in Background
-            </Button>
+          <CardFooter className="bg-muted/30 border-t border-border mt-auto flex items-center justify-between p-4">
+            <span className="text-sm font-medium">Enable Background Enrichment</span>
+            <Switch checked={config.leadEnrichmentEnabled} onCheckedChange={handleSpyChange} />
           </CardFooter>
         </Card>
       </div>

@@ -53,10 +53,21 @@ export async function POST(request: Request) {
     try {
       const ownerProfile = await getProfileById(authResult.userId);
       if (ownerProfile?.email && lead.email) {
-        const enrichment = await enrichLeadData(
-          lead.email,
-          lead.name ?? undefined
-        ).catch(() => null);
+        let enrichment = null;
+
+        const { getAgentByUserId } = await import("@/lib/agent/configure");
+        const { getUserPlan } = await import("@/lib/billing");
+        const agent = await getAgentByUserId(authResult.userId);
+
+        if (agent?.leadEnrichmentEnabled) {
+          const planLevel = await getUserPlan(authResult.userId);
+          if (planLevel !== "free") {
+            enrichment = await enrichLeadData(
+              lead.email,
+              lead.name ?? undefined
+            ).catch(() => null);
+          }
+        }
 
         await sendLeadNotificationEmail(ownerProfile.email, {
           name: lead.name,

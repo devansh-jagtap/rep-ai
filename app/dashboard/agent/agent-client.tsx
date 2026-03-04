@@ -30,6 +30,7 @@ interface AgentClientProps {
     googleCalendarAccountEmail: string | null;
     calendlyEnabled: boolean;
     calendlyAccountEmail: string | null;
+    leadEnrichmentEnabled: boolean;
     notificationEmail: string | null;
     workingHours?: { dayOfWeek: number; startTime: string; endTime: string; enabled: boolean }[] | null;
     offDays?: string[] | null;
@@ -69,6 +70,7 @@ export function AgentClient({ agent, agentId, portfolioHandle, hasContent, isPor
       googleCalendarAccountEmail: agent.googleCalendarAccountEmail,
       calendlyEnabled: agent.calendlyEnabled,
       calendlyAccountEmail: agent.calendlyAccountEmail,
+      leadEnrichmentEnabled: agent.leadEnrichmentEnabled,
       notificationEmail: agent.notificationEmail || null,
       workingHours: agent.workingHours || [
         { dayOfWeek: 0, startTime: "09:00", endTime: "17:00", enabled: false },
@@ -127,6 +129,7 @@ export function AgentClient({ agent, agentId, portfolioHandle, hasContent, isPor
           notificationEmail: config.notificationEmail,
           workingHours: config.workingHours,
           offDays: config.offDays,
+          leadEnrichmentEnabled: config.leadEnrichmentEnabled,
         });
         toast.success("Agent configuration saved");
       } catch (error) {
@@ -186,6 +189,34 @@ export function AgentClient({ agent, agentId, portfolioHandle, hasContent, isPor
     ? `<iframe src="${appOrigin}/embed/${agentId}" width="${widgetWidth}" height="${widgetHeight}" style="border:1px solid rgba(0,0,0,0.12);border-radius:12px;" loading="lazy" title="${config.displayName || "AI Assistant"}"></iframe>`
     : "";
 
+  const handleToggleSpy = (checked: boolean) => {
+    setConfig({ leadEnrichmentEnabled: checked });
+    startTransition(async () => {
+      try {
+        await saveAgentConfig({
+          isEnabled: config.isEnabled,
+          model: config.model,
+          behaviorType: config.behaviorType === "custom" ? null : config.behaviorType,
+          strategyMode: config.strategyMode,
+          customPrompt: config.behaviorType === "custom" ? config.customPrompt : null,
+          temperature: config.temperature,
+          displayName: config.displayName,
+          avatarUrl: config.avatarUrl,
+          intro: config.intro,
+          roleLabel: config.roleLabel,
+          notificationEmail: config.notificationEmail,
+          workingHours: config.workingHours,
+          offDays: config.offDays,
+          leadEnrichmentEnabled: checked,
+        });
+        toast.success(checked ? "The Spy enabled and running" : "The Spy disabled");
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Failed to toggle The Spy");
+        setConfig({ leadEnrichmentEnabled: !checked });
+      }
+    });
+  };
+
   return (
     <div className="max-w-5xl mx-auto flex flex-col font-sans">
       <div className="flex flex-col gap-1.5 mb-6">
@@ -200,7 +231,7 @@ export function AgentClient({ agent, agentId, portfolioHandle, hasContent, isPor
         renderContent={(tab) => {
           if (tab.value === "settings") return <AgentSettingsTab config={config} isPending={isPending} agentId={agentId} onSave={handleSave} setConfig={setConfig} />;
           if (tab.value === "widget") return <AgentWidgetTab canGenerateWidget={canGenerateWidget} isWidgetReady={isWidgetReady} scriptUrl={scriptUrl} scriptSnippet={scriptSnippet} iframeSnippet={iframeSnippet} appOrigin={appOrigin} agentId={agentId} widgetLabel={widgetLabel} widgetPosition={widgetPosition} widgetWidth={widgetWidth} widgetHeight={widgetHeight} setWidgetLabel={setWidgetLabel} setWidgetPosition={setWidgetPosition} setWidgetWidth={setWidgetWidth} setWidgetHeight={setWidgetHeight} />;
-          if (tab.value === "integrations") return <AgentIntegrationsTab config={config} isDisconnectingCalendar={isDisconnectingCalendar} handleCalendarDisconnect={handleCalendarDisconnect} isDisconnectingCalendly={isDisconnectingCalendly} handleCalendlyDisconnect={handleCalendlyDisconnect} plan={plan} />;
+          if (tab.value === "integrations") return <AgentIntegrationsTab config={config} isDisconnectingCalendar={isDisconnectingCalendar} handleCalendarDisconnect={handleCalendarDisconnect} isDisconnectingCalendly={isDisconnectingCalendly} handleCalendlyDisconnect={handleCalendlyDisconnect} plan={plan} handleToggleSpy={handleToggleSpy} />;
           if (tab.value === "test") return <AgentTestTab canTest={canTest} chatMessages={chatMessages} chatInput={chatInput} isChatLoading={isChatLoading} clearChatMessages={clearChatMessages} setChatInput={setChatInput} sendTestMessage={sendTestMessage} isAgentEnabled={config.isEnabled} />;
           return null;
         }}

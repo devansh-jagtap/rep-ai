@@ -62,6 +62,39 @@ export function LeadBody({ lead }: { lead: LeadDetailData }) {
           </dl>
         </Section>
       )}
+
+      {lead.enrichment && typeof lead.enrichment === 'object' && (
+        <Section title="🕵️ Spy Insights">
+          <div className="rounded-lg border bg-primary/5 p-4 text-sm space-y-3">
+            {lead.enrichment.linkedInUrl && (
+              <div>
+                <span className="font-semibold text-muted-foreground">LinkedIn: </span>
+                <a href={lead.enrichment.linkedInUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                  {lead.enrichment.linkedInUrl}
+                </a>
+              </div>
+            )}
+            {lead.enrichment.companySize && (
+              <div>
+                <span className="font-semibold text-muted-foreground">Company Size: </span>
+                {lead.enrichment.companySize}
+              </div>
+            )}
+            {lead.enrichment.recentNews && (
+              <div>
+                <span className="font-semibold text-muted-foreground">Recent News: </span>
+                {lead.enrichment.recentNews}
+              </div>
+            )}
+            {lead.enrichment.bio && (
+              <div>
+                <span className="font-semibold text-muted-foreground">Bio: </span>
+                {lead.enrichment.bio}
+              </div>
+            )}
+          </div>
+        </Section>
+      )}
     </div>
   )
 }

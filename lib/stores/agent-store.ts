@@ -19,6 +19,7 @@ interface AgentConfig {
   googleCalendarAccountEmail: string | null;
   calendlyEnabled: boolean;
   calendlyAccountEmail: string | null;
+  leadEnrichmentEnabled: boolean;
 }
 
 interface ChatMessage {
@@ -66,6 +67,7 @@ const defaultConfig: AgentConfig = {
   googleCalendarAccountEmail: null,
   calendlyEnabled: false,
   calendlyAccountEmail: null,
+  leadEnrichmentEnabled: false,
   notificationEmail: null,
 };
 
