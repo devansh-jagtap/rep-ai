@@ -62,11 +62,27 @@ export async function enrichLeadData(
       return null;
     }
 
+    const isFreeEmail = [
+      "gmail.com",
+      "yahoo.com",
+      "hotmail.com",
+      "outlook.com",
+      "aol.com",
+      "icloud.com",
+      "mail.com",
+      "protonmail.com",
+      "proton.me",
+      "zoho.com",
+    ].includes(domain.toLowerCase());
+
     const queries = [
       `${name ?? email} LinkedIn profile`,
-      `${domain} company size employees`,
-      `${domain} news 2024 OR 2025`,
     ];
+
+    if (!isFreeEmail) {
+      queries.push(`${domain} company size employees`);
+      queries.push(`${domain} news 2024 OR 2025`);
+    }
 
     const settled = await Promise.allSettled(queries.map((query) => runTavilySearch(query)));
 
@@ -101,7 +117,7 @@ export async function enrichLeadData(
       prompt: [
         `Lead name: ${name ?? "Unknown"}`,
         `Lead email: ${email}`,
-        `Lead company domain: ${domain}`,
+        isFreeEmail ? "Note: Lead uses a personal email address. Do not try to infer company information." : `Lead company domain: ${domain}`,
         "Search context:",
         contextParts.join("\n\n"),
       ].join("\n"),

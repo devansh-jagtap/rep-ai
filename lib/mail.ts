@@ -78,10 +78,10 @@ Log in to your dashboard to view the full conversation and manage this lead.
 ${hasEnrichment ? `
 ---
 🕵️ SPY INSIGHTS
-LinkedIn:     ${enrichment?.linkedInUrl || "Not found"}
-Company Size: ${enrichment?.companySize || "Unknown"}
-Recent News:  ${enrichment?.recentNews || "Nothing found"}
-Bio:          ${enrichment?.bio || "—"}
+${enrichment?.linkedInUrl ? `LinkedIn:     ${enrichment.linkedInUrl}\n` : ""}\
+${enrichment?.companySize ? `Company Size: ${enrichment.companySize}\n` : ""}\
+${enrichment?.recentNews ? `Recent News:  ${enrichment.recentNews}\n` : ""}\
+${enrichment?.bio ? `Bio:          ${enrichment.bio}\n` : ""}\
 ---
 ` : ""}`;
 
@@ -106,10 +106,10 @@ Bio:          ${enrichment?.bio || "—"}
     ${hasEnrichment ? `
       <div style="background: #f0f4ff; border-left: 4px solid #4f46e5; padding: 12px; margin-top: 16px; border-radius: 6px;">
         <h3 style="margin-top: 0;">🕵️ Spy Insights</h3>
-        <p><strong>LinkedIn:</strong> ${enrichment?.linkedInUrl ? `<a href="${enrichment.linkedInUrl}">${enrichment.linkedInUrl}</a>` : "Not found"}</p>
-        <p><strong>Company Size:</strong> ${enrichment?.companySize || "Unknown"}</p>
-        <p><strong>Recent News:</strong> ${enrichment?.recentNews || "Nothing found"}</p>
-        <p><strong>Bio:</strong> ${enrichment?.bio || "—"}</p>
+        ${enrichment?.linkedInUrl ? `<p><strong>LinkedIn:</strong> <a href="${enrichment.linkedInUrl}">${enrichment.linkedInUrl}</a></p>` : ""}
+        ${enrichment?.companySize ? `<p><strong>Company Size:</strong> ${enrichment.companySize}</p>` : ""}
+        ${enrichment?.recentNews ? `<p><strong>Recent News:</strong> ${enrichment.recentNews}</p>` : ""}
+        ${enrichment?.bio ? `<p><strong>Bio:</strong> ${enrichment.bio}</p>` : ""}
       </div>
     ` : ""}
     <p><br><em>Log in to your dashboard to view the full conversation and manage this lead.</em></p>
