@@ -305,8 +305,7 @@ export function PortfolioClient({ portfolio, plan = "free", content }: Portfolio
               <SelectItem value="editorial">Editorial</SelectItem>
               <SelectItem value="gallery">Gallery</SelectItem>
               <SelectItem value="minimal">Minimal</SelectItem>
-              <SelectItem value="interactive">Interactive</SelectItem>
-            </SelectContent>
+              <SelectItem value="interactive">Interactive</SelectItem>                <SelectItem value="studio">Studio</SelectItem>            </SelectContent>
           </Select>
 
           {isPublished && (

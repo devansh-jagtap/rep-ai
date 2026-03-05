@@ -8,6 +8,7 @@ import { LandingTemplate } from "@/components/templates/landing-template";
 import { GalleryTemplate } from "@/components/templates/gallery-template";
 import { MinimalTemplate } from "@/components/templates/minimal-template";
 import { InteractiveTemplate } from "@/components/templates/interactive-template";
+import { StudioTemplate } from "@/components/templates/studio-template";
 import { getPublishedPortfolioByHandle, getPublishedPortfolioWithAgentByHandle } from "@/lib/db/portfolio";
 import { validatePortfolioContent } from "@/lib/validation/portfolio-schema";
 import { AgentWidget } from "@/components/agent-widget";
@@ -102,6 +103,8 @@ export default async function PublicPortfolioPage({ params }: PublicPortfolioPag
         <MinimalTemplate content={content} />
       ) : portfolio.template === "interactive" ? (
         <InteractiveTemplate content={content} />
+      ) : portfolio.template === "studio" ? (
+        <StudioTemplate content={content} />
       ) : (
         <ModernTemplate content={content} />
       )}
