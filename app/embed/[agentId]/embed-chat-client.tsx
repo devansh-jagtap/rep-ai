@@ -69,6 +69,19 @@ function AgentAvatar({ avatarUrl, agentName, size = 32 }: { avatarUrl?: string |
 }
 
 export function EmbedChatClient({ agentId, agentName = "AI Assistant", avatarUrl, roleLabel, intro, plan }: EmbedChatClientProps) {
+  const fontUrl = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("font") : null;
+
+  const fontStyle = useMemo(() => {
+    if (!fontUrl) return {};
+    try {
+      const url = new URL(fontUrl);
+      const family = url.searchParams.get("family")?.split(":")[0];
+      if (family) {
+        return { fontFamily: `"${family}", sans-serif` };
+      }
+    } catch (e) { }
+    return {};
+  }, [fontUrl]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -145,7 +158,10 @@ export function EmbedChatClient({ agentId, agentName = "AI Assistant", avatarUrl
   }, [messages, streamingContent]);
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="flex h-screen flex-col bg-background" style={fontStyle}>
+      {fontUrl && (
+        <link rel="stylesheet" href={fontUrl} />
+      )}
       <header className="flex shrink-0 items-center gap-3 border-b px-4 py-3">
         <AgentAvatar avatarUrl={avatarUrl} agentName={agentName} size={36} />
         <div className="flex flex-col min-w-0">

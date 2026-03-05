@@ -27,6 +27,15 @@ function sanitizeRadius(value: string | null): "full" | "md" | "sm" | "none" {
   return "full";
 }
 
+function sanitizeMobile(value: string | null): "collapse" | "hide" {
+  return value === "hide" ? "hide" : "collapse";
+}
+
+function sanitizeIcon(value: string | null): "chat-bubble" | "sparkles" | "bot" | "zap" {
+  if (value === "sparkles" || value === "bot" || value === "zap") return value;
+  return "chat-bubble";
+}
+
 const SHADOW_MAP: Record<string, string> = {
   none: "none",
   sm: "0 2px 8px rgba(0,0,0,0.15)",
@@ -61,6 +70,11 @@ export async function GET(request: Request) {
   const avatarUrl = searchParams.get("avatar")?.trim() || "";
   const shadow = sanitizeShadow(searchParams.get("shadow"));
   const radius = sanitizeRadius(searchParams.get("radius"));
+  const mobile = sanitizeMobile(searchParams.get("mobile"));
+  const icon = sanitizeIcon(searchParams.get("icon"));
+  const fontUrl = searchParams.get("font")?.trim() || "";
+  const name = searchParams.get("name")?.trim() || "Assistant";
+
   const buttonShadow = SHADOW_MAP[shadow];
   const buttonRadius = style === "pill" ? RADIUS_MAP_PILL[radius] : RADIUS_MAP_ICON[radius];
   const proactive = searchParams.get("proactive")?.trim() || "";
@@ -82,6 +96,28 @@ export async function GET(request: Request) {
   var buttonColor = ${JSON.stringify(color)};
   var buttonShadow = ${JSON.stringify(buttonShadow)};
   var buttonRadius = ${JSON.stringify(buttonRadius)};
+  var mobileBehavior = ${JSON.stringify(mobile)};
+  var launcherIcon = ${JSON.stringify(icon)};
+  var fontUrl = ${JSON.stringify(fontUrl)};
+  var agentName = ${JSON.stringify(name)};
+
+  /* ---- font loading ---- */
+  if (fontUrl) {
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = fontUrl;
+    document.head.appendChild(link);
+    /* extract font family from URL if possible, or assume it's the target */
+    try {
+      var urlObj = new URL(fontUrl);
+      var family = urlObj.searchParams.get('family')?.split(':')[0];
+      if (family) {
+        var fontStyle = document.createElement('style');
+        fontStyle.textContent = '.rep-ai-font { font-family: "' + family + '", sans-serif !important; }';
+        document.head.appendChild(fontStyle);
+      }
+    } catch(e) {}
+  }
 
   /* ---- iframe ---- */
   var iframe = document.createElement('iframe');
@@ -104,6 +140,19 @@ export async function GET(request: Request) {
     'transition:opacity 0.22s ease,transform 0.22s ease',
   ].join(';');
 
+  /* mobile styles */
+  var mobileStyle = document.createElement('style');
+  mobileStyle.textContent = [
+    '@media (max-width: 768px) {',
+    '  #rep-ai-agent-widget { width: 100% !important; height: 100% !important; bottom: 0 !important; right: 0 !important; left: 0 !important; border-radius: 0 !important; }',
+    mobileBehavior === 'hide' ? '  #rep-ai-launcher-wrapper { display: none !important; }' : '',
+    mobileBehavior === 'collapse' && styleParam === 'pill' ? '  #rep-ai-launcher { padding: 0 !important; width: 60px !important; border-radius: 9999px !important; }' : '',
+    mobileBehavior === 'collapse' && styleParam === 'pill' ? '  #rep-ai-launcher span { display: none !important; }' : '',
+    mobileBehavior === 'collapse' && styleParam === 'pill' ? '  #rep-ai-launcher .rep-mobile-icon { display: flex !important; }' : '',
+    '}',
+  ].join('\\n');
+  document.head.appendChild(mobileStyle);
+
   /* ---- launcher button ---- */
   var button = document.createElement('button');
   button.type = 'button';
@@ -111,9 +160,18 @@ export async function GET(request: Request) {
   button.setAttribute('aria-label', 'Open chat');
 
   var chatSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/></svg>';
+  var sparklesSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-11.314l.707.707m11.314 11.314l.707-.707M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/></svg>';
+  var botSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>';
+  var zapSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 L3 14 L12 14 L11 22 L21 10 L12 10 Z"/></svg>';
   var closeSVG = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
 
+  var activeIconSVG = chatSVG;
+  if (launcherIcon === 'sparkles') activeIconSVG = sparklesSVG;
+  if (launcherIcon === 'bot') activeIconSVG = botSVG;
+  if (launcherIcon === 'zap') activeIconSVG = zapSVG;
+
   if (styleParam === 'icon') {
+    button.className = 'rep-ai-font';
     button.style.width = '60px';
     button.style.height = '60px';
     button.style.display = 'flex';
@@ -134,10 +192,11 @@ export async function GET(request: Request) {
       closeOverlay.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);border-radius:inherit;opacity:0;transition:opacity 0.18s ease;pointer-events:none;';
       button.appendChild(closeOverlay);
     } else {
-      button.innerHTML = chatSVG;
+      button.innerHTML = activeIconSVG;
     }
   } else {
-    button.innerText = ${JSON.stringify(label)};
+    button.className = 'rep-ai-font';
+    button.innerHTML = '<span>' + ${JSON.stringify(label)} + '</span><div class="rep-mobile-icon" style="display:none;">' + activeIconSVG + '</div>';
     button.style.padding = '0 24px';
     button.style.height = '52px';
     button.style.display = 'flex';
@@ -158,6 +217,9 @@ export async function GET(request: Request) {
   button.style.background = buttonColor;
   button.style.color = '#ffffff';
   button.style.fontFamily = 'system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif';
+  if (fontUrl) {
+    button.className = 'rep-ai-font';
+  }
   button.style.boxShadow = buttonShadow;
   button.style.zIndex = '2147483647';
   button.style.transition = 'transform 0.2s cubic-bezier(.34,1.56,.64,1),box-shadow 0.2s ease';
@@ -171,6 +233,10 @@ export async function GET(request: Request) {
   var tooltip = null;
   var badge = null;
   var unread = 0;
+
+  if (greetingParam === 'Need help?') {
+    greetingParam = 'Chat with ' + agentName;
+  }
 
   function showTooltip(text) {
     if (tooltip) { tooltip.remove(); }
@@ -187,6 +253,7 @@ export async function GET(request: Request) {
       'border-radius:14px',
       pos === 'bottom-right' ? 'border-bottom-right-radius:4px' : 'border-bottom-left-radius:4px',
       'font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif',
+      fontUrl ? 'font-family:inherit' : '',
       'font-size:14px',
       'font-weight:500',
       'z-index:2147483647',
@@ -234,7 +301,7 @@ export async function GET(request: Request) {
       ].join(';');
       button.style.position = 'fixed'; /* ensure relative context for badge */
       /* wrap button in a relative container so badge positions correctly */
-      var wrapper = document.createElement('div');
+      wrapper.id = 'rep-ai-launcher-wrapper';
       wrapper.style.cssText = [
         'position:fixed',
         'bottom:20px',
@@ -312,13 +379,27 @@ export async function GET(request: Request) {
       var overlay = document.getElementById('rep-ai-close-overlay');
       if (overlay) overlay.style.opacity = open ? '1' : '0';
     } else if (styleParam === 'icon') {
-      button.innerHTML = open ? closeSVG : chatSVG;
+      button.innerHTML = open ? closeSVG : activeIconSVG;
     }
   });
 
   /* only append button directly if no proactive (wrapper handles it otherwise) */
   if (!proactiveParam) {
-    document.body.appendChild(button);
+    var finalWrapper = document.createElement('div');
+    finalWrapper.id = 'rep-ai-launcher-wrapper';
+    finalWrapper.style.cssText = [
+      'position:fixed',
+      'bottom:20px',
+      pos === 'bottom-right' ? 'right:20px' : 'left:20px',
+      'z-index:2147483647',
+      'display:inline-flex',
+    ].join(';');
+    button.style.position = 'relative';
+    button.style.bottom = '';
+    button.style.right = '';
+    button.style.left = '';
+    finalWrapper.appendChild(button);
+    document.body.appendChild(finalWrapper);
   }
   document.body.appendChild(iframe);
 })();`;

@@ -50,6 +50,9 @@ interface AgentWidgetTabProps {
   widgetAvatarUrl: string;
   widgetProactive: string;
   widgetProactiveDelay: number;
+  widgetIcon: "chat-bubble" | "sparkles" | "bot" | "zap";
+  widgetMobileBehavior: "collapse" | "hide";
+  widgetFontFamily: string;
   setWidgetLabel: (value: string) => void;
   setWidgetPosition: (value: "bottom-right" | "bottom-left") => void;
   setWidgetWidth: (value: number) => void;
@@ -61,9 +64,12 @@ interface AgentWidgetTabProps {
   setWidgetRadius: (value: "full" | "md" | "sm" | "none") => void;
   setWidgetProactive: (value: string) => void;
   setWidgetProactiveDelay: (value: number) => void;
+  setWidgetIcon: (value: "chat-bubble" | "sparkles" | "bot" | "zap") => void;
+  setWidgetMobileBehavior: (value: "collapse" | "hide") => void;
+  setWidgetFontFamily: (value: string) => void;
 }
 
-function WidgetPreview({ widgetStyle, widgetColor, widgetPosition, widgetGreeting, widgetAvatarUrl, widgetLabel, widgetShadow, widgetRadius, widgetProactive }: {
+function WidgetPreview({ widgetStyle, widgetColor, widgetPosition, widgetGreeting, widgetAvatarUrl, widgetLabel, widgetShadow, widgetRadius, widgetProactive, widgetIcon }: {
   widgetStyle: "pill" | "icon";
   widgetColor: string;
   widgetPosition: "bottom-right" | "bottom-left";
@@ -73,6 +79,7 @@ function WidgetPreview({ widgetStyle, widgetColor, widgetPosition, widgetGreetin
   widgetShadow: "none" | "sm" | "md" | "lg";
   widgetRadius: "full" | "md" | "sm" | "none";
   widgetProactive: string;
+  widgetIcon: "chat-bubble" | "sparkles" | "bot" | "zap";
 }) {
   const shadow = SHADOW_MAP[widgetShadow];
   const radius = widgetStyle === "icon" ? RADIUS_MAP_ICON[widgetRadius] : RADIUS_MAP_PILL[widgetRadius];
@@ -155,7 +162,12 @@ function WidgetPreview({ widgetStyle, widgetColor, widgetPosition, widgetGreetin
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={widgetAvatarUrl} alt="avatar" style={{ width: "60px", height: "60px", objectFit: "cover", borderRadius: radius, display: "block" }} />
               ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z" /></svg>
+                <div className="flex items-center justify-center">
+                  {widgetIcon === "chat-bubble" && <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z" /></svg>}
+                  {widgetIcon === "sparkles" && <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-11.314l.707.707m11.314 11.314l.707-.707M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" /></svg>}
+                  {widgetIcon === "bot" && <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8V4H8" /><rect width="16" height="12" x="4" y="8" rx="2" /><path d="M2 14h2" /><path d="M20 14h2" /><path d="M15 13v2" /><path d="M9 13v2" /></svg>}
+                  {widgetIcon === "zap" && <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2 L3 14 L12 14 L11 22 L21 10 L12 10 Z" /></svg>}
+                </div>
               )
             ) : (
               widgetLabel || "Chat"
@@ -209,6 +221,9 @@ export function AgentWidgetTab(props: AgentWidgetTabProps) {
     widgetAvatarUrl,
     widgetProactive,
     widgetProactiveDelay,
+    widgetIcon,
+    widgetMobileBehavior,
+    widgetFontFamily,
     setWidgetLabel,
     setWidgetPosition,
     setWidgetWidth,
@@ -220,6 +235,9 @@ export function AgentWidgetTab(props: AgentWidgetTabProps) {
     setWidgetRadius,
     setWidgetProactive,
     setWidgetProactiveDelay,
+    setWidgetIcon,
+    setWidgetMobileBehavior,
+    setWidgetFontFamily,
   } = props;
 
   return (
@@ -328,6 +346,39 @@ export function AgentWidgetTab(props: AgentWidgetTabProps) {
                     <Input id="widget-height" type="number" min={420} max={720} value={widgetHeight} onChange={(e) => setWidgetHeight(Math.max(420, Math.min(720, Number(e.target.value) || 520)))} className="shadow-sm" />
                   </div>
 
+                  {/* Mobile Breakpoint */}
+                  <div className="space-y-2">
+                    <Label className="font-semibold">Mobile Behavior</Label>
+                    <Select value={widgetMobileBehavior} onValueChange={(v) => setWidgetMobileBehavior(v as "collapse" | "hide")}>
+                      <SelectTrigger className="w-full shadow-sm"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="collapse">Collapse to Icon</SelectItem>
+                        <SelectItem value="hide">Hide entirely</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Launcher Icon */}
+                  <div className="space-y-2">
+                    <Label className="font-semibold">Launcher Icon</Label>
+                    <Select value={widgetIcon} onValueChange={(v) => setWidgetIcon(v as any)}>
+                      <SelectTrigger className="w-full shadow-sm"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="chat-bubble">Chat Bubble</SelectItem>
+                        <SelectItem value="sparkles">Sparkles</SelectItem>
+                        <SelectItem value="bot">Bot</SelectItem>
+                        <SelectItem value="zap">Zap</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Custom Font */}
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="widget-font" className="font-semibold text-sm">Custom Google Font URL <span className="text-muted-foreground font-normal text-xs">(optional)</span></Label>
+                    <Input id="widget-font" value={widgetFontFamily} onChange={(e) => setWidgetFontFamily(e.target.value)} className="shadow-sm" placeholder="e.g. https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" />
+                    <p className="text-xs text-muted-foreground">The font name must match the site typography for the best look.</p>
+                  </div>
+
                   {/* Proactive message */}
                   <div className="space-y-2 sm:col-span-2">
                     <Label htmlFor="widget-proactive" className="font-semibold">Proactive Message <span className="text-muted-foreground font-normal text-xs">(optional)</span></Label>
@@ -367,6 +418,7 @@ export function AgentWidgetTab(props: AgentWidgetTabProps) {
                 widgetShadow={widgetShadow}
                 widgetRadius={widgetRadius}
                 widgetProactive={widgetProactive}
+                widgetIcon={widgetIcon}
               />
             </div>
 

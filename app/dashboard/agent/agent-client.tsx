@@ -57,6 +57,9 @@ export function AgentClient({ agent, agentId, portfolioHandle, hasContent, isPor
   const [widgetRadius, setWidgetRadius] = useState<"full" | "md" | "sm" | "none">("full");
   const [widgetProactive, setWidgetProactive] = useState("");
   const [widgetProactiveDelay, setWidgetProactiveDelay] = useState(5);
+  const [widgetMobileBehavior, setWidgetMobileBehavior] = useState<"collapse" | "hide">("collapse");
+  const [widgetIcon, setWidgetIcon] = useState<"chat-bubble" | "sparkles" | "bot" | "zap">("chat-bubble");
+  const [widgetFontFamily, setWidgetFontFamily] = useState("");
 
   const { config, chatMessages, chatInput, isChatLoading, setConfig, addChatMessage, clearChatMessages, setChatInput, setIsChatLoading, resetConfig } = useAgentStore();
 
@@ -183,6 +186,7 @@ export function AgentClient({ agent, agentId, portfolioHandle, hasContent, isPor
     if (!canGenerateWidget || !agentId) return "";
     const url = new URL("/agent.js", appOrigin);
     url.searchParams.set("agentId", agentId);
+    if (config.displayName) url.searchParams.set("name", config.displayName);
     const trimmedLabel = widgetLabel.trim();
     if (trimmedLabel && trimmedLabel !== "Chat") url.searchParams.set("label", trimmedLabel.slice(0, 24));
     if (widgetPosition !== "bottom-right") url.searchParams.set("position", widgetPosition);
@@ -202,12 +206,15 @@ export function AgentClient({ agent, agentId, portfolioHandle, hasContent, isPor
       url.searchParams.set("proactive", trimmedProactive.slice(0, 80));
       if (widgetProactiveDelay !== 5) url.searchParams.set("proactiveDelay", String(widgetProactiveDelay));
     }
+    if (widgetMobileBehavior !== "collapse") url.searchParams.set("mobile", widgetMobileBehavior);
+    if (widgetIcon !== "chat-bubble") url.searchParams.set("icon", widgetIcon);
+    if (widgetFontFamily.trim()) url.searchParams.set("font", widgetFontFamily.trim());
     return url.toString();
-  }, [agentId, appOrigin, canGenerateWidget, widgetHeight, widgetLabel, widgetPosition, widgetWidth, widgetColor, widgetStyle, widgetGreeting, widgetShadow, widgetRadius, config.avatarUrl, widgetProactive, widgetProactiveDelay]);
+  }, [agentId, appOrigin, canGenerateWidget, widgetHeight, widgetLabel, widgetPosition, widgetWidth, widgetColor, widgetStyle, widgetGreeting, widgetShadow, widgetRadius, config.avatarUrl, widgetProactive, widgetProactiveDelay, widgetMobileBehavior, widgetIcon, widgetFontFamily, config.displayName]);
 
   const scriptSnippet = scriptUrl ? `<script async src="${scriptUrl}"></script>` : "";
   const iframeSnippet = canGenerateWidget && agentId
-    ? `<iframe src="${appOrigin}/embed/${agentId}" width="${widgetWidth}" height="${widgetHeight}" style="border:1px solid rgba(0,0,0,0.12);border-radius:12px;" loading="lazy" title="${config.displayName || "AI Assistant"}"></iframe>`
+    ? `<iframe src="${appOrigin}/embed/${agentId}${widgetFontFamily.trim() ? `?font=${encodeURIComponent(widgetFontFamily.trim())}` : ""}" width="${widgetWidth}" height="${widgetHeight}" style="border:1px solid rgba(0,0,0,0.12);border-radius:12px;" loading="lazy" title="${config.displayName || "AI Assistant"}"></iframe>`
     : "";
 
   const handleToggleSpy = (checked: boolean) => {
@@ -251,7 +258,7 @@ export function AgentClient({ agent, agentId, portfolioHandle, hasContent, isPor
         tabs={[...AGENT_TABS]}
         renderContent={(tab) => {
           if (tab.value === "settings") return <AgentSettingsTab config={config} isPending={isPending} agentId={agentId} onSave={handleSave} setConfig={setConfig} />;
-          if (tab.value === "widget") return <AgentWidgetTab canGenerateWidget={canGenerateWidget} isWidgetReady={isWidgetReady} scriptUrl={scriptUrl} scriptSnippet={scriptSnippet} iframeSnippet={iframeSnippet} appOrigin={appOrigin} agentId={agentId} widgetLabel={widgetLabel} widgetPosition={widgetPosition} widgetWidth={widgetWidth} widgetHeight={widgetHeight} widgetColor={widgetColor} widgetStyle={widgetStyle} widgetGreeting={widgetGreeting} widgetShadow={widgetShadow} widgetRadius={widgetRadius} widgetAvatarUrl={config.avatarUrl || ""} widgetProactive={widgetProactive} widgetProactiveDelay={widgetProactiveDelay} setWidgetLabel={setWidgetLabel} setWidgetPosition={setWidgetPosition} setWidgetWidth={setWidgetWidth} setWidgetHeight={setWidgetHeight} setWidgetColor={setWidgetColor} setWidgetStyle={setWidgetStyle} setWidgetGreeting={setWidgetGreeting} setWidgetShadow={setWidgetShadow} setWidgetRadius={setWidgetRadius} setWidgetProactive={setWidgetProactive} setWidgetProactiveDelay={setWidgetProactiveDelay} />;
+          if (tab.value === "widget") return <AgentWidgetTab canGenerateWidget={canGenerateWidget} isWidgetReady={isWidgetReady} scriptUrl={scriptUrl} scriptSnippet={scriptSnippet} iframeSnippet={iframeSnippet} appOrigin={appOrigin} agentId={agentId} widgetLabel={widgetLabel} widgetPosition={widgetPosition} widgetWidth={widgetWidth} widgetHeight={widgetHeight} widgetColor={widgetColor} widgetStyle={widgetStyle} widgetGreeting={widgetGreeting} widgetShadow={widgetShadow} widgetRadius={widgetRadius} widgetAvatarUrl={config.avatarUrl || ""} widgetProactive={widgetProactive} widgetProactiveDelay={widgetProactiveDelay} widgetIcon={widgetIcon} widgetMobileBehavior={widgetMobileBehavior} widgetFontFamily={widgetFontFamily} setWidgetLabel={setWidgetLabel} setWidgetPosition={setWidgetPosition} setWidgetWidth={setWidgetWidth} setWidgetHeight={setWidgetHeight} setWidgetColor={setWidgetColor} setWidgetStyle={setWidgetStyle} setWidgetGreeting={setWidgetGreeting} setWidgetShadow={setWidgetShadow} setWidgetRadius={setWidgetRadius} setWidgetProactive={setWidgetProactive} setWidgetProactiveDelay={setWidgetProactiveDelay} setWidgetIcon={setWidgetIcon} setWidgetMobileBehavior={setWidgetMobileBehavior} setWidgetFontFamily={setWidgetFontFamily} />;
           if (tab.value === "integrations") return <AgentIntegrationsTab config={config} isDisconnectingCalendar={isDisconnectingCalendar} handleCalendarDisconnect={handleCalendarDisconnect} isDisconnectingCalendly={isDisconnectingCalendly} handleCalendlyDisconnect={handleCalendlyDisconnect} plan={plan} handleToggleSpy={handleToggleSpy} />;
           if (tab.value === "test") return <AgentTestTab canTest={canTest} chatMessages={chatMessages} chatInput={chatInput} isChatLoading={isChatLoading} clearChatMessages={clearChatMessages} setChatInput={setChatInput} sendTestMessage={sendTestMessage} isAgentEnabled={config.isEnabled} />;
           return null;
