@@ -67,7 +67,7 @@ function WidgetPreview({ widgetStyle, widgetColor, widgetPosition, widgetGreetin
   widgetAvatarUrl: string;
   widgetLabel: string;
   widgetShadow: "none" | "sm" | "md" | "lg";
-  widgetRadius: "full" | "md" | "sm";
+  widgetRadius: "full" | "md" | "sm" | "none";
 }) {
   const shadow = SHADOW_MAP[widgetShadow];
   const radius = widgetStyle === "icon" ? RADIUS_MAP_ICON[widgetRadius] : RADIUS_MAP_PILL[widgetRadius];
