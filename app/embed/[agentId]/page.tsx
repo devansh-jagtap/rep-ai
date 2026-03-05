@@ -23,6 +23,7 @@ export default async function EmbedAgentPage({ params }: EmbedPageProps) {
     <EmbedChatClient
       agentId={agentId}
       agentName={agent.displayName ?? "AI Assistant"}
+      avatarUrl={agent.avatarUrl ?? null}
       roleLabel={agent.roleLabel ?? null}
       intro={agent.intro ?? null}
       plan={agent.plan}

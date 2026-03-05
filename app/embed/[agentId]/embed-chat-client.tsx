@@ -29,12 +29,46 @@ type ChatMessage = {
 interface EmbedChatClientProps {
   agentId: string;
   agentName?: string;
+  avatarUrl?: string | null;
   roleLabel?: string | null;
   intro?: string | null;
   plan?: string | null;
 }
 
-export function EmbedChatClient({ agentId, agentName = "AI Assistant", roleLabel, intro, plan }: EmbedChatClientProps) {
+function AgentAvatar({ avatarUrl, agentName, size = 32 }: { avatarUrl?: string | null; agentName: string; size?: number }) {
+  const initials = agentName.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
+  if (avatarUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={avatarUrl}
+        alt={agentName}
+        width={size}
+        height={size}
+        style={{ width: size, height: size, borderRadius: "9999px", objectFit: "cover", flexShrink: 0 }}
+      />
+    );
+  }
+  return (
+    <div style={{
+      width: size,
+      height: size,
+      borderRadius: "9999px",
+      background: "hsl(var(--primary))",
+      color: "hsl(var(--primary-foreground))",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: size * 0.38,
+      fontWeight: 600,
+      flexShrink: 0,
+    }}>
+      {initials}
+    </div>
+  );
+}
+
+export function EmbedChatClient({ agentId, agentName = "AI Assistant", avatarUrl, roleLabel, intro, plan }: EmbedChatClientProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -112,11 +146,16 @@ export function EmbedChatClient({ agentId, agentName = "AI Assistant", roleLabel
 
   return (
     <div className="flex h-screen flex-col bg-background">
-      <header className="flex shrink-0 items-center gap-2 border-b px-4 py-3">
-        <div className="size-2 rounded-full bg-green-500 animate-pulse" />
-        <div className="flex flex-col">
-          <span className="font-medium text-sm">{agentName}</span>
-          {roleLabel ? <span className="text-xs text-muted-foreground">{roleLabel}</span> : null}
+      <header className="flex shrink-0 items-center gap-3 border-b px-4 py-3">
+        <AgentAvatar avatarUrl={avatarUrl} agentName={agentName} size={36} />
+        <div className="flex flex-col min-w-0">
+          <span className="font-semibold text-sm truncate">{agentName}</span>
+          {roleLabel ? <span className="text-xs text-muted-foreground truncate">{roleLabel}</span> : (
+            <span className="flex items-center gap-1 text-xs text-green-600 font-medium">
+              <span className="size-1.5 rounded-full bg-green-500 inline-block animate-pulse" />
+              Online
+            </span>
+          )}
         </div>
       </header>
 
@@ -127,8 +166,12 @@ export function EmbedChatClient({ agentId, agentName = "AI Assistant", roleLabel
         >
           {allMessages.length === 0 ? (
             <ConversationEmptyState
-              icon={<MessageSquare className="size-12 text-muted-foreground" />}
-              title="Start a conversation"
+              icon={avatarUrl ? (
+                <AgentAvatar avatarUrl={avatarUrl} agentName={agentName} size={64} />
+              ) : (
+                <MessageSquare className="size-12 text-muted-foreground" />
+              )}
+              title={`Chat with ${agentName}`}
               description={intro || "Ask me anything and I'll help you out"}
             />
           ) : (
