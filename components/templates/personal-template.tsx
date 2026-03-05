@@ -153,13 +153,23 @@ export function PersonalTemplate({ content }: { content: PortfolioContent }) {
                             <AnimateIn delay={0.5} className="w-full relative">
                                 <div className="absolute top-10 -right-10 w-[120%] h-[120%] bg-blue-100 dark:bg-blue-900/20 rounded-full blur-3xl -z-10" />
                                 <div className="w-full aspect-square border-4 border-black dark:border-white rounded-3xl bg-white dark:bg-black overflow-hidden shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] dark:shadow-[12px_12px_0px_0px_rgba(255,255,255,1)] flex flex-col items-center justify-end p-8 relative group">
-                                    <div className="absolute top-8 left-8 flex gap-2">
-                                        <div className="w-4 h-4 rounded-full border-2 border-black dark:border-white bg-red-400" />
-                                        <div className="w-4 h-4 rounded-full border-2 border-black dark:border-white bg-yellow-400" />
-                                        <div className="w-4 h-4 rounded-full border-2 border-black dark:border-white bg-green-400" />
-                                    </div>
-                                    <div className="w-32 h-32 rounded-full border-4 border-black dark:border-white mb-8 group-hover:scale-110 transition-transform duration-500" />
-                                    <div className="w-[120%] h-40 border-t-4 border-l-4 border-r-4 border-black dark:border-white bg-neutral-100 dark:bg-neutral-900 rounded-t-full group-hover:-translate-y-4 transition-transform duration-500" />
+                                    {content.about.avatarUrl ? (
+                                        <img
+                                            src={content.about.avatarUrl}
+                                            alt={content.name || "Profile"}
+                                            className="absolute inset-0 w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <>
+                                            <div className="absolute top-8 left-8 flex gap-2">
+                                                <div className="w-4 h-4 rounded-full border-2 border-black dark:border-white bg-red-400" />
+                                                <div className="w-4 h-4 rounded-full border-2 border-black dark:border-white bg-yellow-400" />
+                                                <div className="w-4 h-4 rounded-full border-2 border-black dark:border-white bg-green-400" />
+                                            </div>
+                                            <div className="w-32 h-32 rounded-full border-4 border-black dark:border-white mb-8 group-hover:scale-110 transition-transform duration-500" />
+                                            <div className="w-[120%] h-40 border-t-4 border-l-4 border-r-4 border-black dark:border-white bg-neutral-100 dark:bg-neutral-900 rounded-t-full group-hover:-translate-y-4 transition-transform duration-500" />
+                                        </>
+                                    )}
                                 </div>
                             </AnimateIn>
                         </div>
@@ -169,12 +179,19 @@ export function PersonalTemplate({ content }: { content: PortfolioContent }) {
                 {isSectionVisible(visibleSections, "about") && (
                     <section id="about" className="py-20 md:py-32 grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-16 items-center">
                         <AnimateIn className="order-2 lg:order-1 lg:block hidden">
-                            {/* Boxed abstract illustration placeholder for About Me */}
-                            <div className="relative aspect-[4/5] border-4 border-black dark:border-white rounded-xl p-6 bg-white dark:bg-black">
-                                <div className="w-full h-full flex flex-col items-center justify-end">
-                                    <div className="w-32 h-32 rounded-full border-4 border-black dark:border-white mb-4" />
-                                    <div className="w-[120%] h-64 border-t-4 border-l-4 border-r-4 border-black dark:border-white rounded-t-full bg-neutral-100 dark:bg-neutral-900" />
-                                </div>
+                            <div className="relative aspect-[4/5] border-4 border-black dark:border-white rounded-xl overflow-hidden bg-white dark:bg-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)]">
+                                {content.about.avatarUrl ? (
+                                    <img
+                                        src={content.about.avatarUrl}
+                                        alt={content.name || "Profile"}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex flex-col items-center justify-end p-6">
+                                        <div className="w-32 h-32 rounded-full border-4 border-black dark:border-white mb-4" />
+                                        <div className="w-[120%] h-64 border-t-4 border-l-4 border-r-4 border-black dark:border-white rounded-t-full bg-neutral-100 dark:bg-neutral-900" />
+                                    </div>
+                                )}
                             </div>
                         </AnimateIn>
                         <div className="order-1 lg:order-2">
@@ -360,7 +377,7 @@ export function PersonalTemplate({ content }: { content: PortfolioContent }) {
                         <p>&copy; {new Date().getFullYear()} {content.name || "Personal"}. All rights reserved.</p>
                     </div>
                     <div className="text-sm font-bold text-neutral-400 dark:text-neutral-500 flex items-center gap-2">
-                        Designed with AI <ThemeSwitcher />
+                        Designed with Love by  {content.name}<ThemeSwitcher />
                     </div>
                 </div>
             </footer>
